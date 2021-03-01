@@ -21,7 +21,7 @@ import net.lucode.hackware.magicindicator.buildins.commonnavigator.CommonNavigat
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.abs.CommonNavigatorAdapter;
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.abs.IPagerIndicator;
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.abs.IPagerTitleView;
-import net.lucode.hackware.magicindicator.buildins.commonnavigator.indicators.LinePagerIndicator;
+import net.lucode.hackware.magicindicator.buildins.commonnavigator.indicators.WrapPagerIndicator;
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.ColorTransitionPagerTitleView;
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.SimplePagerTitleView;
 
@@ -77,6 +77,7 @@ public class PreviewMainActivity extends AppCompatActivity {
 
         MagicIndicator magicIndicator = viewDataBinding.magicIndicator;
         CommonNavigator commonNavigator = new CommonNavigator(this);
+        commonNavigator.setScrollPivotX(0.35f);
         commonNavigator.setAdapter(new CommonNavigatorAdapter() {
 
             @Override
@@ -87,8 +88,8 @@ public class PreviewMainActivity extends AppCompatActivity {
             @Override
             public IPagerTitleView getTitleView(Context context, final int index) {
                 SimplePagerTitleView simplePagerTitleView = new ColorTransitionPagerTitleView(context);
-                simplePagerTitleView.setNormalColor(0x99555555);
-                simplePagerTitleView.setSelectedColor(0xFF000000);
+                simplePagerTitleView.setNormalColor(0xFF323232);
+                simplePagerTitleView.setSelectedColor(0xFFFFFFFF);
                 simplePagerTitleView.setText(mTitleList[index]);
                 simplePagerTitleView.setOnClickListener(v -> viewDataBinding.mViewPager.setCurrentItem(index));
                 return simplePagerTitleView;
@@ -96,11 +97,9 @@ public class PreviewMainActivity extends AppCompatActivity {
 
             @Override
             public IPagerIndicator getIndicator(Context context) {
-                LinePagerIndicator linePagerIndicator = new LinePagerIndicator(context);
-                linePagerIndicator.setMode(LinePagerIndicator.MODE_EXACTLY);
-                linePagerIndicator.setLineWidth(UIUtil.dip2px(context, 10));
-                linePagerIndicator.setColors(Color.WHITE);
-                return linePagerIndicator;
+                WrapPagerIndicator indicator = new WrapPagerIndicator(context);
+                indicator.setFillColor(Color.parseColor("#3e99f9"));
+                return indicator;
             }
         });
         magicIndicator.setNavigator(commonNavigator);
@@ -109,7 +108,7 @@ public class PreviewMainActivity extends AppCompatActivity {
         titleContainer.setDividerDrawable(new ColorDrawable() {
             @Override
             public int getIntrinsicWidth() {
-                return UIUtil.dip2px(getApplication(), 50);
+                return UIUtil.dip2px(getApplication(), 10);
             }
         });
 
@@ -118,8 +117,18 @@ public class PreviewMainActivity extends AppCompatActivity {
         fragmentContainerHelper.setDuration(300);
         viewDataBinding.mViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                magicIndicator.onPageScrolled(position, positionOffset, positionOffsetPixels);
+            }
+
+            @Override
             public void onPageSelected(int position) {
-                fragmentContainerHelper.handlePageSelected(position);
+                magicIndicator.onPageSelected(position);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                magicIndicator.onPageScrollStateChanged(state);
             }
         });
     }
