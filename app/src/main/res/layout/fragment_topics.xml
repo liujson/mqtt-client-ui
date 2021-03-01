@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <ScrollView
+        android:background="#ececec"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".ui.fragments.PublishFragment">
+
+            <EditText
+                android:id="@+id/et_topic_input"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_margin="5dp"
+                android:background="@drawable/selector_input_bg"
+                android:gravity="top"
+                android:padding="5dp" />
+
+            <RadioGroup
+                android:id="@+id/radio_group_topic_qos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/et_topic_input"
+                android:checkedButton="@id/rb_qos0"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rb_qos0"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="QoS 0"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_qos1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="QoS 1"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_qos2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="QoS 2"
+                    android:textSize="12sp" />
+            </RadioGroup>
+
+            <CheckBox
+                android:id="@+id/cb_retained"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/radio_group_topic_qos"
+                android:text="Retained" />
+
+            <Button
+                android:id="@+id/btn_submit"
+                android:layout_below="@id/cb_retained"
+                android:layout_marginTop="15dp"
+                android:layout_marginEnd="10dp"
+                android:textAllCaps="false"
+                android:layout_width="100dp"
+                android:textColor="#F0F0F0"
+                android:layout_height="32dp"
+                android:letterSpacing="0.08"
+                android:background="@drawable/selector_btn_blue_style"
+                android:text="Submit" />
+
+            <View
+                android:id="@+id/line1"
+                android:layout_width="match_parent"
+                android:layout_height="0.8dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_below="@id/btn_submit"
+                android:background="#335533" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_topics_list"
+                android:layout_width="match_parent"
+                android:layout_height="600dp"
+                android:layout_below="@id/line1" />
+
+        </RelativeLayout>
+    </ScrollView>
+</layout>
