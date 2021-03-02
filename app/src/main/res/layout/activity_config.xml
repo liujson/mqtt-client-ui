@@ -47,13 +47,26 @@
 
             <RelativeLayout
                 android:layout_width="wrap_content"
-
                 android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:id="@+id/linear_01"
+                    style="@style/config_linear_item_style"
+                    android:layout_marginTop="35dp">
+
+                    <TextView
+                        style="@style/text_style_1"
+                        android:text="Profile Name" />
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/et_profile_name"
+                        style="@style/et_edit_style_1" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/linear_1"
                     style="@style/config_linear_item_style"
-                    android:layout_marginTop="35dp">
+                    android:layout_below="@id/linear_01">
 
                     <TextView
                         style="@style/text_style_1"
@@ -89,7 +102,21 @@
 
                     <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/et_client_id"
-                        style="@style/et_edit_style_1" />
+                        style="@style/et_edit_style_1"
+                        android:layout_weight="1.4" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.05" />
+
+                    <Button
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.55"
+                        android:text="generate"
+                        android:textAllCaps="false"
+                        android:textSize="14sp" />
                 </LinearLayout>
 
                 <LinearLayout

@@ -11,7 +11,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Refactor">
-        <activity android:name="cn.liujson.client.ui.ConfigListActivity" />
+        <activity
+            android:name="cn.liujson.client.ui.ConfigListActivity"
+            android:launchMode="singleTask" />
         <activity android:name="cn.liujson.client.ui.ConfigActivity" />
         <activity android:name="cn.liujson.client.ui.PreviewMainActivity">
             <intent-filter>

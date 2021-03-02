@@ -14,7 +14,7 @@
         android:layout_margin="5dp"
         android:padding="5dp"
         android:gravity="left|top"
-        android:layout_height="100dp"/>
+        android:layout_height="320dp"/>
     <RadioGroup
         android:id="@+id/radio_group_publish_qos"
         android:layout_below="@id/et_publish_input"

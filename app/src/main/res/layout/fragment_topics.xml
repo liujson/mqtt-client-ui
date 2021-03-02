@@ -20,8 +20,9 @@
             <EditText
                 android:id="@+id/et_topic_input"
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
+                android:layout_height="wrap_content"
                 android:layout_margin="5dp"
+                android:textSize="22sp"
                 android:background="@drawable/selector_input_bg"
                 android:gravity="top"
                 android:padding="5dp" />

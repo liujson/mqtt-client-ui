@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <variable
+            name="clickListener"
+            type="android.view.View.OnClickListener" />
     </data>
 
     <RelativeLayout
@@ -53,6 +55,7 @@
                 android:layout_height="42dp"
                 android:background="@null"
                 android:scaleType="fitXY"
+                android:onClick="@{clickListener}"
                 android:src="@drawable/ic_action_add"/>
             <ImageButton
                 android:id="@+id/btn_remove_profile"
@@ -61,6 +64,7 @@
                 android:layout_marginStart="15dp"
                 android:background="@null"
                 android:scaleType="fitXY"
+                android:onClick="@{clickListener}"
                 android:layout_toEndOf="@id/btn_add_profile"
                 android:src="@drawable/ic_action_remove"/>
         </RelativeLayout>
