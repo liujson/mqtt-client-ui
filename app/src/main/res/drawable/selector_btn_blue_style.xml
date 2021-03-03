@@ -7,7 +7,7 @@
                 android:type="linear"
                 android:angle="270"
                 android:endColor="#388ce1"/>
-            <corners android:radius="8dp"/>
+            <corners android:radius="4dp"/>
         </shape>
     </item>
     <item android:state_pressed="true" android:state_focused="true">
@@ -16,7 +16,7 @@
                 android:centerColor="#4b97e3"
                 android:angle="270"
                 android:endColor="#347fcb"/>
-            <corners android:radius="8dp"/>
+            <corners android:radius="4dp"/>
         </shape>
     </item>
     <item>
@@ -25,7 +25,7 @@
                 android:centerColor="#519eec"
                 android:angle="270"
                 android:endColor="#388ce1"/>
-            <corners android:radius="8dp"/>
+            <corners android:radius="4dp"/>
         </shape>
     </item>
 </selector>

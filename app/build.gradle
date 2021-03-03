@@ -60,13 +60,18 @@ dependencies {
     //rxjava
     implementation 'io.reactivex.rxjava2:rxjava:2.2.8'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-
+    //https://github.com/hackware1993/MagicIndicator
     implementation 'com.github.hackware1993:MagicIndicator:1.7.0'
+    //https://github.com/CymChad/BaseRecyclerViewAdapterHelper
+    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:3.0.4'
+    //https://github.com/daimajia/AndroidSwipeLayout
+    implementation 'com.daimajia.swipelayout:library:1.2.0@aar'
 
-    //Room 数据库框架
+    //region Room
     //https://developer.android.google.cn/training/data-storage/room
     implementation "androidx.room:room-runtime:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
     // optional - RxJava support for Room
     implementation "androidx.room:room-rxjava2:$room_version"
+    //endregion Room
 }

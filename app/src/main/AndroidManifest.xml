@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".ui.app.CustomApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -12,9 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Refactor">
         <activity
-            android:name="cn.liujson.client.ui.ConfigListActivity"
+            android:name="cn.liujson.client.ui.ConnectionProfilesActivity"
             android:launchMode="singleTask" />
-        <activity android:name="cn.liujson.client.ui.ConfigActivity" />
+        <activity android:name="cn.liujson.client.ui.ProfileEditorActivity" />
         <activity android:name="cn.liujson.client.ui.PreviewMainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

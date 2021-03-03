@@ -40,21 +40,72 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/selector_setting_btn" />
         </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rl_cation_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/rl_title_bar"
+            android:background="@drawable/shape_tab_bar_bg">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp">
+
+                <EditText
+                    android:layout_width="260dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/selector_input_bg" />
+
+                <Button
+                    android:layout_width="100dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/selector_btn_blue_style"
+                    android:fontFamily="sans-serif-condensed"
+                    android:text="@string/connect"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF" />
+
+                <Button
+                    android:layout_width="120dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/selector_btn_white_style"
+                    android:fontFamily="sans-serif-condensed"
+                    android:text="@string/disconnect"
+                    android:textAllCaps="false"
+                    android:textColor="#333333" />
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#F0F0F0" />
+
         <LinearLayout
             android:id="@+id/linear_1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_below="@id/rl_title_bar"
-            android:background="@drawable/shape_tab_bar_bg"
+            android:layout_below="@id/rl_cation_bar"
             android:orientation="vertical">
 
             <net.lucode.hackware.magicindicator.MagicIndicator
                 android:id="@+id/magic_indicator"
                 android:layout_width="wrap_content"
-                android:layout_height="35dp"
-                android:layout_gravity="center_horizontal" />
-
+                android:layout_height="30dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"/>
         </LinearLayout>
 
         <View
@@ -65,8 +116,8 @@
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/m_view_pager"
-            android:layout_below="@id/linear_1"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:layout_below="@id/linear_1" />
     </RelativeLayout>
 </layout>

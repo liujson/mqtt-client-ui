@@ -2,4 +2,12 @@
     <string name="app_name">Refactor</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+    <string name="profile_name_cannot_be_null">Profile name cannot be null</string>
+    <string name="broker_address_cannot_be_null">Broker address cannot be null</string>
+    <string name="broker_port_cannot_be_null">Broker port cannot be null</string>
+    <string name="client_id_cannot_be_null">Client ID cannot be null</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
 </resources>

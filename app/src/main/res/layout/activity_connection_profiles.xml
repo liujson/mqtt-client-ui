@@ -4,16 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="clickListener"
             type="android.view.View.OnClickListener" />
+
+        <variable
+            name="vm"
+            type="cn.liujson.client.ui.viewmodel.ConnectionProfilesViewModel" />
     </data>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ececec"
-        tools:context=".ui.ConfigListActivity">
+        tools:context=".ui.ConnectionProfilesActivity">
 
         <RelativeLayout
             android:id="@+id/rl_title_bar"
@@ -41,40 +46,41 @@
                 android:textSize="24sp" />
         </RelativeLayout>
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_config_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/rl_title_bar"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="10dp"
+            app:recyclerAdapter="@{vm.adapter}"
+            app:recyclerData="@{vm.dataList}"
+            app:recyclerLayoutManager="@{vm.layoutManager}" />
+
         <RelativeLayout
             android:id="@+id/rl_actions"
-            android:layout_width="wrap_content"
-            android:layout_alignParentBottom="true"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
             android:layout_marginEnd="30dp"
-            android:layout_marginBottom="20dp"
-            android:layout_height="wrap_content">
-            <ImageButton
+            android:layout_marginBottom="20dp">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/btn_add_profile"
                 android:layout_width="42dp"
                 android:layout_height="42dp"
+                android:layout_centerInParent="true"
                 android:background="@null"
-                android:scaleType="fitXY"
+                android:elevation="5dp"
                 android:onClick="@{clickListener}"
-                android:src="@drawable/ic_action_add"/>
-            <ImageButton
-                android:id="@+id/btn_remove_profile"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:layout_marginStart="15dp"
-                android:background="@null"
-                android:scaleType="fitXY"
-                android:onClick="@{clickListener}"
-                android:layout_toEndOf="@id/btn_add_profile"
-                android:src="@drawable/ic_action_remove"/>
+                android:src="@drawable/ic_action_add"
+                app:fabCustomSize="42dp"
+                app:backgroundTint="@android:color/white"
+                app:fabSize="auto" />
         </RelativeLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_config_list"
-            android:layout_below="@id/rl_title_bar"
-            android:layout_marginTop="5dp"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
 
     </RelativeLayout>
 </layout>

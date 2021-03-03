@@ -53,7 +53,7 @@ public class PreviewMainActivity extends AppCompatActivity {
         initMagicIndicator();
 
         viewDataBinding.btnSetting.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ConfigListActivity.class);
+            Intent intent = new Intent(this, ConnectionProfilesActivity.class);
 
             startActivity(intent);
         });

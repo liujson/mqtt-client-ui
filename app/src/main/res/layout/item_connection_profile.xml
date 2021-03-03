@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="5dp">
+    <TextView
+        android:id="@+id/tv_profile_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="192.168.1.193"
+        android:fontFamily="sans-serif-condensed"
+        android:textSize="20sp"
+        android:textColor="@color/color_333333"/>
+    <TextView
+        android:id="@+id/tv_broker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_profile_name"
+        android:text="192.168.1.193:1883"
+        android:layout_marginTop="5dp"
+        android:fontFamily="sans-serif-condensed"
+        android:textSize="14sp"
+        android:textColor="#a2a2a2"/>
+</RelativeLayout>

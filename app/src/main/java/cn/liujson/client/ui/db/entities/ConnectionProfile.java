@@ -20,7 +20,7 @@ public class ConnectionProfile {
     @ColumnInfo(name = "broker_address")
     public String brokerAddress;
     @ColumnInfo(name = "broker_port")
-    public String brokerPort;
+    public int brokerPort;
     @ColumnInfo(name = "client_id")
     public String clientID;
     @ColumnInfo(name = "clean_session")
