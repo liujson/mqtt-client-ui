@@ -24,4 +24,10 @@ public interface IMQTT {
     void disconnect(IMQTTCallback<Void> callback);
 
     void setMessageReceiver(IMQTTMessageReceiver messageReceiver);
+
+    /**
+     * 强制关闭连接
+     * @throws Exception exception
+     */
+    void close() throws Exception;
 }

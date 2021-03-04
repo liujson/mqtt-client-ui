@@ -5,6 +5,7 @@ import androidx.databinding.ObservableList;
 import androidx.lifecycle.Lifecycle;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import cn.liujson.client.R;
 import cn.liujson.client.ui.adapter.ConnectionProfilesAdapter;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
@@ -28,11 +29,34 @@ public class ConnectionProfilesViewModel extends BaseViewModel {
 
     Disposable loadProfilesDisposable;
 
-    public ConnectionProfilesViewModel(Lifecycle mLifecycle) {
-        super(mLifecycle);
+    Navigator navigator;
+
+    public void setNavigator(Navigator navigator) {
+        this.navigator = navigator;
     }
 
+    public ConnectionProfilesViewModel(Lifecycle mLifecycle) {
+        super(mLifecycle);
+        adapter.setOnItemChildClickListener((adapter, view, position) -> {
+            if (adapter instanceof ConnectionProfilesAdapter) {
+                ConnectionProfilesAdapter profilesAdapter = (ConnectionProfilesAdapter) adapter;
+                if (view.getId() == R.id.tv_edit) {
+                    if (navigator != null) {
+                        navigator.editProfile(profilesAdapter.getData().get(position).id);
+                    }
+                } else if (view.getId() == R.id.tv_del) {
+                    if (navigator != null) {
+                        navigator.delProfile(profilesAdapter.getData().get(position).id);
+                    }
+                }
+            }
+        });
+        adapter.addChildClickViewIds(R.id.tv_edit, R.id.tv_del);
+    }
 
+    /**
+     * 加载配置
+     */
     public void loadConnectionProfiles() {
         if (loadProfilesDisposable != null) {
             loadProfilesDisposable.dispose();
@@ -47,16 +71,32 @@ public class ConnectionProfilesViewModel extends BaseViewModel {
                     loadProfilesDisposable = null;
                     dataList.clear();
                     for (ConnectionProfile profile : data) {
-                        final ConnectionProfilesAdapter.ItemProfile itemProfile = new ConnectionProfilesAdapter.ItemProfile();
-                        itemProfile.profileName = profile.profileName;
-                        itemProfile.brokerPort = profile.brokerPort;
-                        itemProfile.brokerAddress = profile.brokerAddress;
-                        dataList.add(itemProfile);
+                        dataList.add(ConnectionProfilesAdapter.ItemProfile.covert(profile));
                     }
                     adapter.notifyDataSetChanged();
                 }, throwable -> {
                     loadProfilesDisposable = null;
                     ToastHelper.showToast(CustomApplication.getApp(), "load connection profiles failure.");
+                });
+    }
+
+    /**
+     * 删除配置
+     *
+     * @param id
+     */
+    public void delProfile(int id) {
+        Disposable delProfilesDisposable = DatabaseHelper
+                .getInstance()
+                .connectionProfileDao()
+                .deleteProfile(id)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                    ToastHelper.showToast(CustomApplication.getApp(), "successfully!");
+                    adapter.notifyDataSetChanged();
+                }, throwable -> {
+                    ToastHelper.showToast(CustomApplication.getApp(), "Sorry,delete failure.");
                 });
     }
 
@@ -66,5 +106,17 @@ public class ConnectionProfilesViewModel extends BaseViewModel {
             loadProfilesDisposable.dispose();
             loadProfilesDisposable = null;
         }
+    }
+
+    public interface Navigator {
+        /**
+         * 编辑配置
+         */
+        void editProfile(long id);
+
+        /**
+         * 删除配置
+         */
+        void delProfile(long id);
     }
 }

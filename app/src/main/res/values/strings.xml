@@ -10,4 +10,5 @@
     <string name="client_id_cannot_be_null">Client ID cannot be null</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
+
 </resources>

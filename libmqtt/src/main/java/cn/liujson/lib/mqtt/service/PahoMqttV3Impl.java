@@ -21,9 +21,11 @@ import java.util.Objects;
 
 import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
+import cn.liujson.lib.mqtt.api.IMQTTConnectionBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.IReconnectionStrategy;
 import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.util.MQTTUtils;
 
 /**
@@ -54,45 +56,50 @@ public class PahoMqttV3Impl implements IMQTT {
      */
     private final HashMap<String, QoS> activeSubs = new HashMap<>();
 
-    public PahoMqttV3Impl(final MqttBuilder builder) throws MqttException {
+    public PahoMqttV3Impl(final IMQTTConnectionBuilder builder) throws WrapMQTTException {
         Objects.requireNonNull(builder.getHost());
+        String clientId = builder.getClientId();
         //如果clientId是空或者null，生成一个随机的clientId
-        if (TextUtils.isEmpty(builder.getClientId())) {
-            builder.clientId(MQTTUtils.generateClientId());
+        if (TextUtils.isEmpty(clientId)) {
+            clientId = MQTTUtils.generateClientId();
         }
-        /**
-         * MemoryPersistence设置clientid的保存形式，默认为以内存保存
-         */
-        MemoryPersistence persistence = new MemoryPersistence();
-        mqttAsyncClient = new MqttAsyncClient(builder.getHost(), builder.getClientId(), persistence);
-        connOpts = new MqttConnectOptions();
-        connOpts.setCleanSession(builder.isCleanSession());
+        try {
+            /**
+             * MemoryPersistence设置clientid的保存形式，默认为以内存保存
+             */
+            MemoryPersistence persistence = new MemoryPersistence();
+            mqttAsyncClient = new MqttAsyncClient(builder.getHost(), clientId, persistence);
+            connOpts = new MqttConnectOptions();
+            connOpts.setCleanSession(builder.isCleanSession());
 
-        if (!TextUtils.isEmpty(builder.getUserName())) {
-            connOpts.setUserName(builder.getUserName());
-        }
-        if (!TextUtils.isEmpty(builder.getPassword())) {
-            connOpts.setPassword(builder.getPassword().toCharArray());
-        }
-        if (!TextUtils.isEmpty(builder.getWillTopic())
-                && !TextUtils.isEmpty(builder.getWillMessage())
-                && builder.getWillQos() != null) {
-            connOpts.setWill(builder.getWillTopic(),
-                    builder.getWillMessage().getBytes(),
-                    MQTTUtils.qoS2Int(builder.getWillQos()), false);
-        }
-        //连接超时时间（秒）
-        connOpts.setConnectionTimeout(CONNECTION_TIMEOUT);
-        //保持存活间隔（秒）
-        connOpts.setKeepAliveInterval(builder.getKeepAlive());
-        //设置回调
-        mqttAsyncClient.setCallback(mMqttCallback);
+            if (!TextUtils.isEmpty(builder.getUserName())) {
+                connOpts.setUserName(builder.getUserName());
+            }
+            if (!TextUtils.isEmpty(builder.getPassword())) {
+                connOpts.setPassword(builder.getPassword().toCharArray());
+            }
+            if (!TextUtils.isEmpty(builder.getWillTopic())
+                    && !TextUtils.isEmpty(builder.getWillMessage())
+                    && builder.getWillQos() != null) {
+                connOpts.setWill(builder.getWillTopic(),
+                        builder.getWillMessage().getBytes(),
+                        MQTTUtils.qoS2Int(builder.getWillQos()), false);
+            }
+            //连接超时时间（秒）
+            connOpts.setConnectionTimeout(CONNECTION_TIMEOUT);
+            //保持存活间隔（秒）
+            connOpts.setKeepAliveInterval(builder.getKeepAlive());
+            //设置回调
+            mqttAsyncClient.setCallback(mMqttCallback);
 
-        //自动重连
-        connOpts.setAutomaticReconnect(true);
+            //自动重连
+            connOpts.setAutomaticReconnect(true);
 
-        //初始化
-        activeSubs.clear();
+            //初始化
+            activeSubs.clear();
+        } catch (MqttException e) {
+            throw new WrapMQTTException(e);
+        }
     }
 
     @Override
@@ -185,7 +192,9 @@ public class PahoMqttV3Impl implements IMQTT {
             mqttAsyncClient.publish(topic, payload, MQTTUtils.qoS2Int(qos), retained, null,
                     MQTTUtils.adapterActionListener(callback));
         } catch (MqttException e) {
-            callback.onFailure(e);
+            if (callback != null) {
+                callback.onFailure(e);
+            }
         }
     }
 
@@ -209,11 +218,20 @@ public class PahoMqttV3Impl implements IMQTT {
         this.messageReceiver = messageReceiver;
     }
 
+    @Override
+    public void close() throws Exception {
+        //释放资源
+        messageReceiver = null;
+        //强制断开连接
+        mqttAsyncClient.close(true);
+    }
+
 
     @Override
     public String toString() {
         return "PahoMqttV3Impl{client=" + mqttAsyncClient.getClientId() + ",activeSub=" + activeSubs + "}";
     }
+
 
     private final MqttCallbackExtended mMqttCallback = new MqttCallbackExtended() {
 

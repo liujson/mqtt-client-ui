@@ -4,6 +4,9 @@ import androidx.annotation.NonNull;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
+import com.daimajia.swipe.SwipeLayout;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,12 +29,46 @@ public class ConnectionProfilesAdapter extends BaseQuickAdapter<ConnectionProfil
 
     @Override
     protected void convert(@NotNull BaseViewHolder holder, ItemProfile itemProfile) {
+        SwipeLayout swipeLayout = holder.findView(R.id.swipe);
         holder.setText(R.id.tv_profile_name, itemProfile.profileName);
         holder.setText(R.id.tv_broker, itemProfile.brokerAddress + ":" + itemProfile.brokerPort);
+
+        swipeLayout.addSwipeListener(new SwipeLayout.SwipeListener() {
+            @Override
+            public void onStartOpen(SwipeLayout layout) {
+
+            }
+
+            @Override
+            public void onOpen(SwipeLayout layout) {
+                YoYo.with(Techniques.Tada).duration(500).delay(100).playOn(layout.findViewById(R.id.rl_actions));
+            }
+
+            @Override
+            public void onStartClose(SwipeLayout layout) {
+
+            }
+
+            @Override
+            public void onClose(SwipeLayout layout) {
+
+            }
+
+            @Override
+            public void onUpdate(SwipeLayout layout, int leftOffset, int topOffset) {
+
+            }
+
+            @Override
+            public void onHandRelease(SwipeLayout layout, float xvel, float yvel) {
+
+            }
+        });
     }
 
     public static class ItemProfile {
 
+        public int id;
         public String profileName;
         public String brokerAddress;
         public int brokerPort;
@@ -39,6 +76,7 @@ public class ConnectionProfilesAdapter extends BaseQuickAdapter<ConnectionProfil
         public static ItemProfile covert(@NonNull ConnectionProfile connectionProfile) {
             ItemProfile itemProfile = new ItemProfile();
             itemProfile.profileName = connectionProfile.profileName;
+            itemProfile.id = connectionProfile.id;
             itemProfile.brokerAddress = connectionProfile.brokerAddress;
             itemProfile.brokerPort = connectionProfile.brokerPort;
             return itemProfile;

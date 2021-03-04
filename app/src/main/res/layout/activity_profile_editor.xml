@@ -183,8 +183,8 @@
                     android:layout_below="@id/linear_6"
                     android:layout_centerHorizontal="true"
                     android:layout_marginTop="20dp"
-                    android:onClick="@{v->vm.applyProfile()}"
                     android:background="@drawable/selector_btn_blue_style"
+                    android:onClick="@{v->vm.applyProfile()}"
                     android:text="Apply"
                     android:textAllCaps="false"
                     android:textColor="#FFFFFF" />

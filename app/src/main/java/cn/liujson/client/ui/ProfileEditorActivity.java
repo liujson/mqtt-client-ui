@@ -7,8 +7,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import java.io.Serializable;
+
 import cn.liujson.client.R;
 import cn.liujson.client.databinding.ActivityProfileEditorBinding;
+import cn.liujson.client.ui.db.entities.ConnectionProfile;
+import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.ProfileEditorViewModel;
 
 /**
@@ -19,17 +23,39 @@ public class ProfileEditorActivity extends AppCompatActivity implements ProfileE
     ActivityProfileEditorBinding viewDataBinding;
     ProfileEditorViewModel viewModel;
 
+    public static final String KEY_MODE = "key_mode";
+    public static final String KEY_PROFILE_ID = "key_profile_id";
+
+    private Mode mode = Mode.NEW;
+    private long profileID = 0;
+
+    public enum Mode implements Serializable {
+        EDIT,
+        NEW,
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewDataBinding = DataBindingUtil.setContentView(this, R.layout.activity_profile_editor);
-        viewModel = new ProfileEditorViewModel(getLifecycle());
+
+        final Intent intent = getIntent();
+        if (intent != null) {
+            mode = (Mode) intent.getSerializableExtra(KEY_MODE);
+            profileID = intent.getLongExtra(KEY_PROFILE_ID, 0);
+        }
+
+        viewModel = new ProfileEditorViewModel(getLifecycle(), mode, profileID);
         viewModel.setNavigator(this);
 
         viewDataBinding.setVm(viewModel);
         viewDataBinding.btnBack.setOnClickListener(v -> {
             onBackPressed();
         });
+
+        if (mode == Mode.EDIT && profileID > 0) {
+            viewModel.queryProfileById(profileID);
+        }
     }
 
 
@@ -60,8 +86,27 @@ public class ProfileEditorActivity extends AppCompatActivity implements ProfileE
 
     @Override
     public void applySuccess() {
-        startActivity(new Intent(this, ConnectionProfilesActivity.class));
+        setResult(RESULT_OK);
         finish();
+    }
+
+    @Override
+    public void onEditingQueryProfile(ConnectionProfile connectionProfile) {
+        //回显到控件上
+        if (viewModel != null) {
+            viewModel.fieldProfileName.set(connectionProfile.profileName);
+            viewModel.fieldBrokerAddress.set(connectionProfile.brokerAddress);
+            viewModel.fieldBrokerPort.set(String.valueOf(connectionProfile.brokerPort));
+            viewModel.fieldClientID.set(connectionProfile.clientID);
+            viewModel.fieldCleanSession.set(connectionProfile.cleanSession);
+            viewModel.fieldUsername.set(connectionProfile.username);
+            viewModel.fieldPassword.set(connectionProfile.password);
+        }
+    }
+
+    @Override
+    public void onEditingQueryProfileFail(Throwable throwable) {
+        ToastHelper.showToast(this, "Sorry,operation failure.");
     }
 
 

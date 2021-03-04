@@ -1,10 +1,15 @@
 package cn.liujson.lib.mqtt.util;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
+
+import java.util.ArrayList;
 
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
 import cn.liujson.lib.mqtt.api.QoS;
@@ -125,4 +130,26 @@ public class MQTTUtils {
         Log.e(tag, message);
     }
 
+
+    /**
+     * 判断服务是否在运行
+     * @param context
+     * @param serviceName
+     * @return
+     */
+    public static boolean isServiceRunning(Context context, String serviceName) {
+        if (TextUtils.isEmpty(serviceName)) {
+            return false;
+        }
+        ActivityManager myManager = (ActivityManager) context
+                .getSystemService(Context.ACTIVITY_SERVICE);
+        ArrayList<ActivityManager.RunningServiceInfo> runningService = (ArrayList<ActivityManager.RunningServiceInfo>) myManager
+                .getRunningServices(50);
+        for (int i = 0; i < runningService.size(); i++) {
+            if (runningService.get(i).service.getClassName().equals(serviceName)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

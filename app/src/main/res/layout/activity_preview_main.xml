@@ -55,13 +55,24 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="6dp">
 
-                <EditText
+                <com.jaredrummler.materialspinner.MaterialSpinner
+                    android:id="@+id/spinner"
                     android:layout_width="260dp"
                     android:layout_height="30dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="@drawable/selector_input_bg" />
+                    android:fontFamily="sans-serif-condensed"
+                    app:ms_arrow_tint="#4e9be7"
+                    app:ms_background_selector="@drawable/selector_spinner_item_bg"
+                    app:ms_dropdown_max_height="260dp"
+                    app:ms_padding_bottom="5dp"
+                    app:ms_padding_left="8dp"
+                    app:ms_padding_top="5dp"
+                    app:ms_popup_padding_bottom="5dp"
+                    app:ms_popup_padding_left="8dp"
+                    app:ms_popup_padding_top="5dp"
+                    app:ms_text_color="@color/color_333333" />
 
                 <Button
+                    android:id="@+id/btn_connect"
                     android:layout_width="100dp"
                     android:layout_height="30dp"
                     android:layout_gravity="center_vertical"
@@ -105,7 +116,7 @@
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="15dp"
                 android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"/>
+                android:layout_marginBottom="5dp" />
         </LinearLayout>
 
         <View

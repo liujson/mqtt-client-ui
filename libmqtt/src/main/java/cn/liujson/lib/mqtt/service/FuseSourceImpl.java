@@ -18,12 +18,15 @@ import java.util.Objects;
 
 import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
+import cn.liujson.lib.mqtt.api.IMQTTConnectionBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.util.MQTTUtils;
 
 /**
  * FuseSource MqttClient 自带重连机制
+ *
  * @author liujson
  * @date 2021/2/22.
  */
@@ -36,33 +39,37 @@ public class FuseSourceImpl implements IMQTT {
 
     private IMQTTMessageReceiver messageReceiver;
 
-    public FuseSourceImpl(final MqttBuilder builder) throws URISyntaxException {
+    public FuseSourceImpl(final IMQTTConnectionBuilder builder) throws WrapMQTTException {
         Objects.requireNonNull(builder.getHost());
-        mqtt = new MQTT();
-        mqtt.setHost(builder.getHost());
-        mqtt.setCleanSession(builder.isCleanSession());
-        if (!TextUtils.isEmpty(builder.getClientId())) {
-            mqtt.setClientId(builder.getClientId());
-        }
-        mqtt.setKeepAlive((short) builder.getKeepAlive());
-        if (!TextUtils.isEmpty(builder.getUserName())) {
-            mqtt.setUserName(builder.getUserName());
-        }
-        if (!TextUtils.isEmpty(builder.getPassword())) {
-            mqtt.setPassword(builder.getPassword());
-        }
-        mqtt.setWillQos(MQTTUtils.convertQoS(builder.getWillQos()));
-        if (!TextUtils.isEmpty(builder.getWillMessage())) {
-            mqtt.setWillMessage(builder.getWillMessage());
-        }
-        if (!TextUtils.isEmpty(builder.getWillTopic())) {
-            mqtt.setWillTopic(builder.getWillTopic());
-        }
-        //设置追踪者
+        try {
+            mqtt = new MQTT();
+            mqtt.setHost(builder.getHost());
+            mqtt.setCleanSession(builder.isCleanSession());
+            if (!TextUtils.isEmpty(builder.getClientId())) {
+                mqtt.setClientId(builder.getClientId());
+            }
+            mqtt.setKeepAlive((short) builder.getKeepAlive());
+            if (!TextUtils.isEmpty(builder.getUserName())) {
+                mqtt.setUserName(builder.getUserName());
+            }
+            if (!TextUtils.isEmpty(builder.getPassword())) {
+                mqtt.setPassword(builder.getPassword());
+            }
+            mqtt.setWillQos(MQTTUtils.convertQoS(builder.getWillQos()));
+            if (!TextUtils.isEmpty(builder.getWillMessage())) {
+                mqtt.setWillMessage(builder.getWillMessage());
+            }
+            if (!TextUtils.isEmpty(builder.getWillTopic())) {
+                mqtt.setWillTopic(builder.getWillTopic());
+            }
+            //设置追踪者
 //        mqtt.setTracer(new FuseSourceTracer());
-        //异步不堵塞模式
-        callbackConnection = mqtt.callbackConnection();
-        callbackConnection.listener(mExtendedListener);
+            //异步不堵塞模式
+            callbackConnection = mqtt.callbackConnection();
+            callbackConnection.listener(mExtendedListener);
+        } catch (URISyntaxException e) {
+            throw new WrapMQTTException(e);
+        }
     }
 
     /**
@@ -139,6 +146,12 @@ public class FuseSourceImpl implements IMQTT {
     @Override
     public void setMessageReceiver(IMQTTMessageReceiver messageReceiver) {
         this.messageReceiver = messageReceiver;
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.messageReceiver = null;
+        callbackConnection.kill(null);
     }
 
     private ExtendedListener mExtendedListener = new ExtendedListener() {

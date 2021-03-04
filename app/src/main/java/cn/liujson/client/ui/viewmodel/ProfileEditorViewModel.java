@@ -5,6 +5,9 @@ import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
 
+import java.util.concurrent.TimeUnit;
+
+import cn.liujson.client.ui.ProfileEditorActivity;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.db.DatabaseHelper;
@@ -31,10 +34,15 @@ public class ProfileEditorViewModel extends BaseViewModel {
 
     private Navigator navigator;
 
-    Disposable insertProfileDisposable;
+    private Disposable insertProfileDisposable, queryProfileByIdDisposable, updateProfileDisposable;
 
-    public ProfileEditorViewModel(Lifecycle mLifecycle) {
+    private final ProfileEditorActivity.Mode openMode;
+    private final long profileID;
+
+    public ProfileEditorViewModel(Lifecycle mLifecycle, ProfileEditorActivity.Mode openMode, long profileID) {
         super(mLifecycle);
+        this.openMode = openMode;
+        this.profileID = profileID;
         initNewProfile();
     }
 
@@ -65,6 +73,7 @@ public class ProfileEditorViewModel extends BaseViewModel {
             return;
         }
         final ConnectionProfile connectionProfile = new ConnectionProfile();
+        connectionProfile.id = (int) profileID;
         connectionProfile.profileName = fieldProfileName.get();
         connectionProfile.brokerAddress = fieldBrokerAddress.get();
         connectionProfile.brokerPort = Integer.parseInt(fieldBrokerPort.get());
@@ -72,6 +81,18 @@ public class ProfileEditorViewModel extends BaseViewModel {
         connectionProfile.username = fieldUsername.get();
         connectionProfile.password = fieldPassword.get();
         connectionProfile.cleanSession = fieldCleanSession.get();
+
+        if (openMode == ProfileEditorActivity.Mode.NEW) {
+            save(connectionProfile);
+        } else if (openMode == ProfileEditorActivity.Mode.EDIT) {
+            update(connectionProfile);
+        } else {
+            throw new RuntimeException("error data openMode = " + openMode);
+        }
+    }
+
+
+    private final void save(ConnectionProfile connectionProfile) {
         if (insertProfileDisposable != null) {
             insertProfileDisposable.dispose();
             insertProfileDisposable = null;
@@ -83,19 +104,78 @@ public class ProfileEditorViewModel extends BaseViewModel {
                 .insertProfile(connectionProfile)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(()->{
-                    insertProfileDisposable = null;
-                    navigator.applySuccess();
-                },
-                throwable -> {
-                    insertProfileDisposable = null;
-                    ToastHelper.showToast(CustomApplication.getApp(), "insert connection profiles failure.");
+                .subscribe(() -> {
+                            insertProfileDisposable = null;
+                            navigator.applySuccess();
+                        },
+                        throwable -> {
+                            insertProfileDisposable = null;
+                            ToastHelper.showToast(CustomApplication.getApp(), "insert connection profiles failure.");
+                        });
+    }
+
+    private final void update(ConnectionProfile connectionProfile) {
+        if (updateProfileDisposable != null) {
+            updateProfileDisposable.dispose();
+            updateProfileDisposable = null;
+        }
+        //插入数据
+        updateProfileDisposable = DatabaseHelper
+                .getInstance()
+                .connectionProfileDao()
+                .updateProfile(connectionProfile)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                            updateProfileDisposable = null;
+                            navigator.applySuccess();
+                        },
+                        throwable -> {
+                            updateProfileDisposable = null;
+                            ToastHelper.showToast(CustomApplication.getApp(), "update connection profiles failure.");
+                        });
+    }
+
+    /**
+     * 通过ID查询
+     *
+     * @param id
+     * @return
+     */
+    public final void queryProfileById(long id) {
+        queryProfileByIdDisposable = DatabaseHelper
+                .getInstance()
+                .connectionProfileDao()
+                .queryProfileById((int) id)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .timeout(10, TimeUnit.SECONDS)
+                .subscribe(data -> {
+                    if (navigator != null) {
+                        navigator.onEditingQueryProfile(data);
+                    }
+                }, throwable -> {
+                    if (navigator != null) {
+                        navigator.onEditingQueryProfileFail(throwable);
+                    }
                 });
     }
 
     @Override
     public void onRelease() {
         navigator = null;
+        if (queryProfileByIdDisposable != null) {
+            queryProfileByIdDisposable.dispose();
+            queryProfileByIdDisposable = null;
+        }
+        if (insertProfileDisposable != null) {
+            insertProfileDisposable.dispose();
+            insertProfileDisposable = null;
+        }
+        if (updateProfileDisposable != null) {
+            updateProfileDisposable.dispose();
+            updateProfileDisposable = null;
+        }
     }
 
 
@@ -111,5 +191,15 @@ public class ProfileEditorViewModel extends BaseViewModel {
          * 应用成功
          */
         void applySuccess();
+
+        /**
+         * 编辑时查询参数
+         */
+        void onEditingQueryProfile(ConnectionProfile connectionProfile);
+
+        /**
+         * 编辑时查询参数错误
+         */
+        void onEditingQueryProfileFail(Throwable throwable);
     }
 }
