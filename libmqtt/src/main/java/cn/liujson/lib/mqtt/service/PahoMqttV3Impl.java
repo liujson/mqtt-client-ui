@@ -1,5 +1,7 @@
 package cn.liujson.lib.mqtt.service;
 
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.text.TextUtils;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -7,23 +9,19 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.fusesource.hawtbuf.UTF8Buffer;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
 
 import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
-import cn.liujson.lib.mqtt.api.IMQTTConnectionBuilder;
+import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
-import cn.liujson.lib.mqtt.api.IReconnectionStrategy;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.util.MQTTUtils;
@@ -42,7 +40,7 @@ public class PahoMqttV3Impl implements IMQTT {
     /**
      * 连接超时时间
      */
-    public static final int CONNECTION_TIMEOUT = 12;
+    public static final int CONNECTION_TIMEOUT = 20;
 
     private final MqttAsyncClient mqttAsyncClient;
     private final MqttConnectOptions connOpts;
@@ -56,7 +54,7 @@ public class PahoMqttV3Impl implements IMQTT {
      */
     private final HashMap<String, QoS> activeSubs = new HashMap<>();
 
-    public PahoMqttV3Impl(final IMQTTConnectionBuilder builder) throws WrapMQTTException {
+    public PahoMqttV3Impl(final IMQTTBuilder builder) throws WrapMQTTException {
         Objects.requireNonNull(builder.getHost());
         String clientId = builder.getClientId();
         //如果clientId是空或者null，生成一个随机的clientId
@@ -105,11 +103,27 @@ public class PahoMqttV3Impl implements IMQTT {
     @Override
     public void connect(IMQTTCallback<Void> callback) {
         try {
-            final LoginHandler loginHandler = new LoginHandler(callback);
-            mqttAsyncClient.connect(connOpts, null, loginHandler);
+            mqttAsyncClient.connect(connOpts, null, new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    if (callback != null) {
+                        callback.onSuccess(null);
+                    }
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    //第一次重连就出错了，很可能是配置出了问题
+                    if (callback != null) {
+                        callback.onFailure(exception);
+                    }
+                }
+            });
         } catch (MqttException e) {
             //第一次重连就出错了，很可能是配置出了问题
-            callback.onFailure(new FirstConnectMqttException(e));
+            if (callback != null) {
+                callback.onFailure(e);
+            }
         }
     }
 
@@ -146,7 +160,9 @@ public class PahoMqttV3Impl implements IMQTT {
                         }
                     });
         } catch (MqttException e) {
-            callback.onFailure(e);
+            if (callback != null) {
+                callback.onFailure(e);
+            }
         }
     }
 
@@ -182,7 +198,9 @@ public class PahoMqttV3Impl implements IMQTT {
                         }
                     });
         } catch (MqttException e) {
-            callback.onFailure(e);
+            if (callback != null) {
+                callback.onFailure(e);
+            }
         }
     }
 
@@ -207,9 +225,25 @@ public class PahoMqttV3Impl implements IMQTT {
     public void disconnect(IMQTTCallback<Void> callback) {
         try {
             mqttAsyncClient.disconnect(null,
-                    MQTTUtils.adapterActionListener(callback));
+                    new IMqttActionListener() {
+                        @Override
+                        public void onSuccess(IMqttToken asyncActionToken) {
+                            if (callback != null) {
+                                callback.onSuccess(null);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                            if (callback != null) {
+                                callback.onFailure(exception);
+                            }
+                        }
+                    });
         } catch (MqttException e) {
-            callback.onFailure(e);
+            if (callback != null) {
+                callback.onFailure(e);
+            }
         }
     }
 
@@ -219,24 +253,38 @@ public class PahoMqttV3Impl implements IMQTT {
     }
 
     @Override
-    public void close() throws Exception {
+    public void disconnectForcibly() throws Exception {
         //释放资源
         messageReceiver = null;
+        //先尝试断开连接
+        mqttAsyncClient.disconnect();
         //强制断开连接
-        mqttAsyncClient.close(true);
+        mqttAsyncClient.disconnectForcibly();
+        //终止重连任务
+        stopRetryTask();
     }
 
 
     @Override
     public String toString() {
-        return "PahoMqttV3Impl{client=" + mqttAsyncClient.getClientId() + ",activeSub=" + activeSubs + "}";
+        return "PahoMqttV3Impl{" +
+                "client=" + mqttAsyncClient.getClientId() + "," +
+                "serverUri=" + mqttAsyncClient.getServerURI() + "," +
+                "activeSub=" + activeSubs + "}";
     }
 
 
     private final MqttCallbackExtended mMqttCallback = new MqttCallbackExtended() {
 
+        /**
+         * setAutomaticReconnect为True的时候
+         * 它是在丢失重连成功后会触发该方法
+         * @param reconnect
+         * @param serverURI
+         */
         @Override
         public void connectComplete(boolean reconnect, String serverURI) {
+            MQTTUtils.logD(TAG, "connectComplete,reconnect:" + reconnect);
             if (reconnect) {
                 //重连
                 return;
@@ -244,14 +292,20 @@ public class PahoMqttV3Impl implements IMQTT {
             //第一次连接
         }
 
+        /**
+         *  connectionLost 是在连接已经连上且丢失后走这里
+         *  掉线之后会在消息接收线程上回调
+         * @param cause
+         */
         @Override
         public void connectionLost(Throwable cause) {
             //失去连接
             //用户主动关闭和其他原因失去连接会走此方法，连接将被关闭,此Client将变得不可用，意味着生命周期的结束
             MQTTUtils.logD(TAG, "connectionLost:" + cause.toString());
-
-            //需要自己重写重连机制
+            //启动断线重连任务
+            startRetryTask();
         }
+
 
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
@@ -276,43 +330,56 @@ public class PahoMqttV3Impl implements IMQTT {
     };
 
 
-    private static class LoginHandler implements IReconnectionStrategy, IMqttActionListener {
-        final IMQTTCallback<Void> cb;
-
-        public LoginHandler(IMQTTCallback<Void> cb) {
-            this.cb = cb;
-        }
-
-
-        @Override
-        public void onSuccess(IMqttToken asyncActionToken) {
-            //第一次连接成功
-            if (this.cb != null) {
-                this.cb.onSuccess(null);
+    /**
+     * 重连任务
+     */
+    private final Runnable retryRunning = () -> {
+        connect(new IMQTTCallback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+                MQTTUtils.logD(TAG, "IReconnectionStrategy reconnect success.");
             }
-        }
 
-        @Override
-        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-            //第一次连接失败了
-            if (this.cb != null) {
-                this.cb.onFailure(exception);
+            @Override
+            public void onFailure(Throwable value) {
+                MQTTUtils.logE(TAG, "IReconnectionStrategy reconnect failure.");
+                //继续重试
+                if (mHandle != null) {
+                    mHandle.postDelayed(retryRunning, calculateRetryTime());
+                }
             }
-        }
+        });
+    };
 
-        @Override
-        public void reconnect() {
+    private HandlerThread retryHandlerThread;
+    private Handler mHandle;
 
+    /**
+     * 启动重连定时任务
+     */
+    private void startRetryTask() {
+        if (retryHandlerThread == null) {
+            retryHandlerThread = new HandlerThread("PahoRetry");
+            retryHandlerThread.start();
+            mHandle = new Handler(retryHandlerThread.getLooper());
         }
+        mHandle.postDelayed(retryRunning, calculateRetryTime());
+    }
+
+
+    private void stopRetryTask() {
+        mHandle.removeCallbacks(retryRunning);
+        retryHandlerThread.quitSafely();
+        retryHandlerThread = null;
+        mHandle = null;
     }
 
     /**
-     * 首次进行连接异常了
+     * 计算下次重连需要等待的时间
+     *
+     * @return
      */
-    public static class FirstConnectMqttException extends MqttException {
-
-        public FirstConnectMqttException(MqttException cause) {
-            super(cause);
-        }
+    private long calculateRetryTime() {
+        return 3000;
     }
 }

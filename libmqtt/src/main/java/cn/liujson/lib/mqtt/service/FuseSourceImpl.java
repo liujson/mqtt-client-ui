@@ -18,7 +18,7 @@ import java.util.Objects;
 
 import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
-import cn.liujson.lib.mqtt.api.IMQTTConnectionBuilder;
+import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
@@ -39,7 +39,7 @@ public class FuseSourceImpl implements IMQTT {
 
     private IMQTTMessageReceiver messageReceiver;
 
-    public FuseSourceImpl(final IMQTTConnectionBuilder builder) throws WrapMQTTException {
+    public FuseSourceImpl(final IMQTTBuilder builder) throws WrapMQTTException {
         Objects.requireNonNull(builder.getHost());
         try {
             mqtt = new MQTT();
@@ -63,7 +63,7 @@ public class FuseSourceImpl implements IMQTT {
                 mqtt.setWillTopic(builder.getWillTopic());
             }
             //设置追踪者
-//        mqtt.setTracer(new FuseSourceTracer());
+            mqtt.setTracer(new FuseSourceTracer());
             //异步不堵塞模式
             callbackConnection = mqtt.callbackConnection();
             callbackConnection.listener(mExtendedListener);
@@ -149,10 +149,11 @@ public class FuseSourceImpl implements IMQTT {
     }
 
     @Override
-    public void close() throws Exception {
+    public void disconnectForcibly() throws Exception {
         this.messageReceiver = null;
         callbackConnection.kill(null);
     }
+
 
     private ExtendedListener mExtendedListener = new ExtendedListener() {
 

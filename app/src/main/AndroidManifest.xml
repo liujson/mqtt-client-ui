@@ -12,11 +12,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Refactor">
+        <activity android:name=".ui.TestActivity"></activity>
         <activity
-            android:name="cn.liujson.client.ui.ConnectionProfilesActivity"
+            android:name=".ui.ConnectionProfilesActivity"
             android:launchMode="singleTask" />
-        <activity android:name="cn.liujson.client.ui.ProfileEditorActivity" />
-        <activity android:name="cn.liujson.client.ui.PreviewMainActivity">
+        <activity android:name=".ui.ProfileEditorActivity" />
+        <activity android:name=".ui.PreviewMainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

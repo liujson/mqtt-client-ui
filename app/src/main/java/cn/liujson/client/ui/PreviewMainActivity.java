@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
 
@@ -41,6 +42,7 @@ import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.fragments.LogPreviewFragment;
 import cn.liujson.client.ui.fragments.PublishFragment;
 import cn.liujson.client.ui.fragments.TopicsFragment;
+import cn.liujson.client.ui.service.MqttServiceManager;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
 import cn.liujson.lib.mqtt.api.QoS;
@@ -53,6 +55,7 @@ import io.reactivex.schedulers.Schedulers;
 
 
 public class PreviewMainActivity extends AppCompatActivity {
+    private static final String TAG = "PreviewMainActivity";
 
     public static final String[] mTitleList = new String[]{"Publish", "Topics", "Log"};
 
@@ -85,26 +88,26 @@ public class PreviewMainActivity extends AppCompatActivity {
             if (oriDataList.size() > selectedIndex) {
                 final ConnectionProfile connectionProfile = oriDataList.get(selectedIndex);
                 MqttBuilder builder = new MqttBuilder()
-                        .clientId(connectionProfile.clientID)
                         .cleanSession(connectionProfile.cleanSession)
                         .host("tcp://" + connectionProfile.brokerAddress + ":" + connectionProfile.brokerPort);
 
                 try {
-                    CustomApplication.getTestBinder().setup(builder);
-                    CustomApplication.getTestBinder().connect(new IMQTTCallback() {
+                    MqttServiceManager.getInstance().getServiceBinder().setup(builder);
+                    MqttServiceManager.getInstance().getServiceBinder().connect(new IMQTTCallback() {
                         @Override
                         public void onSuccess(Object value) {
                             Observable.interval(1, TimeUnit.SECONDS)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe(time -> {
-                                        CustomApplication.getTestBinder()
+                                        MqttServiceManager.getInstance().getServiceBinder()
                                                 .publish("CIIIA", String.valueOf(count), QoS.AT_MOST_ONCE, false, null);
                                     });
+                            Log.d(TAG, "连接成功");
                         }
 
                         @Override
                         public void onFailure(Throwable value) {
-
+                            Log.d(TAG, "连接失败：" + value.toString());
                         }
                     });
                 } catch (WrapMQTTException e) {

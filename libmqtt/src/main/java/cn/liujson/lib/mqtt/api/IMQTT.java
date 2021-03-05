@@ -2,6 +2,7 @@ package cn.liujson.lib.mqtt.api;
 
 /**
  * MQTT 操作抽象接口
+ *
  * @author liujson
  * @date 2021/2/22.
  */
@@ -26,8 +27,9 @@ public interface IMQTT {
     void setMessageReceiver(IMQTTMessageReceiver messageReceiver);
 
     /**
-     * 强制关闭连接
+     * 强制端口连接(Paho 实现会在调用它的线程上执行)
+     *
      * @throws Exception exception
      */
-    void close() throws Exception;
+    void disconnectForcibly() throws Exception;
 }

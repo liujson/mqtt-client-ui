@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
-import cn.liujson.lib.mqtt.api.IMQTTConnectionBuilder;
+import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
@@ -34,10 +34,6 @@ public class ConnectionService extends Service {
      * MQTT 连接操作对象
      */
     IMQTT imqtt;
-    /**
-     * 连接 Builder
-     */
-    IMQTTConnectionBuilder connectionBuilder;
 
     final ReentrantLock lock = new ReentrantLock();
 
@@ -68,37 +64,46 @@ public class ConnectionService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "==onDestroy==");
+        if (imqtt != null) {
+            imqtt.disconnect(new IMQTTCallback<Void>() {
+                @Override
+                public void onSuccess(Void value) {
+                    try {
+                        imqtt.disconnectForcibly();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable value) {
+                    try {
+                        imqtt.disconnectForcibly();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
     }
 
 
     /**
      * 安装 MQTT 到此服务
      */
-    public void setup(IMQTTConnectionBuilder builder) throws WrapMQTTException {
-        if (lock.tryLock()) {
-            try {
-                release();
-                this.imqtt = new PahoMqttV3Impl(builder);
-                this.connectionBuilder = builder;
-            } finally {
-                lock.unlock();
+    public void setup(IMQTTBuilder builder) throws WrapMQTTException {
+        if (this.imqtt == null) {
+            if (lock.tryLock()) {
+                try {
+                    this.imqtt = new PahoMqttV3Impl(builder);
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                throw new WrapMQTTException("尝试安装IMQTT失败，请不要频繁调用此方法");
             }
         } else {
-            throw new WrapMQTTException("尝试绑定IMQTT失败，请不要频繁调用");
-        }
-    }
-
-
-    /**
-     * 释放资源（端断开连接等等）
-     */
-    public void release() {
-        if(imqtt!=null) {
-            try {
-                imqtt.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            throw new WrapMQTTException("已经安装IMQTT，不要重复绑定");
         }
     }
 
@@ -107,10 +112,9 @@ public class ConnectionService extends Service {
      */
     public class ConnectionServiceBinder extends Binder implements IMQTT {
 
-        public void setup(IMQTTConnectionBuilder builder) throws WrapMQTTException {
+        public void setup(IMQTTBuilder builder) throws WrapMQTTException {
             ConnectionService.this.setup(builder);
         }
-
 
         @Override
         public void connect(IMQTTCallback<Void> callback) {
@@ -157,9 +161,14 @@ public class ConnectionService extends Service {
             imqtt.setMessageReceiver(messageReceiver);
         }
 
+        /**
+         * 此方法会堵塞UI
+         *
+         * @throws Exception
+         */
         @Override
-        public void close() throws Exception {
-            imqtt.close();
+        public void disconnectForcibly() throws Exception {
+            imqtt.disconnectForcibly();
         }
     }
 

@@ -1,6 +1,6 @@
 package cn.liujson.lib.mqtt.service;
 
-import cn.liujson.lib.mqtt.api.IMQTTConnectionBuilder;
+import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.QoS;
 
 /**
@@ -9,7 +9,7 @@ import cn.liujson.lib.mqtt.api.QoS;
  * @author liujson
  * @date 2021/2/21.
  */
-public class MqttBuilder implements IMQTTConnectionBuilder {
+public class MqttBuilder implements IMQTTBuilder {
     /**
      * host为主机名和端口
      */

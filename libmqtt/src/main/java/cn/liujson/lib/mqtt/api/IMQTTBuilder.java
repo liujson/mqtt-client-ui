@@ -6,7 +6,7 @@ package cn.liujson.lib.mqtt.api;
  * @author liujson
  * @date 2021/2/21.
  */
-public interface IMQTTConnectionBuilder {
+public interface IMQTTBuilder {
     /**
      * Host 主机地址 例如: tcp://192.168.0.193:1883
      * @return
