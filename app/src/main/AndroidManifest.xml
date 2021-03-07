@@ -14,10 +14,10 @@
         android:theme="@style/Theme.Refactor">
         <activity android:name=".ui.TestActivity"></activity>
         <activity
-            android:name=".ui.ConnectionProfilesActivity"
+            android:name=".ui.ConnectionProfilesActivity"  android:screenOrientation="landscape"
             android:launchMode="singleTask" />
-        <activity android:name=".ui.ProfileEditorActivity" />
-        <activity android:name=".ui.PreviewMainActivity">
+        <activity android:name=".ui.ProfileEditorActivity"  android:screenOrientation="landscape"/>
+        <activity android:name=".ui.PreviewMainActivity" android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

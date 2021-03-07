@@ -1,115 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#ececec"
-    android:padding="10dp"
-    tools:context=".ui.fragments.PublishFragment">
+    android:layout_height="wrap_content">
 
-    <EditText
-        android:id="@+id/et_publish_input"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="320dp"
-        android:layout_margin="5dp"
-        android:background="@drawable/selector_input_bg"
-        android:gravity="left|top"
-        android:padding="5dp" />
+        android:layout_height="match_parent"
+        android:background="#ececec"
+        android:padding="10dp"
+        tools:context=".ui.fragments.PublishFragment">
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chip_group_topic_qos"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/et_publish_input"
-        android:orientation="horizontal"
-        app:checkedChip="@id/chip_qos0"
-        app:chipSpacingHorizontal="10dp"
-        app:singleSelection="true">
+        <EditText
+            android:id="@+id/et_publish_input"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/selector_input_bg"
+            android:gravity="left|top"
+            android:padding="5dp" />
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_qos0"
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_topic_qos"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checkable="true"
-            android:fontFamily="sans-serif-condensed"
-            android:text="QoS 0"
-            android:textAllCaps="false"
-            android:textColor="#323232"
-            android:textSize="12sp"
-            app:checkedIconTint="#2c63aa"
-            app:chipBackgroundColor="#F2F2F2"
-            app:chipStrokeColor="#2c639a"
-            app:chipStrokeWidth="0.8dp"
-            />
+            android:layout_below="@id/et_publish_input"
+            android:orientation="horizontal"
+            app:checkedChip="@id/chip_qos0"
+            app:chipSpacingHorizontal="10dp"
+            app:singleSelection="true">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_qos1"
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_qos0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:fontFamily="sans-serif-condensed"
+                android:text="QoS 0"
+                android:textAllCaps="false"
+                android:textColor="#323232"
+                android:textSize="12sp"
+                app:checkedIconTint="#2c63aa"
+                app:chipBackgroundColor="#F2F2F2"
+                app:chipStrokeColor="#2c639a"
+                app:chipStrokeWidth="0.8dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_qos1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:fontFamily="sans-serif-condensed"
+                android:text="QoS 1"
+                android:textAllCaps="false"
+                android:textColor="#323232"
+                android:textSize="12sp"
+                app:checkedIconTint="#2c63aa"
+                app:chipBackgroundColor="#F2F2F2"
+                app:chipStrokeColor="#2c639a"
+                app:chipStrokeWidth="0.8dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_qos2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:text="QoS 2"
+                android:textAllCaps="false"
+                android:textColor="#323232"
+                android:textSize="12sp"
+                app:checkedIconTint="#2c63aa"
+                app:chipBackgroundColor="#F2F2F2"
+                app:chipStrokeColor="#2c639a"
+                app:chipStrokeWidth="0.8dp" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_topic_retained"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checkable="true"
-            android:fontFamily="sans-serif-condensed"
-            android:text="QoS 1"
+            android:layout_below="@id/et_publish_input"
+            android:layout_toEndOf="@id/chip_group_topic_qos"
+            android:orientation="horizontal"
+            app:checkedChip="@id/chip_qos0"
+            app:chipSpacingHorizontal="10dp"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/cb_retained"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:checkable="true"
+                android:text="Retained"
+                android:textAllCaps="false"
+                android:textColor="#323232"
+                android:textSize="12sp"
+                app:checkedIconTint="#2c63aa"
+                app:chipBackgroundColor="#F2F2F2"
+                app:chipStrokeColor="#2c639a"
+                app:chipStrokeWidth="0.8dp" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <Button
+            android:id="@+id/btn_publish"
+            android:layout_width="100dp"
+            android:layout_height="32dp"
+            android:layout_below="@id/chip_group_topic_retained"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/selector_btn_blue_style"
+            android:letterSpacing="0.08"
+            android:text="Publish"
             android:textAllCaps="false"
-            android:textColor="#323232"
-            android:textSize="12sp"
-            app:checkedIconTint="#2c63aa"
-            app:chipBackgroundColor="#F2F2F2"
-            app:chipStrokeColor="#2c639a"
-            app:chipStrokeWidth="0.8dp" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_qos2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checkable="true"
-            android:text="QoS 2"
-            android:textAllCaps="false"
-            android:textColor="#323232"
-            android:textSize="12sp"
-            app:checkedIconTint="#2c63aa"
-            app:chipBackgroundColor="#F2F2F2"
-            app:chipStrokeColor="#2c639a"
-            app:chipStrokeWidth="0.8dp" />
-    </com.google.android.material.chip.ChipGroup>
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chip_group_topic_retained"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/et_publish_input"
-        android:layout_toEndOf="@id/chip_group_topic_qos"
-        android:orientation="horizontal"
-        app:checkedChip="@id/chip_qos0"
-        app:chipSpacingHorizontal="10dp"
-        app:singleSelection="false">
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/cb_retained"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:text="Retained"
-            android:textAllCaps="false"
-            android:checkable="true"
-            app:checkedIconTint="#2c63aa"
-            android:textColor="#323232"
-            android:textSize="12sp"
-            app:chipBackgroundColor="#F2F2F2"
-            app:chipStrokeColor="#2c639a"
-            app:chipStrokeWidth="0.8dp" />
-    </com.google.android.material.chip.ChipGroup>
-
-    <Button
-        android:id="@+id/btn_publish"
-        android:layout_width="100dp"
-        android:layout_height="32dp"
-        android:layout_below="@id/chip_group_topic_retained"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="10dp"
-        android:background="@drawable/selector_btn_blue_style"
-        android:letterSpacing="0.08"
-        android:text="Publish"
-        android:textAllCaps="false"
-        android:textColor="#F0F0F0" />
-
-</RelativeLayout>
+            android:textColor="#F0F0F0" />
+    </RelativeLayout>
+</ScrollView>
