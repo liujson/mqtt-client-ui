@@ -18,18 +18,18 @@ import androidx.annotation.Nullable;
  * @author liujson
  * @date 2021/3/5.
  */
-public class MqttSM {
+public class MqttMgr {
 
-    private MqttSM() {
+    private MqttMgr() {
 
     }
 
-    public static MqttSM instance() {
+    public static MqttMgr instance() {
         return Holder.INSTANCE;
     }
 
     private static final class Holder {
-        private static final MqttSM INSTANCE = new MqttSM();
+        private static final MqttMgr INSTANCE = new MqttMgr();
     }
 
     /**

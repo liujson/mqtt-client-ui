@@ -42,9 +42,8 @@ import cn.liujson.client.ui.fragments.PublishFragment;
 import cn.liujson.client.ui.fragments.TopicsFragment;
 import cn.liujson.client.ui.fragments.WorkingStatusFragment;
 import cn.liujson.client.ui.service.ConnectionService;
-import cn.liujson.client.ui.service.MqttSM;
+import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
-import cn.liujson.lib.mqtt.service.MqttBuilder;
 
 
 public class PreviewMainActivity extends AppCompatActivity implements PreviewMainViewModel.Navigator {
@@ -78,7 +77,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
 
         // TODO: 2021/3/8
         //绑定 MQTT Service
-        MqttSM.instance().bindToActivity(this, new ServiceConnection() {
+        MqttMgr.instance().bindToActivity(this, new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 // 安装MQTT
