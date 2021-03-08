@@ -13,10 +13,13 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
+import org.eclipse.paho.client.mqttv3.TimerPingSender;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
 
 import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
@@ -66,7 +69,8 @@ public class PahoMqttV3Impl implements IMQTT {
              * MemoryPersistence设置clientid的保存形式，默认为以内存保存
              */
             MemoryPersistence persistence = new MemoryPersistence();
-            mqttAsyncClient = new MqttAsyncClient(builder.getHost(), clientId, persistence);
+            mqttAsyncClient = new MqttAsyncClient(builder.getHost(),
+                    clientId, persistence);
             connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(builder.isCleanSession());
 
@@ -125,6 +129,17 @@ public class PahoMqttV3Impl implements IMQTT {
                 callback.onFailure(e);
             }
         }
+    }
+
+    /**
+     * 带返回IMqttToken的连接
+     *
+     * @return
+     * @throws MqttException
+     * @throws MqttSecurityException
+     */
+    public IMqttToken connect() throws MqttException, MqttSecurityException {
+        return mqttAsyncClient.connect(connOpts);
     }
 
     @Override
@@ -254,14 +269,10 @@ public class PahoMqttV3Impl implements IMQTT {
 
     @Override
     public void disconnectForcibly() throws Exception {
-        //释放资源
-        messageReceiver = null;
-        //先尝试断开连接
-        mqttAsyncClient.disconnect();
-        //强制断开连接
-        mqttAsyncClient.disconnectForcibly();
         //终止重连任务
         stopRetryTask();
+        //强制断开连接
+        mqttAsyncClient.disconnectForcibly(10000, 5000);
     }
 
 
@@ -368,10 +379,12 @@ public class PahoMqttV3Impl implements IMQTT {
 
 
     private void stopRetryTask() {
-        mHandle.removeCallbacks(retryRunning);
-        retryHandlerThread.quitSafely();
-        retryHandlerThread = null;
-        mHandle = null;
+        if (retryHandlerThread != null) {
+            mHandle.removeCallbacks(retryRunning);
+            retryHandlerThread.quitSafely();
+            retryHandlerThread = null;
+            mHandle = null;
+        }
     }
 
     /**
@@ -381,5 +394,10 @@ public class PahoMqttV3Impl implements IMQTT {
      */
     private long calculateRetryTime() {
         return 3000;
+    }
+
+
+    public MqttAsyncClient getMqttAsyncClient() {
+        return mqttAsyncClient;
     }
 }

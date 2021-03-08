@@ -34,4 +34,30 @@
         <item name="android:layout_marginStart">10dp</item>
         <item name="android:layout_marginEnd">10dp</item>
     </style>
+
+
+    <style name="status_rl_right_item">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:padding">3dp</item>
+        <item name="android:layout_height">65dp</item>
+    </style>
+
+    <style name="status_tv_title_right_item">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#191919</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:layout_centerVertical">true</item>
+    </style>
+
+    <style name="status_tv_description_right_item">
+        <item name="android:layout_width">600dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textColor">#666666</item>
+        <item name="android:gravity">center|right</item>
+        <item name="android:layout_alignParentEnd">true</item>
+        <item name="android:paddingEnd">5dp</item>
+        <item name="android:textSize">22sp</item>
+    </style>
 </resources>

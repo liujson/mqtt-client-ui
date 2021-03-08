@@ -12,17 +12,28 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Refactor">
-        <activity android:name=".ui.TestActivity"></activity>
-        <activity
-            android:name=".ui.ConnectionProfilesActivity"  android:screenOrientation="landscape"
-            android:launchMode="singleTask" />
-        <activity android:name=".ui.ProfileEditorActivity"  android:screenOrientation="landscape"/>
-        <activity android:name=".ui.PreviewMainActivity" android:screenOrientation="landscape">
+        <activity android:name=".ui.TestActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.ConnectionProfilesActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".ui.ProfileEditorActivity"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".ui.PreviewMainActivity"
+            android:screenOrientation="landscape">
+            <!--            <intent-filter>-->
+            <!--                <action android:name="android.intent.action.MAIN" />-->
+
+            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+            <!--            </intent-filter>-->
         </activity>
 
         <service android:name=".ui.service.ConnectionService" />

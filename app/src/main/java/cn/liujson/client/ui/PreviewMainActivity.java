@@ -6,16 +6,17 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.IBinder;
+import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
-
-import com.jaredrummler.materialspinner.MaterialSpinner;
 
 import net.lucode.hackware.magicindicator.FragmentContainerHelper;
 import net.lucode.hackware.magicindicator.MagicIndicator;
@@ -30,100 +31,80 @@ import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.Simple
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import cn.liujson.client.R;
 
 import cn.liujson.client.databinding.ActivityPreviewMainBinding;
 import cn.liujson.client.ui.adapter.PageFragmentStateAdapter;
-import cn.liujson.client.ui.app.CustomApplication;
-import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.fragments.LogPreviewFragment;
 import cn.liujson.client.ui.fragments.PublishFragment;
 import cn.liujson.client.ui.fragments.TopicsFragment;
-import cn.liujson.client.ui.service.MqttServiceManager;
-import cn.liujson.client.ui.util.ToastHelper;
-import cn.liujson.lib.mqtt.api.IMQTTCallback;
-import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.lib.mqtt.exception.WrapMQTTException;
+import cn.liujson.client.ui.fragments.WorkingStatusFragment;
+import cn.liujson.client.ui.service.ConnectionService;
+import cn.liujson.client.ui.service.MqttSM;
+import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 import cn.liujson.lib.mqtt.service.MqttBuilder;
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 
-public class PreviewMainActivity extends AppCompatActivity {
+public class PreviewMainActivity extends AppCompatActivity implements PreviewMainViewModel.Navigator {
+
     private static final String TAG = "PreviewMainActivity";
 
-    public static final String[] mTitleList = new String[]{"Publish", "Topics", "Log"};
+    public static final String[] mTitleList = new String[]{"Publish", "Topics", "Log", "Status"};
 
     private ActivityPreviewMainBinding viewDataBinding;
 
     private final List<String> dataList = new ArrayList<>();
     private final List<ConnectionProfile> oriDataList = new ArrayList<>();
 
-    Disposable loadProfilesDisposable;
+
+    PreviewMainViewModel viewModel;
 
     private int count = 0;
+
+    private ConnectionService.ConnectionServiceBinder binder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         viewDataBinding = DataBindingUtil.setContentView(this, R.layout.activity_preview_main);
+        viewModel = new PreviewMainViewModel(getLifecycle());
+        viewDataBinding.setVm(viewModel);
 
         initSpinner();
         initViewPager();
-        initMagicIndicator();
 
-        viewDataBinding.btnSetting.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ConnectionProfilesActivity.class);
-            startActivity(intent);
-        });
+        // TODO: 2021/3/8
+        //绑定 MQTT Service
+        MqttSM.instance().bindToActivity(this, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                // 安装MQTT
+                binder = (ConnectionService.ConnectionServiceBinder) service;
+                //setup
 
-        viewDataBinding.btnConnect.setOnClickListener(v -> {
-            final int selectedIndex = viewDataBinding.spinner.getSelectedIndex();
-            if (oriDataList.size() > selectedIndex) {
-                final ConnectionProfile connectionProfile = oriDataList.get(selectedIndex);
-                MqttBuilder builder = new MqttBuilder()
-                        .cleanSession(connectionProfile.cleanSession)
-                        .host("tcp://" + connectionProfile.brokerAddress + ":" + connectionProfile.brokerPort);
+            }
 
-                try {
-                    MqttServiceManager.getInstance().getServiceBinder().setup(builder);
-                    MqttServiceManager.getInstance().getServiceBinder().connect(new IMQTTCallback() {
-                        @Override
-                        public void onSuccess(Object value) {
-                            Observable.interval(1, TimeUnit.SECONDS)
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe(time -> {
-                                        MqttServiceManager.getInstance().getServiceBinder()
-                                                .publish("CIIIA", String.valueOf(count), QoS.AT_MOST_ONCE, false, null);
-                                    });
-                            Log.d(TAG, "连接成功");
-                        }
-
-                        @Override
-                        public void onFailure(Throwable value) {
-                            Log.d(TAG, "连接失败：" + value.toString());
-                        }
-                    });
-                } catch (WrapMQTTException e) {
-                    e.printStackTrace();
-                    ToastHelper.showToast(getApplicationContext(), "连接异常");
-                }
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                binder = null;
             }
         });
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        loadProfiles();
+    protected void onResume() {
+        super.onResume();
+        if (viewModel != null) {
+            viewModel.loadProfiles();
+        }
     }
 
+    /**
+     * 初始化下拉菜单
+     */
     private void initSpinner() {
         viewDataBinding.spinner.setOnItemSelectedListener((view, position, id, item) -> {
 
@@ -132,39 +113,22 @@ public class PreviewMainActivity extends AppCompatActivity {
 
         });
         viewDataBinding.spinner.setOnClickListener(v -> {
-            loadProfiles();
+            if (viewModel != null) {
+                viewModel.loadProfiles();
+            }
         });
 
-        loadProfiles();
-    }
-
-
-    /**
-     * 加载连接属性列表
-     */
-    private void loadProfiles() {
-        if (loadProfilesDisposable != null) {
-            loadProfilesDisposable.dispose();
+        if (viewModel != null) {
+            viewModel.loadProfiles();
         }
-        loadProfilesDisposable = DatabaseHelper
-                .getInstance()
-                .connectionProfileDao()
-                .loadProfiles()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(data -> {
-                    loadProfilesDisposable = null;
-                    notifyChangeSpinner(data);
-                }, throwable -> {
-                    loadProfilesDisposable = null;
-                    ToastHelper.showToast(CustomApplication.getApp(), "load connection profiles failure.");
-                });
     }
+
 
     /**
      * 通知spinner数据改变
      */
-    private void notifyChangeSpinner(List<ConnectionProfile> data) {
+    @Override
+    public void notifyChangeSpinner(List<ConnectionProfile> data) {
         dataList.clear();
         oriDataList.clear();
         for (ConnectionProfile datum : data) {
@@ -174,20 +138,30 @@ public class PreviewMainActivity extends AppCompatActivity {
         oriDataList.addAll(data);
     }
 
+    /**
+     * 初始化ViewPager
+     */
     private void initViewPager() {
         PublishFragment publishFragment = PublishFragment.newInstance();
         TopicsFragment topicsFragment = TopicsFragment.newInstance();
         LogPreviewFragment logPreviewFragment = LogPreviewFragment.newInstance();
+        WorkingStatusFragment workingStatusFragment = WorkingStatusFragment.newInstance();
 
         ArrayList<Fragment> fragmentList = new ArrayList<>();
         fragmentList.add(publishFragment);
         fragmentList.add(topicsFragment);
         fragmentList.add(logPreviewFragment);
+        fragmentList.add(workingStatusFragment);
 
         viewDataBinding.mViewPager.setAdapter(new PageFragmentStateAdapter(getSupportFragmentManager(), getLifecycle(), fragmentList));
+
+        //指示器
+        initMagicIndicator();
     }
 
-
+    /**
+     * 初始化Indicator指示器
+     */
     private void initMagicIndicator() {
 
         MagicIndicator magicIndicator = viewDataBinding.magicIndicator;
@@ -248,13 +222,32 @@ public class PreviewMainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 设置图标点击
+     *
+     * @param view
+     */
+    public void settingClick(View view) {
+        Intent intent = new Intent(this, ConnectionProfilesActivity.class);
+        startActivity(intent);
+    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (loadProfilesDisposable != null) {
-            loadProfilesDisposable.dispose();
-            loadProfilesDisposable = null;
-        }
+    /**
+     * 连接按钮点击
+     *
+     * @param view
+     */
+    public void connectClick(View view) {
+
+
+    }
+
+    /**
+     * 失去连接按钮点击
+     *
+     * @param view
+     */
+    public void disconnectClick(View view) {
+
     }
 }

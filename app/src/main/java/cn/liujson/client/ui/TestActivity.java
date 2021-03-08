@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+
 import java.io.UnsupportedEncodingException;
 
 import cn.liujson.client.R;
@@ -14,15 +16,24 @@ import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.service.MqttBuilder;
 import cn.liujson.lib.mqtt.service.PahoMqttV3Impl;
+import io.reactivex.Completable;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class TestActivity extends AppCompatActivity implements IMQTTMessageReceiver {
 
     private final String testSendTopic = "testSendTopic";
     private final String testSubTopic = "testSubTopic";
 
-    IMQTT imqtt;
+    private PahoMqttV3Impl imqtt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +50,11 @@ public class TestActivity extends AppCompatActivity implements IMQTTMessageRecei
         }
     }
 
+    /**
+     * 使用同步的方式调用
+     *
+     * @param view
+     */
     public void connect(View view) {
         imqtt.connect(new IMQTTCallback<Void>() {
             @Override
@@ -110,11 +126,16 @@ public class TestActivity extends AppCompatActivity implements IMQTTMessageRecei
     }
 
     public void disconnectForcibly(View view) {
-        try {
+        final Disposable subscribe = Completable.create(emitter -> {
             imqtt.disconnectForcibly();
-        } catch (Exception e) {
-            log("强制断开连接出现异常：" + e.toString());
-        }
+            emitter.onComplete();
+        }).subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                    log("disconnectForcibly 强制断开成功");
+                }, throwable -> {
+                    log("disconnectForcibly 强制断开连接：" + throwable.toString());
+                });
     }
 
     public void reconnect(View view) {
@@ -139,5 +160,25 @@ public class TestActivity extends AppCompatActivity implements IMQTTMessageRecei
             e.printStackTrace();
         }
         log("onReceive 收到消息，topic：" + topic + ",body" + gbk);
+    }
+
+    public void close(View view) {
+        imqtt.disconnect(new IMQTTCallback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+                try {
+                    imqtt.getMqttAsyncClient().close(true);
+                    log("close 成功");
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                    log("close 失败：" + e.toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable value) {
+                log("close 失败2：" + value.toString());
+            }
+        });
     }
 }

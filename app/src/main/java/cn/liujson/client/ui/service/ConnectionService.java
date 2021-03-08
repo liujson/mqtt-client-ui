@@ -8,15 +8,19 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+
 import java.util.concurrent.locks.ReentrantLock;
 
 import cn.liujson.lib.mqtt.api.IMQTT;
-import cn.liujson.lib.mqtt.api.IMQTTCallback;
 import cn.liujson.lib.mqtt.api.IMQTTBuilder;
-import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
-import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.api.IMQTTCallback;
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.service.PahoMqttV3Impl;
+import io.reactivex.Completable;
+import io.reactivex.Single;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 
 /**
  * MQTT 连接管理服务。
@@ -33,9 +37,12 @@ public class ConnectionService extends Service {
     /**
      * MQTT 连接操作对象
      */
-    IMQTT imqtt;
+    private PahoMqttV3Impl imqtt;
 
-    final ReentrantLock lock = new ReentrantLock();
+    /**
+     * 安装和释放资源时需要用的锁
+     */
+    private final ReentrantLock lock = new ReentrantLock();
 
     @Nullable
     @Override
@@ -64,34 +71,19 @@ public class ConnectionService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "==onDestroy==");
-        if (imqtt != null) {
-            imqtt.disconnect(new IMQTTCallback<Void>() {
-                @Override
-                public void onSuccess(Void value) {
-                    try {
-                        imqtt.disconnectForcibly();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                @Override
-                public void onFailure(Throwable value) {
-                    try {
-                        imqtt.disconnectForcibly();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-        }
+        final Disposable disconnectForcibly = disconnectForcibly()
+                .subscribe(() -> {
+                    Log.d(TAG, "==disconnectForcibly success==");
+                }, throwable -> {
+                    Log.d(TAG, "==disconnectForcibly failure:" + throwable.toString());
+                });
     }
 
 
     /**
      * 安装 MQTT 到此服务
      */
-    public void setup(IMQTTBuilder builder) throws WrapMQTTException {
+    public IMQTT setup(IMQTTBuilder builder) throws WrapMQTTException {
         if (this.imqtt == null) {
             if (lock.tryLock()) {
                 try {
@@ -105,75 +97,70 @@ public class ConnectionService extends Service {
         } else {
             throw new WrapMQTTException("已经安装IMQTT，不要重复绑定");
         }
+        return this.imqtt;
+    }
+
+    /**
+     * 强制接收并释放资源
+     * 超时操作会堵塞UI
+     *
+     * @return
+     */
+    public Completable disconnectForcibly() {
+        //PahoMqttV3Impl 默认的实现，超时时间是40秒，请耐心等待。
+        return Completable.create(emitter -> {
+            if (imqtt == null) {
+                throw new WrapMQTTException("未安装IMQTT释放资源");
+            }
+            if (lock.tryLock()) {
+                try {
+                    imqtt.disconnectForcibly();
+                    imqtt = null;
+                    emitter.onComplete();
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                throw new WrapMQTTException("获取锁失败，请等待锁释放");
+            }
+        });
     }
 
     /**
      * Binder
      */
-    public class ConnectionServiceBinder extends Binder implements IMQTT {
+    public class ConnectionServiceBinder extends ConnectionBinder {
 
-        public void setup(IMQTTBuilder builder) throws WrapMQTTException {
-            ConnectionService.this.setup(builder);
-        }
-
+        /**
+         * 安装配置
+         * @param builder
+         * @return
+         */
         @Override
-        public void connect(IMQTTCallback<Void> callback) {
-            imqtt.connect(callback);
-        }
-
-        @Override
-        public void subscribe(String topic, QoS qoS, IMQTTCallback<byte[]> callback) {
-            imqtt.subscribe(topic, qoS, callback);
-        }
-
-        @Override
-        public void subscribe(String[] topics, QoS[] qoS, IMQTTCallback<byte[]> callback) {
-            imqtt.subscribe(topics, qoS, callback);
-        }
-
-        @Override
-        public void unsubscribe(String topic, IMQTTCallback<Void> callback) {
-            imqtt.unsubscribe(topic, callback);
-        }
-
-        @Override
-        public void unsubscribe(String[] topics, IMQTTCallback<Void> callback) {
-            imqtt.unsubscribe(topics, callback);
-        }
-
-        @Override
-        public void publish(String topic, byte[] payload, QoS qos, boolean retained, IMQTTCallback<Void> callback) {
-            imqtt.publish(topic, payload, qos, retained, callback);
-        }
-
-        @Override
-        public void publish(String topic, String payload, QoS qos, boolean retained, IMQTTCallback<Void> callback) {
-            imqtt.publish(topic, payload, qos, retained, callback);
-        }
-
-        @Override
-        public void disconnect(IMQTTCallback<Void> callback) {
-            imqtt.disconnect(callback);
-        }
-
-        @Override
-        public void setMessageReceiver(IMQTTMessageReceiver messageReceiver) {
-            imqtt.setMessageReceiver(messageReceiver);
+        public Single<IMQTT> setup(IMQTTBuilder builder) {
+            return null;
         }
 
         /**
-         * 此方法会堵塞UI
-         *
-         * @throws Exception
+         * 安全关闭
+         * @return
          */
         @Override
-        public void disconnectForcibly() throws Exception {
-            imqtt.disconnectForcibly();
+        public Completable closeSafety() {
+            return null;
+        }
+
+        /**
+         * 强制结束并释放资源
+         * 需要等待其完成
+         *
+         * @return Completable
+         */
+        @Override
+        public Completable closeForcibly() {
+            return ConnectionService.this.disconnectForcibly();
         }
     }
 
-
     //----------------------------------------------------------------------
-
-
 }

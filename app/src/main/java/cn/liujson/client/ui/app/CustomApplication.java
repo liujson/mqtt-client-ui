@@ -1,15 +1,8 @@
 package cn.liujson.client.ui.app;
 
 import android.app.Application;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
-import android.util.Log;
 
 import cn.liujson.client.ui.db.DatabaseHelper;
-import cn.liujson.client.ui.service.ConnectionService;
-import cn.liujson.client.ui.service.MqttServiceManager;
 
 /**
  * @author liujson
@@ -26,7 +19,7 @@ public class CustomApplication extends Application {
         //初始化数据库
         DatabaseHelper.init(this);
         //启动Mqtt服务
-        MqttServiceManager.getInstance().bindToApplication(this);
+//        MqttServiceManager.getInstance().bindToApplication(this);
     }
 
     public static CustomApplication getApp() {

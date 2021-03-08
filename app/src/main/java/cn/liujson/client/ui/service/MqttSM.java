@@ -1,5 +1,6 @@
 package cn.liujson.client.ui.service;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,23 +10,26 @@ import android.os.Build;
 import android.os.IBinder;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
+ * MQTTServiceManager
+ *
  * @author liujson
  * @date 2021/3/5.
  */
-public class MqttServiceManager {
+public class MqttSM {
 
-    private MqttServiceManager() {
+    private MqttSM() {
 
     }
 
-    public static MqttServiceManager getInstance() {
+    public static MqttSM instance() {
         return Holder.INSTANCE;
     }
 
     private static final class Holder {
-        private static final MqttServiceManager INSTANCE = new MqttServiceManager();
+        private static final MqttSM INSTANCE = new MqttSM();
     }
 
     /**
@@ -60,6 +64,13 @@ public class MqttServiceManager {
         bindService(application, mServiceConnection);
     }
 
+    /**
+     * 与 Activity 绑定（所有绑定的Activity生命周期结束，服务结束）
+     */
+    public void bindToActivity(@NonNull Activity activity, @NonNull ServiceConnection serviceConnection) {
+        bindService(activity, serviceConnection);
+    }
+
 
     public void bindService(@NonNull Context context, @NonNull ServiceConnection serviceConnection) {
         context.bindService(getServiceIntent(context), serviceConnection, Context.BIND_AUTO_CREATE);
@@ -70,6 +81,15 @@ public class MqttServiceManager {
         return new Intent(context, ConnectionService.class);
     }
 
+    /**
+     * 获取Binder(只有通过绑定Application启动才有这个值)
+     *
+     * @return
+     */
+    @Nullable
+    public ConnectionService.ConnectionServiceBinder binder() {
+        return mBinder;
+    }
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -83,13 +103,4 @@ public class MqttServiceManager {
             //Service 断开连接了
         }
     };
-
-    /**
-     * 获取Binder
-     *
-     * @return
-     */
-    public ConnectionService.ConnectionServiceBinder getServiceBinder() {
-        return mBinder;
-    }
 }

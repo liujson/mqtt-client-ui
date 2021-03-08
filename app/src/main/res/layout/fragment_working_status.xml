@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.fragments.WorkingStatusFragment">
+
+    <RelativeLayout style="@style/status_rl_right_item">
+
+        <TextView
+            style="@style/status_tv_title_right_item"
+            android:text="MQTT连接状态" />
+
+        <TextView
+            style="@style/status_tv_description_right_item"
+            android:text="@{vm.fieldIpAddress}" />
+    </RelativeLayout>
+
+</RelativeLayout>
