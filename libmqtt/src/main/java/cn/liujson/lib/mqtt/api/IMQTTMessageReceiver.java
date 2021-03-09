@@ -14,6 +14,6 @@ public interface IMQTTMessageReceiver {
      * @param topic   主题
      * @param message 消息内容
      */
-    void onReceive(String topic, byte[] body);
+    void onReceive(String topic, byte[] body) throws Exception;
 
 }

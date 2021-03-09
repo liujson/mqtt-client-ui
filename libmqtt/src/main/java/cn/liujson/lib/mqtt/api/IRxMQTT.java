@@ -1,6 +1,6 @@
 package cn.liujson.lib.mqtt.api;
 
-import io.reactivex.Observable;
+import io.reactivex.Completable;
 
 /**
  * Rxjava 版本的契约
@@ -17,7 +17,7 @@ public interface IRxMQTT {
      *
      * @return
      */
-    Observable<Void> connect();
+    Completable connect();
 
     /**
      * 订阅
@@ -26,7 +26,7 @@ public interface IRxMQTT {
      * @param qos    qos
      * @return
      */
-    Observable<Void> subscribe(String[] topics, QoS[] qos);
+    Completable subscribe(String[] topics, QoS[] qos);
 
     /**
      * 解除订阅
@@ -34,7 +34,7 @@ public interface IRxMQTT {
      * @param topics
      * @return
      */
-    Observable<Void> unsubscribe(String[] topics);
+    Completable unsubscribe(String[] topics);
 
 
     /**
@@ -45,7 +45,7 @@ public interface IRxMQTT {
      * @param qos
      * @return
      */
-    Observable<Void> publish(String topic, byte[] payload, QoS qos);
+    Completable publish(String topic, byte[] payload, QoS qos);
 
 
     /**
@@ -53,7 +53,7 @@ public interface IRxMQTT {
      *
      * @return
      */
-    Observable<Void> disconnect();
+    Completable disconnect();
 
     //endregion 主动型动作
 }

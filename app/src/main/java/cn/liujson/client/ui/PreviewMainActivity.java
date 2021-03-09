@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
@@ -29,6 +30,9 @@ import net.lucode.hackware.magicindicator.buildins.commonnavigator.indicators.Wr
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.ColorTransitionPagerTitleView;
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.SimplePagerTitleView;
 
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +47,22 @@ import cn.liujson.client.ui.fragments.TopicsFragment;
 import cn.liujson.client.ui.fragments.WorkingStatusFragment;
 import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.service.MqttMgr;
+import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
+import cn.liujson.lib.mqtt.service.MqttBuilder;
+import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
+import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
+import io.reactivex.Completable;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableSource;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 
 
 public class PreviewMainActivity extends AppCompatActivity implements PreviewMainViewModel.Navigator {
@@ -64,12 +83,17 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
 
     private ConnectionService.ConnectionServiceBinder binder;
 
+    private IMQTTWrapper<PahoV3MQTTClient> clientIMQTTWrapper;
+
+    private CompositeDisposable mCompositeDisposable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         viewDataBinding = DataBindingUtil.setContentView(this, R.layout.activity_preview_main);
         viewModel = new PreviewMainViewModel(getLifecycle());
+        viewModel.setNavigator(this);
         viewDataBinding.setVm(viewModel);
 
         initSpinner();
@@ -83,7 +107,6 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                 // 安装MQTT
                 binder = (ConnectionService.ConnectionServiceBinder) service;
                 //setup
-
             }
 
             @Override
@@ -91,6 +114,9 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                 binder = null;
             }
         });
+
+        mCompositeDisposable = new CompositeDisposable();
+
     }
 
     @Override
@@ -98,6 +124,15 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
         super.onResume();
         if (viewModel != null) {
             viewModel.loadProfiles();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mCompositeDisposable != null) {
+            mCompositeDisposable.clear();
+            mCompositeDisposable = null;
         }
     }
 
@@ -135,6 +170,10 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
         }
         viewDataBinding.spinner.setItems(dataList);
         oriDataList.addAll(data);
+
+        if (!data.isEmpty()) {
+            viewModel.fieldConnectEnable.set(true);
+        }
     }
 
     /**
@@ -237,8 +276,35 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
      * @param view
      */
     public void connectClick(View view) {
+        if (!dataList.isEmpty()) {
+            final ConnectionProfile profile = oriDataList.get(viewDataBinding.spinner.getSelectedIndex());
+            MqttBuilder builder = new MqttBuilder();
+            builder.host("tcp://" + profile.brokerAddress + ":" + profile.brokerPort);
+            builder.cleanSession(true);
+            final Disposable subscribe = binder
+                    .setup(builder)
+                    .flatMapCompletable(pahoV3MQTTClientIMQTTWrapper -> {
+                        clientIMQTTWrapper = pahoV3MQTTClientIMQTTWrapper;
+                        if (clientIMQTTWrapper.getClient().isConnected()) {
+                            return Completable.complete();
+                        }
+                        return clientIMQTTWrapper.getClient().rxConnect();
+                    })
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(() -> {
+                        ToastHelper.showToast(this, "连接成功");
+                        viewModel.fieldConnectEnable.set(false);
+                        viewModel.fieldDisconnectEnable.set(true);
+                    }, throwable -> {
+                        ToastHelper.showToast(this, "配置连接失败");
+                        viewModel.fieldConnectEnable.set(true);
+                        viewModel.fieldDisconnectEnable.set(false);
+                    });
+            mCompositeDisposable.add(subscribe);
+        } else {
+            ToastHelper.showToast(this, "请先配置");
 
-
+        }
     }
 
     /**
@@ -247,6 +313,14 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
      * @param view
      */
     public void disconnectClick(View view) {
-
+        final Disposable subscribe = binder.closeSafety()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                    viewModel.fieldConnectEnable.set(true);
+                    viewModel.fieldDisconnectEnable.set(false);
+                    ToastHelper.showToast(this, "断开成功");
+                }, throwable -> {
+                    ToastHelper.showToast(this, "断开失败");
+                });
     }
 }

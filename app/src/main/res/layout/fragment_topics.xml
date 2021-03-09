@@ -10,6 +10,7 @@
     <ScrollView
         android:background="#ececec"
         android:padding="10dp"
+        android:overScrollMode="never"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 

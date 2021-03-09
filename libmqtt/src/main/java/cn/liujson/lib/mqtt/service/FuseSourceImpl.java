@@ -184,7 +184,11 @@ public class FuseSourceImpl implements IMQTT {
             //收到消息
             MQTTUtils.logD(TAG, "onPublish 2 topic:" + topic.toString() + ",body:" + body.toString());
             if (messageReceiver != null) {
-                messageReceiver.onReceive(topic.toString(), body.toByteArray());
+                try {
+                    messageReceiver.onReceive(topic.toString(), body.toByteArray());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     };
