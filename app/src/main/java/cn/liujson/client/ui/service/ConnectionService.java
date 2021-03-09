@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 import cn.liujson.lib.mqtt.api.IMQTT;
@@ -46,6 +47,8 @@ public class ConnectionService extends Service {
     private final ConnectionServiceBinder binder = new ConnectionServiceBinder();
 
     private IMQTTWrapper<PahoV3MQTTClient> mqttClient;
+
+    private AtomicBoolean registered = new AtomicBoolean(false);
 
     @Nullable
     @Override
@@ -91,18 +94,28 @@ public class ConnectionService extends Service {
     /**
      * 安装 MQTT Client服务
      */
-    public IMQTTWrapper<PahoV3MQTTClient> setup(IMQTTBuilder builder) throws WrapMQTTException {
+    public IMQTTWrapper<PahoV3MQTTClient> register(IMQTTBuilder builder) throws WrapMQTTException {
         if (Looper.myLooper() != getMainLooper()) {
             throw new WrapMQTTException("只允许在Main线程调用此方法");
         }
         if (mqttClient == null) {
             mqttClient = new PahoV3MQTTWrapper(builder);
+            registered.set(true);
         } else {
             throw new WrapMQTTException("已经安装IMQTT，不要重复绑定");
         }
         return mqttClient;
     }
 
+
+    public void unregister() {
+        registered.set(false);
+    }
+
+
+    public boolean isRegistered() {
+        return registered.get();
+    }
 
     /**
      * Binder
@@ -118,7 +131,7 @@ public class ConnectionService extends Service {
         @Override
         public Single<IMQTTWrapper<PahoV3MQTTClient>> setup(final IMQTTBuilder builder) {
             return Single.create((SingleOnSubscribe<IMQTTWrapper<PahoV3MQTTClient>>) emitter -> {
-                emitter.onSuccess(ConnectionService.this.setup(builder));
+                emitter.onSuccess(ConnectionService.this.register(builder));
             }).subscribeOn(AndroidSchedulers.mainThread())
                     .observeOn(AndroidSchedulers.mainThread());
         }
