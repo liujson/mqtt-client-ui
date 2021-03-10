@@ -32,6 +32,7 @@ import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.Simple
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ import cn.liujson.client.R;
 
 import cn.liujson.client.databinding.ActivityPreviewMainBinding;
 import cn.liujson.client.ui.adapter.PageFragmentStateAdapter;
+import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.fragments.LogPreviewFragment;
 import cn.liujson.client.ui.fragments.PublishFragment;
@@ -79,12 +81,6 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
 
     PreviewMainViewModel viewModel;
 
-    private int count = 0;
-
-    private ConnectionService.ConnectionServiceBinder binder;
-
-    private IMQTTWrapper<PahoV3MQTTClient> clientIMQTTWrapper;
-
     private CompositeDisposable mCompositeDisposable;
 
     @Override
@@ -96,27 +92,13 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
         viewModel.setNavigator(this);
         viewDataBinding.setVm(viewModel);
 
+        viewModel.getRepository().bindConnectionService(this);
+
         initSpinner();
         initViewPager();
 
-        // TODO: 2021/3/8
-        //绑定 MQTT Service
-        MqttMgr.instance().bindToActivity(this, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                // 安装MQTT
-                binder = (ConnectionService.ConnectionServiceBinder) service;
-                //setup
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                binder = null;
-            }
-        });
 
         mCompositeDisposable = new CompositeDisposable();
-
     }
 
     @Override
@@ -134,6 +116,8 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
             mCompositeDisposable.clear();
             mCompositeDisposable = null;
         }
+
+        viewModel.getRepository().unbindConnectionService();
     }
 
     /**
@@ -278,32 +262,40 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
     public void connectClick(View view) {
         if (!dataList.isEmpty()) {
             final ConnectionProfile profile = oriDataList.get(viewDataBinding.spinner.getSelectedIndex());
-            MqttBuilder builder = new MqttBuilder();
-            builder.host("tcp://" + profile.brokerAddress + ":" + profile.brokerPort);
-            builder.cleanSession(true);
-            final Disposable subscribe = binder
-                    .setup(builder)
-                    .flatMapCompletable(pahoV3MQTTClientIMQTTWrapper -> {
-                        clientIMQTTWrapper = pahoV3MQTTClientIMQTTWrapper;
-                        if (clientIMQTTWrapper.getClient().isConnected()) {
-                            return Completable.complete();
-                        }
-                        return clientIMQTTWrapper.getClient().rxConnect();
-                    })
-                    .observeOn(AndroidSchedulers.mainThread())
+            Completable actionCompletable = viewModel.getRepository()
+                    .connect().observeOn(AndroidSchedulers.mainThread());
+            //如果已经配置和已经连接上则断开连接然后再创建新的连接
+            if (viewModel.getRepository().isSetup()) {
+                if (viewModel.getRepository().isConnected()) {
+                    actionCompletable = viewModel.getRepository().closeSafety()
+                            //如果安全断开失败则强制断开连接
+                            .onErrorResumeNext(throwable -> viewModel.getRepository().closeForcibly())
+                            .andThen(actionCompletable);
+                }
+            } else {
+                //如果未安装则进行安装
+                final IMQTTWrapper<PahoV3MQTTClient> wrapper = viewModel.create(profile);
+                if (wrapper != null) {
+                    viewModel.getRepository().setup(wrapper);
+                }
+            }
+            //执行连接逻辑
+            Disposable subscribe = actionCompletable
                     .subscribe(() -> {
                         ToastHelper.showToast(this, "连接成功");
                         viewModel.fieldConnectEnable.set(false);
                         viewModel.fieldDisconnectEnable.set(true);
+                        EventBus.getDefault().post(new ConnectChangeEvent(true));
                     }, throwable -> {
-                        ToastHelper.showToast(this, "配置连接失败");
+                        ToastHelper.showToast(this, "连接失败");
                         viewModel.fieldConnectEnable.set(true);
                         viewModel.fieldDisconnectEnable.set(false);
+                        EventBus.getDefault().post(new ConnectChangeEvent(false));
                     });
+
             mCompositeDisposable.add(subscribe);
         } else {
-            ToastHelper.showToast(this, "请先配置");
-
+            ToastHelper.showToast(this, "请先配置连接参数");
         }
     }
 
@@ -313,14 +305,29 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
      * @param view
      */
     public void disconnectClick(View view) {
-        final Disposable subscribe = binder.closeSafety()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(() -> {
-                    viewModel.fieldConnectEnable.set(true);
-                    viewModel.fieldDisconnectEnable.set(false);
-                    ToastHelper.showToast(this, "断开成功");
-                }, throwable -> {
-                    ToastHelper.showToast(this, "断开失败");
-                });
+        final Disposable subscribe =
+                viewModel.getRepository()
+                        .closeSafety()
+                        //如果安全断开失败则强制断开连接
+                        .onErrorResumeNext(throwable -> viewModel.getRepository().closeForcibly())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(() -> {
+                            viewModel.fieldConnectEnable.set(true);
+                            viewModel.fieldDisconnectEnable.set(false);
+                            ToastHelper.showToast(this, "断开成功");
+                        }, throwable -> {
+                            ToastHelper.showToast(this, "断开失败");
+                        });
+        mCompositeDisposable.add(subscribe);
+    }
+
+    @Override
+    public void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder) {
+        ToastHelper.showToast(this, "绑定服务成功");
+    }
+
+    @Override
+    public void onBindFailure() {
+        ToastHelper.showToast(this, "绑定服务失败");
     }
 }

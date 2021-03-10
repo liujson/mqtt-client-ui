@@ -2,36 +2,23 @@ package cn.liujson.client.ui.service;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import org.eclipse.paho.client.mqttv3.MqttException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
-
-import cn.liujson.lib.mqtt.api.IMQTT;
-import cn.liujson.lib.mqtt.api.IMQTTBuilder;
-import cn.liujson.lib.mqtt.api.IMQTTCallback;
+import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
-import cn.liujson.lib.mqtt.service.PahoMqttV3Impl;
 import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
 import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
-import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTWrapper;
 import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
-import io.reactivex.CompletableOnSubscribe;
-import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.SingleOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 
 /**
  * MQTT 连接管理服务。
@@ -48,7 +35,9 @@ public class ConnectionService extends Service {
 
     private IMQTTWrapper<PahoV3MQTTClient> mqttClient;
 
-    private AtomicBoolean registered = new AtomicBoolean(false);
+    final Object lockObject = new Object();
+
+    final List<IMQTTMessageReceiver> receiverList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -80,60 +69,83 @@ public class ConnectionService extends Service {
         //尝试关闭并释放资源
         if (mqttClient != null) {
             mqttClient.destroy();
-            final Disposable rxCloseSafety = mqttClient.getClient()
-                    .rxCloseForcibly()
+            final Disposable rxCloseSafety = binder.closeForcibly()
                     .subscribe(() -> {
                         Log.d(TAG, "==disconnectForcibly success==");
                     }, throwable -> {
                         Log.d(TAG, "==disconnectForcibly failure:" + throwable.toString());
                     });
         }
+        //清空集合元素
+        receiverList.clear();
     }
 
 
     /**
      * 安装 MQTT Client服务
      */
-    public IMQTTWrapper<PahoV3MQTTClient> register(IMQTTBuilder builder) throws WrapMQTTException {
-        if (Looper.myLooper() != getMainLooper()) {
-            throw new WrapMQTTException("只允许在Main线程调用此方法");
-        }
+    public IMQTTWrapper<PahoV3MQTTClient> setup(IMQTTWrapper<PahoV3MQTTClient> clientWrapper) {
+        //如果锁不可用，那么当前线程被阻塞，休眠一直到该锁可以获取
         if (mqttClient == null) {
-            mqttClient = new PahoV3MQTTWrapper(builder);
-            registered.set(true);
-        } else {
-            throw new WrapMQTTException("已经安装IMQTT，不要重复绑定");
+            synchronized (lockObject) {
+                if (mqttClient == null) {
+                    mqttClient = clientWrapper;
+                    clientWrapper.setMessageReceiver(new MessageReceiver());
+                }
+            }
         }
         return mqttClient;
     }
 
-
-    public void unregister() {
-        registered.set(false);
+    /**
+     * 移除安装（移除安装前请先断开连接）
+     */
+    public void unset() {
+        synchronized (lockObject) {
+            mqttClient = null;
+            receiverList.clear();
+        }
     }
 
-
-    public boolean isRegistered() {
-        return registered.get();
+    public IMQTTWrapper<PahoV3MQTTClient> getClientWrapper() {
+        return mqttClient;
     }
 
     /**
      * Binder
      */
     public class ConnectionServiceBinder extends ConnectionBinder<PahoV3MQTTClient> {
-
         /**
          * 安装配置
          *
-         * @param builder 参数
+         * @param imqttWrapper
          * @return
          */
         @Override
-        public Single<IMQTTWrapper<PahoV3MQTTClient>> setup(final IMQTTBuilder builder) {
-            return Single.create((SingleOnSubscribe<IMQTTWrapper<PahoV3MQTTClient>>) emitter -> {
-                emitter.onSuccess(ConnectionService.this.register(builder));
-            }).subscribeOn(AndroidSchedulers.mainThread())
-                    .observeOn(AndroidSchedulers.mainThread());
+        public IMQTTWrapper<PahoV3MQTTClient> setup(IMQTTWrapper<PahoV3MQTTClient> imqttWrapper) {
+            return ConnectionService.this.setup(imqttWrapper);
+        }
+
+        @Override
+        public boolean isSetup() {
+            return this.getWrapper() != null;
+        }
+
+        @Override
+        public void registerMessageReceiver(IMQTTMessageReceiver messageReceiver) {
+            if (!receiverList.contains(messageReceiver)) {
+                receiverList.add(messageReceiver);
+            }
+        }
+
+        @Override
+        public void unregisterMessageReceiver(IMQTTMessageReceiver messageReceiver) {
+            receiverList.remove(messageReceiver);
+        }
+
+        @Override
+        public IMQTTWrapper<PahoV3MQTTClient> getWrapper() {
+            return getClientWrapper();
         }
 
         /**
@@ -149,7 +161,7 @@ public class ConnectionService extends Service {
             return mqttClient.getClient()
                     .rxCloseSafety()
                     .doOnComplete(() -> {
-                        mqttClient = null;
+                        unset();
                     })
                     .observeOn(AndroidSchedulers.mainThread());
         }
@@ -157,6 +169,7 @@ public class ConnectionService extends Service {
         /**
          * 强制结束并释放资源
          * 需要等待其完成
+         * (默认10秒超时，设置timeout建议不要小于此时间)
          *
          * @return Completable
          */
@@ -166,11 +179,25 @@ public class ConnectionService extends Service {
                 return Completable.error(new WrapMQTTException("请先setup后关闭"));
             }
             return mqttClient.getClient()
-                    .rxCloseForcibly()
+                    .rxCloseForcibly(6000, 3000)
+                    .timeout(10, TimeUnit.SECONDS)
                     .doFinally(() -> {
-                        mqttClient = null;
+                        unset();
                     })
                     .observeOn(AndroidSchedulers.mainThread());
+        }
+    }
+
+
+    public class MessageReceiver implements IMQTTMessageReceiver {
+
+        @Override
+        public void onReceive(String topic, byte[] body) throws Exception {
+            final Iterator<IMQTTMessageReceiver> it = receiverList.iterator();
+            while (it.hasNext()) {
+                final IMQTTMessageReceiver next = it.next();
+                next.onReceive(topic, body);
+            }
         }
     }
     //----------------------------------------------------------------------

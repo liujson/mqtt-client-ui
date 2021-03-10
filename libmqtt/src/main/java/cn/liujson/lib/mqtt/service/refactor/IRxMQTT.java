@@ -1,5 +1,6 @@
-package cn.liujson.lib.mqtt.api;
+package cn.liujson.lib.mqtt.service.refactor;
 
+import cn.liujson.lib.mqtt.api.QoS;
 import io.reactivex.Completable;
 
 /**

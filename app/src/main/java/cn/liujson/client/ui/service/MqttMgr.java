@@ -64,6 +64,10 @@ public class MqttMgr {
         bindService(application, mServiceConnection);
     }
 
+    public void unbindToApplication(@NonNull Context context) {
+        unbindService(context, mServiceConnection);
+    }
+
     /**
      * 与 Activity 绑定（所有绑定的Activity生命周期结束，服务结束）
      */
@@ -74,6 +78,10 @@ public class MqttMgr {
 
     public void bindService(@NonNull Context context, @NonNull ServiceConnection serviceConnection) {
         context.bindService(getServiceIntent(context), serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    public void unbindService(@NonNull Context context, @NonNull ServiceConnection serviceConnection) {
+        context.unbindService(serviceConnection);
     }
 
 

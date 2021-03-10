@@ -8,5 +8,9 @@ package cn.liujson.client.ui.bean.event;
  */
 public class ConnectChangeEvent {
 
-    public boolean isConnected = false;
+    public final boolean isConnected ;
+
+    public ConnectChangeEvent(boolean isConnected) {
+        this.isConnected = isConnected;
+    }
 }

@@ -42,6 +42,10 @@ public class MqttBuilder implements IMQTTBuilder {
     private String willTopic;
     private String willMessage;
     private QoS willQos = QoS.AT_MOST_ONCE;
+    /**
+     * 自动重连
+     */
+    private boolean autoReconnect = true;
 
     public MqttBuilder host(String host) {
         this.host = host;
@@ -88,6 +92,11 @@ public class MqttBuilder implements IMQTTBuilder {
         return this;
     }
 
+    public MqttBuilder autoReconnect(boolean autoReconnect) {
+        this.autoReconnect = autoReconnect;
+        return this;
+    }
+
     @Override
     public String getHost() {
         return host;
@@ -131,5 +140,10 @@ public class MqttBuilder implements IMQTTBuilder {
     @Override
     public QoS getWillQos() {
         return willQos;
+    }
+
+    @Override
+    public boolean isAutoReconnect() {
+        return autoReconnect;
     }
 }

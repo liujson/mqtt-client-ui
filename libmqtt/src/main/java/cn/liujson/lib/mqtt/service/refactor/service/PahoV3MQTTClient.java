@@ -4,30 +4,28 @@ package cn.liujson.lib.mqtt.service.refactor.service;
 import android.text.TextUtils;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttPingSender;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
-import org.eclipse.paho.client.mqttv3.internal.HighResolutionTimer;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+
 
 import cn.liujson.lib.mqtt.api.IMQTTBuilder;
+import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.util.MQTTUtils;
 import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
-import io.reactivex.CompletableOnSubscribe;
-import io.reactivex.Observable;
-import io.reactivex.annotations.NonNull;
+
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -35,6 +33,8 @@ import io.reactivex.schedulers.Schedulers;
  * @date 2021/3/8.
  */
 public class PahoV3MQTTClient extends MqttAsyncClient {
+
+    private static final String TAG = "PahoV3MQTTClient";
 
     /**
      * 默认超时时间
@@ -47,6 +47,10 @@ public class PahoV3MQTTClient extends MqttAsyncClient {
     private final ConcurrentHashMap<String, QoS> activeSubs = new ConcurrentHashMap<>();
 
     private final MqttConnectOptions mConnOpts;
+
+    private MqttCallback mRealCallback;
+
+    private IMQTTMessageReceiver messageReceiver;
 
     public PahoV3MQTTClient(final IMQTTBuilder builder) throws MqttException {
         super(Objects.requireNonNull(builder.getHost()),
@@ -73,8 +77,13 @@ public class PahoV3MQTTClient extends MqttAsyncClient {
         mConnOpts.setConnectionTimeout(20);
         //保持存活间隔（秒）
         mConnOpts.setKeepAliveInterval(builder.getKeepAlive());
-        //自动重连
-        mConnOpts.setAutomaticReconnect(true);
+        //设置自动重连
+        mConnOpts.setAutomaticReconnect(builder.isAutoReconnect());
+        //自动断线重连最大延时时间(默认128000)
+        //mConnOpts.setMaxReconnectDelay();
+
+        //set callback
+        super.setCallback(new InternalProxyCallback());
     }
 
     @Override
@@ -161,18 +170,23 @@ public class PahoV3MQTTClient extends MqttAsyncClient {
     public Completable rxCloseSafety() {
         return Completable.create(emitter -> {
             disconnect().waitForCompletion();
-            close(true);
+            close();
             emitter.onComplete();
         }).subscribeOn(Schedulers.io());
     }
 
+
     /**
      * 强制关闭连接
      * 先尝试发送断开信号，然后尝试关闭连接
+     *
+     * @param quiesceTimeout    允许当前入站和出站工作完成的超时时间
+     * @param disconnectTimeout 发送断开连接包给服务端，直到超时时间
+     * @return
      */
-    public Completable rxCloseForcibly() {
+    public Completable rxCloseForcibly(final long quiesceTimeout, final long disconnectTimeout) {
         return Completable.create(emitter -> {
-            disconnectForcibly(DEFAULT_TIME_OUT, DEFAULT_TIME_OUT >> 1);
+            disconnectForcibly(quiesceTimeout, disconnectTimeout);
             emitter.onComplete();
         }).subscribeOn(Schedulers.io());
     }
@@ -184,5 +198,86 @@ public class PahoV3MQTTClient extends MqttAsyncClient {
                 "clientId=" + getClientId() + "," +
                 "serverUri=" + getServerURI() + "," +
                 "activeSub=" + activeSubs + "}";
+    }
+
+    @Override
+    public void setCallback(MqttCallback callback) {
+        this.mRealCallback = callback;
+    }
+
+
+    /**
+     * 设置消息接收
+     */
+    public void setMessageReceiver(IMQTTMessageReceiver messageReceiver) {
+        this.messageReceiver = messageReceiver;
+    }
+
+    //---------------------------------------------------------------------------------------------
+
+    /**
+     * 内部代理 Callback
+     */
+    class InternalProxyCallback implements MqttCallbackExtended {
+
+        /**
+         * 触发条件是setAutomaticReconnect为True的时候,第一次连接成功和重连成功后会触发该方法
+         *
+         * @param reconnect 如何设置了cleanSession为false 重连后会订阅之前的主题，否则不会订阅之前的主题
+         * @param serverURI 服务端URI
+         */
+        @Override
+        public void connectComplete(boolean reconnect, String serverURI) {
+            MQTTUtils.logD(TAG, "connectComplete,serverURI:" + serverURI + ",reconnect:" + reconnect);
+            if (mRealCallback != null && mRealCallback instanceof MqttCallbackExtended) {
+                ((MqttCallbackExtended) mRealCallback).connectComplete(reconnect, serverURI);
+            }
+        }
+
+        /**
+         * connectionLost 是在连接已经连上且丢失后走这里,掉线之后会在消息接收线程上回调
+         *
+         * @param cause 连接丢失的原因
+         */
+        @Override
+        public void connectionLost(Throwable cause) {
+            MQTTUtils.logD(TAG, "connectionLost:" + cause.toString());
+            if (mRealCallback != null) {
+                mRealCallback.connectionLost(cause);
+            }
+        }
+
+        /**
+         * 接收到消息会触发此方法
+         *
+         * @param topic
+         * @param message
+         * @throws Exception
+         */
+        @Override
+        public void messageArrived(String topic, MqttMessage message) throws Exception {
+            MQTTUtils.logD(TAG, "messageArrived detail,topic:" + topic +
+                    ",Qos:" + message.getQos() + ",length:" + message.getPayload().length);
+            if (mRealCallback != null) {
+                mRealCallback.messageArrived(topic, message);
+            }
+
+            if (messageReceiver != null) {
+                messageReceiver.onReceive(topic, message.getPayload());
+            }
+        }
+
+        /**
+         * 消息发送成功会触发此方法
+         *
+         * @param token
+         */
+        @Override
+        public void deliveryComplete(IMqttDeliveryToken token) {
+            MQTTUtils.logD(TAG, "deliveryComplete");
+            if (mRealCallback != null) {
+                mRealCallback.deliveryComplete(token);
+            }
+        }
     }
 }

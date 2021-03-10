@@ -84,4 +84,7 @@ dependencies {
 
     //https://github.com/daimajia/AndroidViewAnimations
     implementation 'org.greenrobot:eventbus:3.2.0'
+
+    //https://github.com/li-xiaojun/XPopup
+    implementation 'com.lxj:xpopup:2.2.0'
 }
