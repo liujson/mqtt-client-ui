@@ -52,11 +52,13 @@ public class PahoV3MQTTClient extends MqttAsyncClient {
 
     private IMQTTMessageReceiver messageReceiver;
 
+
     public PahoV3MQTTClient(final IMQTTBuilder builder) throws MqttException {
         super(Objects.requireNonNull(builder.getHost()),
                 TextUtils.isEmpty(builder.getClientId()) ?
                         MQTTUtils.generateClientId() : builder.getClientId(),
                 new MemoryPersistence());
+
         mConnOpts = new MqttConnectOptions();
         mConnOpts.setCleanSession(builder.isCleanSession());
 
@@ -198,6 +200,11 @@ public class PahoV3MQTTClient extends MqttAsyncClient {
                 "clientId=" + getClientId() + "," +
                 "serverUri=" + getServerURI() + "," +
                 "activeSub=" + activeSubs + "}";
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(activeSubs, mConnOpts, mRealCallback, messageReceiver);
     }
 
     @Override

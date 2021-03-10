@@ -2,6 +2,8 @@ package cn.liujson.client.ui.fragments;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -9,6 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import cn.liujson.client.databinding.FragmentTopicsBinding;
+import cn.liujson.client.ui.viewmodel.PublishViewModel;
+import cn.liujson.client.ui.viewmodel.TopicsViewModel;
+import cn.liujson.client.ui.widget.OnSingleCheckedListener;
 
 /**
  * 主题订阅/取消订阅/查看订阅页面
@@ -19,6 +24,8 @@ import cn.liujson.client.databinding.FragmentTopicsBinding;
 public class TopicsFragment extends Fragment {
 
     FragmentTopicsBinding binding;
+
+    TopicsViewModel viewModel;
 
     public TopicsFragment() {
         // Required empty public constructor
@@ -45,5 +52,14 @@ public class TopicsFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentTopicsBinding.inflate(inflater, container, false);
         return binding.getRoot();
+    }
+
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        binding.chipGroupTopicQos.setOnCheckedChangeListener(new OnSingleCheckedListener(binding.chipGroupTopicQos));
+        binding.setVm(viewModel = new TopicsViewModel(getLifecycle()));
+
     }
 }

@@ -8,6 +8,7 @@ import android.os.IBinder;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.service.MqttMgr;
+import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
@@ -90,6 +91,10 @@ public class ConnectionServiceRepository {
 
     public boolean isSetup() {
         return serviceBinder.isSetup();
+    }
+
+    public boolean isSame(IMQTTBuilder builder) {
+        return serviceBinder.isSame(builder);
     }
 
     public boolean isConnected() {

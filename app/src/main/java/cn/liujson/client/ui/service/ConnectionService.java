@@ -10,8 +10,10 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
@@ -129,6 +131,11 @@ public class ConnectionService extends Service {
         @Override
         public boolean isSetup() {
             return this.getWrapper() != null;
+        }
+
+        @Override
+        public boolean isSame(IMQTTBuilder builder) {
+            return Objects.equals(mqttClient.getBuilder(), builder);
         }
 
         @Override

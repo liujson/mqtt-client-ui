@@ -51,6 +51,7 @@ import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
+import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.service.MqttBuilder;
 import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
 import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
@@ -262,25 +263,9 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
     public void connectClick(View view) {
         if (!dataList.isEmpty()) {
             final ConnectionProfile profile = oriDataList.get(viewDataBinding.spinner.getSelectedIndex());
-            Completable actionCompletable = viewModel.getRepository()
-                    .connect().observeOn(AndroidSchedulers.mainThread());
-            //如果已经配置和已经连接上则断开连接然后再创建新的连接
-            if (viewModel.getRepository().isSetup()) {
-                if (viewModel.getRepository().isConnected()) {
-                    actionCompletable = viewModel.getRepository().closeSafety()
-                            //如果安全断开失败则强制断开连接
-                            .onErrorResumeNext(throwable -> viewModel.getRepository().closeForcibly())
-                            .andThen(actionCompletable);
-                }
-            } else {
-                //如果未安装则进行安装
-                final IMQTTWrapper<PahoV3MQTTClient> wrapper = viewModel.create(profile);
-                if (wrapper != null) {
-                    viewModel.getRepository().setup(wrapper);
-                }
-            }
+            final IMQTTBuilder builder = viewModel.profile2MQTTBuilder(profile);
             //执行连接逻辑
-            Disposable subscribe = actionCompletable
+            Disposable subscribe = viewModel.setupAndConnect(builder)
                     .subscribe(() -> {
                         ToastHelper.showToast(this, "连接成功");
                         viewModel.fieldConnectEnable.set(false);

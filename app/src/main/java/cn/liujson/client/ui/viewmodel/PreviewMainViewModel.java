@@ -21,6 +21,8 @@ import cn.liujson.lib.mqtt.service.MqttBuilder;
 import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
 import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
 import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTWrapper;
+import io.reactivex.Completable;
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -39,7 +41,7 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
     private Navigator navigator;
 
 
-    ConnectionServiceRepository repository;
+    private final ConnectionServiceRepository repository;
 
     public void setNavigator(Navigator navigator) {
         this.navigator = navigator;
@@ -52,9 +54,8 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
     }
 
     public ConnectionServiceRepository getRepository() {
-       return repository;
+        return repository;
     }
-
 
 
     @Override
@@ -90,16 +91,48 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
                 });
     }
 
+    public IMQTTBuilder profile2MQTTBuilder(ConnectionProfile profile) {
+        final MqttBuilder builder = new MqttBuilder();
+        builder.host("tcp://" + profile.brokerAddress + ":" + profile.brokerPort);
+        builder.cleanSession(profile.cleanSession);
+        return builder;
+    }
 
-    public IMQTTWrapper<PahoV3MQTTClient> create(ConnectionProfile profile) {
+    public IMQTTWrapper<PahoV3MQTTClient> create(IMQTTBuilder builder) {
         try {
-            MqttBuilder builder = new MqttBuilder();
-            builder.host("tcp://" + profile.brokerAddress + ":" + profile.brokerPort);
-            builder.cleanSession(profile.cleanSession);
             return new PahoV3MQTTWrapper(builder);
         } catch (WrapMQTTException e) {
             return null;
         }
+    }
+
+    /**
+     * 配置并且连接
+     * 如果当前存在已配置的且和目标builder相同不重新配置，否则重新配置；
+     * 如果旧的还在连接着先尝试安全关闭，如果失败，采取强制关闭
+     *
+     * @param builder
+     * @return
+     */
+    public Completable setupAndConnect(IMQTTBuilder builder) {
+        Completable actionCompletable = getRepository()
+                .connect().observeOn(AndroidSchedulers.mainThread());
+        //如果已经配置和已经连接上则断开连接然后再创建新的连接
+        if (getRepository().isSetup() && getRepository().isSame(builder)) {
+            if (getRepository().isConnected()) {
+                actionCompletable = getRepository().closeSafety()
+                        //如果安全断开失败则强制断开连接
+                        .onErrorResumeNext(throwable -> getRepository().closeForcibly())
+                        .andThen(actionCompletable);
+            }
+        } else {
+            //如果未安装则进行安装
+            final IMQTTWrapper<PahoV3MQTTClient> wrapper = create(builder);
+            if (wrapper != null) {
+                getRepository().setup(wrapper);
+            }
+        }
+        return actionCompletable;
     }
 
     @Override

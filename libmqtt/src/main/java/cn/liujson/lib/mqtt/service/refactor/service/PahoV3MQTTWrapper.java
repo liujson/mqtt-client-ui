@@ -32,9 +32,12 @@ public class PahoV3MQTTWrapper implements IMQTTWrapper<PahoV3MQTTClient> {
 
     private final PahoV3MQTTClient pahoV3MQTTClient;
 
+    private final IMQTTBuilder builder;
+
     public PahoV3MQTTWrapper(final IMQTTBuilder builder) throws WrapMQTTException {
         try {
             pahoV3MQTTClient = new PahoV3MQTTClient(builder);
+            this.builder = builder;
         } catch (Exception e) {
             throw new WrapMQTTException(e);
         }
@@ -44,6 +47,11 @@ public class PahoV3MQTTWrapper implements IMQTTWrapper<PahoV3MQTTClient> {
     @Override
     public PahoV3MQTTClient getClient() {
         return pahoV3MQTTClient;
+    }
+
+    @Override
+    public IMQTTBuilder getBuilder() {
+        return builder;
     }
 
     @Override
@@ -61,14 +69,6 @@ public class PahoV3MQTTWrapper implements IMQTTWrapper<PahoV3MQTTClient> {
     @Override
     public String toString() {
         return "PahoV3MQTTWrapper{" + getClient().toString() + "}";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PahoV3MQTTWrapper that = (PahoV3MQTTWrapper) o;
-        return pahoV3MQTTClient == that.pahoV3MQTTClient;
     }
 
     @Override

@@ -14,9 +14,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import cn.liujson.client.databinding.FragmentPublishBinding;
 
+import cn.liujson.client.ui.base.BaseFragment;
+import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.service.ConnectionService;
+import cn.liujson.client.ui.viewmodel.PublishViewModel;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.OnSingleCheckedListener;
 
@@ -26,12 +32,12 @@ import cn.liujson.client.ui.widget.OnSingleCheckedListener;
  * Use the {@link PublishFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PublishFragment extends Fragment implements ConnectionServiceRepository.OnBindStatus{
+public class PublishFragment extends BaseFragment {
 
     FragmentPublishBinding binding;
 
 
-    ConnectionServiceRepository repository;
+    PublishViewModel viewModel;
 
     public PublishFragment() {
         // Required empty public constructor
@@ -54,6 +60,7 @@ public class PublishFragment extends Fragment implements ConnectionServiceReposi
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        super.onCreateView(inflater,container,savedInstanceState);
         // Inflate the layout for this fragment
         binding = FragmentPublishBinding.inflate(inflater, container, false);
         return binding.getRoot();
@@ -63,28 +70,28 @@ public class PublishFragment extends Fragment implements ConnectionServiceReposi
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         binding.chipGroupTopicQos.setOnCheckedChangeListener(new OnSingleCheckedListener(binding.chipGroupTopicQos));
+        binding.setVm(viewModel = new PublishViewModel(getLifecycle()));
+        viewModel.getRepository().bindConnectionService(getContext());
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        repository = new ConnectionServiceRepository(this);
-        repository.bindConnectionService(getContext());
+    public void onDestroyView() {
+        super.onDestroyView();
+        viewModel.getRepository().unbindConnectionService();
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        repository.unbindConnectionService();
+    public boolean useEventBus() {
+        return true;
     }
 
-    @Override
-    public void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder) {
-        //绑定成功
-    }
 
-    @Override
-    public void onBindFailure() {
-        //绑定失败
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onConnectChangeEvent(ConnectChangeEvent event) {
+        if (event.isConnected) {
+            viewModel.fieldAllEnable.set(true);
+        } else {
+            viewModel.fieldAllEnable.set(false);
+        }
     }
 }

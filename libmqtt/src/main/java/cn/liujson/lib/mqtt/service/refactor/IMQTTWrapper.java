@@ -1,6 +1,7 @@
 package cn.liujson.lib.mqtt.service.refactor;
 
 
+import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 
 /**
@@ -15,6 +16,12 @@ public interface IMQTTWrapper<T> {
      * @return IMQTTService 的实现
      */
     T getClient();
+
+    /**
+     * 获取连接参数
+     * @return
+     */
+    IMQTTBuilder getBuilder();
 
     /**
      * 设置接收消息监听

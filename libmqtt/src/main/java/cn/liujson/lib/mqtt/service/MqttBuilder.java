@@ -1,5 +1,7 @@
 package cn.liujson.lib.mqtt.service;
 
+import java.util.Objects;
+
 import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.QoS;
 
@@ -145,5 +147,28 @@ public class MqttBuilder implements IMQTTBuilder {
     @Override
     public boolean isAutoReconnect() {
         return autoReconnect;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MqttBuilder builder = (MqttBuilder) o;
+        return cleanSession == builder.cleanSession &&
+                keepAlive == builder.keepAlive &&
+                autoReconnect == builder.autoReconnect &&
+                Objects.equals(host, builder.host) &&
+                Objects.equals(clientId, builder.clientId) &&
+                Objects.equals(userName, builder.userName) &&
+                Objects.equals(password, builder.password) &&
+                Objects.equals(willTopic, builder.willTopic) &&
+                Objects.equals(willMessage, builder.willMessage) &&
+                willQos == builder.willQos;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(host, clientId, cleanSession, keepAlive, userName, password, willTopic, willMessage, willQos, autoReconnect);
     }
 }

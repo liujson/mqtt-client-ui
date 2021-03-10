@@ -20,6 +20,7 @@ public abstract class ConnectionBinder<C> extends Binder {
     /**
      * 配置Client成服务运行，服务运行会使其生命周期变长，请小心内存泄露
      * setup 后消息接收监听器会被清除，请重新调用设置监听器 registerMessageReceiver
+     *
      * @return
      */
     public abstract IMQTTWrapper<C> setup(IMQTTWrapper<C> imqttWrapper);
@@ -28,6 +29,14 @@ public abstract class ConnectionBinder<C> extends Binder {
      * 是否已经配置
      */
     public abstract boolean isSetup();
+
+
+    /**
+     * 目标与已安装的是同一个（参数一致）
+     *
+     * @return
+     */
+    public abstract boolean isSame(IMQTTBuilder builder);
 
     /**
      * 注册消息接收监听器
