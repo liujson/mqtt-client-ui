@@ -18,21 +18,20 @@ import org.greenrobot.eventbus.EventBus;
 public abstract class BaseFragment extends Fragment {
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        if (useEventBus()) {
+    public void onStart() {
+        super.onStart();
+        if (useEventBus() && !EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (useEventBus()) {
+    public void onStop() {
+        super.onStop();
+        if (useEventBus() && EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().unregister(this);
         }
     }
-
 
     public boolean useEventBus() {
         return false;

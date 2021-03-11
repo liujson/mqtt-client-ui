@@ -23,27 +23,17 @@
 
             <EditText
                 android:id="@+id/et_topic_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:background="@drawable/selector_input_bg"
+                style="@style/et_input_style"
                 android:enabled="@{vm.fieldAllEnable}"
-                android:gravity="top"
                 android:hint="Please input topic"
-                android:padding="5dp"
-                android:text="@={vm.fieldInputTopic}"
-                android:textSize="16sp" />
+                android:text="@={vm.fieldInputTopic}" />
 
             <EditText
                 android:id="@+id/et_publish_input"
-                android:layout_width="match_parent"
-                android:layout_height="320dp"
+                style="@style/et_input_style"
+                android:layout_height="300dp"
                 android:layout_below="@id/et_topic_input"
-                android:layout_margin="5dp"
-                android:background="@drawable/selector_input_bg"
                 android:enabled="@{vm.fieldAllEnable}"
-                android:gravity="left|top"
-                android:padding="5dp"
                 android:text="@={vm.fieldInputContent}" />
 
             <com.google.android.material.chip.ChipGroup
@@ -93,10 +83,11 @@
                 android:layout_below="@id/chip_group_topic_retained"
                 android:layout_marginTop="15dp"
                 android:layout_marginEnd="10dp"
+                android:layout_marginStart="5dp"
                 android:background="@drawable/selector_btn_blue_style"
                 android:enabled="@{vm.fieldAllEnable}"
                 android:letterSpacing="0.08"
-                android:onClick="@{v->vm.publish()}"
+                android:onClick="@{v->vm.publish(v)}"
                 android:text="Publish"
                 android:textAllCaps="false"
                 android:textColor="@color/selector_btn_text_blue_btn" />

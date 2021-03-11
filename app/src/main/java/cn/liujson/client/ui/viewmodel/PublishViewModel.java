@@ -1,5 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
+
 import android.view.View;
 
 import androidx.databinding.ObservableBoolean;
@@ -12,6 +13,8 @@ import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.lib.mqtt.api.QoS;
+
+import io.reactivex.disposables.Disposable;
 
 /**
  * 发布
@@ -27,6 +30,8 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
 
     private final ConnectionServiceRepository repository;
 
+    private Disposable publishDisposable;
+
     public PublishViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);
         repository = new ConnectionServiceRepository(this);
@@ -39,19 +44,28 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
     /**
      * 发布消息
      */
-    public void publish() {
+    public void publish(View view) {
+        // TODO: 2021/3/11
         final CharSequence topic = fieldInputTopic.get();
         final CharSequence content = fieldInputContent.get();
-        repository.publish(topic.toString(), content.toString(), QoS.AT_MOST_ONCE, false)
+        publishDisposable = repository.publish(topic.toString(), content.toString(), QoS.AT_MOST_ONCE, false)
+                .doOnSubscribe(disposable -> {
+                    view.setEnabled(false);
+                })
                 .subscribe(() -> {
+                    view.setEnabled(true);
                     ToastHelper.showToast(CustomApplication.getApp(), "发送成功");
+                }, throwable -> {
+                    view.setEnabled(true);
+                    ToastHelper.showToast(CustomApplication.getApp(), "发送异常");
                 });
-
     }
 
     @Override
     public void onRelease() {
-
+        if (publishDisposable != null) {
+            publishDisposable.dispose();
+        }
     }
 
     @Override

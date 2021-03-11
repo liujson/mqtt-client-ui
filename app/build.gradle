@@ -87,4 +87,7 @@ dependencies {
 
     //https://github.com/li-xiaojun/XPopup
     implementation 'com.lxj:xpopup:2.2.0'
+
+    //https://github.com/JessYanCoding/AndroidAutoSize
+    implementation 'me.jessyan:autosize:1.2.1'
 }
