@@ -90,4 +90,7 @@ dependencies {
 
     //https://github.com/JessYanCoding/AndroidAutoSize
     implementation 'me.jessyan:autosize:1.2.1'
+
+    //https://github.com/orhanobut/logger
+    implementation 'com.orhanobut:logger:2.2.0'
 }

@@ -65,6 +65,14 @@ public class TopicsFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
         binding.chipGroupTopicQos.setOnCheckedChangeListener(new OnSingleCheckedListener(binding.chipGroupTopicQos));
         binding.setVm(viewModel = new TopicsViewModel(getLifecycle()));
+        viewModel.getRepository().bindConnectionService(getContext());
+    }
+
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        viewModel.getRepository().unbindConnectionService();
     }
 
 
@@ -72,6 +80,7 @@ public class TopicsFragment extends BaseFragment {
     public boolean useEventBus() {
         return true;
     }
+
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)

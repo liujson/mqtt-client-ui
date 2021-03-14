@@ -1,28 +1,34 @@
 package cn.liujson.client.ui.viewmodel;
 
-import android.content.Context;
+
 
 import androidx.databinding.ObservableBoolean;
 import androidx.lifecycle.Lifecycle;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
+import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.lib.mqtt.api.IMQTTBuilder;
-import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
+
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.service.MqttBuilder;
 import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
 import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
 import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTWrapper;
 import io.reactivex.Completable;
-import io.reactivex.Observable;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -31,7 +37,7 @@ import io.reactivex.schedulers.Schedulers;
  * @author liujson
  * @date 2021/3/4.
  */
-public class PreviewMainViewModel extends BaseViewModel implements ConnectionServiceRepository.OnBindStatus {
+public class PreviewMainViewModel extends BaseViewModel implements ConnectionServiceRepository.OnBindStatus, MqttCallbackExtended {
 
     public final ObservableBoolean fieldConnectEnable = new ObservableBoolean(false);
     public final ObservableBoolean fieldDisconnectEnable = new ObservableBoolean(false);
@@ -63,6 +69,9 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
         if (loadProfilesDisposable != null) {
             loadProfilesDisposable.dispose();
             loadProfilesDisposable = null;
+        }
+        if (repository.isSetup()) {
+            repository.setCallback(null);
         }
     }
 
@@ -130,6 +139,7 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
             final IMQTTWrapper<PahoV3MQTTClient> wrapper = create(builder);
             if (wrapper != null) {
                 getRepository().setup(wrapper);
+                getRepository().setCallback(this);
             }
         }
         return actionCompletable;
@@ -147,6 +157,26 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
         if (navigator != null) {
             navigator.onBindFailure();
         }
+    }
+
+    @Override
+    public void connectComplete(boolean reconnect, String serverURI) {
+        EventBus.getDefault().post(new ConnectChangeEvent(true));
+    }
+
+    @Override
+    public void connectionLost(Throwable cause) {
+        EventBus.getDefault().post(new ConnectChangeEvent(false));
+    }
+
+    @Override
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
+
+    }
+
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken token) {
+
     }
 
 

@@ -270,12 +270,10 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                         ToastHelper.showToast(this, "连接成功");
                         viewModel.fieldConnectEnable.set(false);
                         viewModel.fieldDisconnectEnable.set(true);
-                        EventBus.getDefault().post(new ConnectChangeEvent(true));
                     }, throwable -> {
                         ToastHelper.showToast(this, "连接失败");
                         viewModel.fieldConnectEnable.set(true);
                         viewModel.fieldDisconnectEnable.set(false);
-                        EventBus.getDefault().post(new ConnectChangeEvent(false));
                     });
 
             mCompositeDisposable.add(subscribe);
@@ -300,6 +298,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                             viewModel.fieldConnectEnable.set(true);
                             viewModel.fieldDisconnectEnable.set(false);
                             ToastHelper.showToast(this, "断开成功");
+                            EventBus.getDefault().post(new ConnectChangeEvent(false));
                         }, throwable -> {
                             ToastHelper.showToast(this, "断开失败");
                         });

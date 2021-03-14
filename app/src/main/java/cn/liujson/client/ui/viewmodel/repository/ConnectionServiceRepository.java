@@ -5,6 +5,11 @@ import android.content.Context;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.service.MqttMgr;
@@ -120,6 +125,10 @@ public class ConnectionServiceRepository {
 
     public void setup(IMQTTWrapper<PahoV3MQTTClient> clientIMQTTWrapper) {
         serviceBinder.setup(clientIMQTTWrapper);
+    }
+
+    public void setCallback(MqttCallback callback){
+        serviceBinder.getWrapper().getClient().setCallback(callback);
     }
 
     public Completable connect() {

@@ -32,6 +32,8 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
 
     private Disposable publishDisposable;
 
+    private Navigator navigator;
+
     public PublishViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);
         repository = new ConnectionServiceRepository(this);
@@ -45,9 +47,16 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
      * 发布消息
      */
     public void publish(View view) {
-        // TODO: 2021/3/11
+        if (this.navigator == null || !this.navigator.checkPublishParam()) {
+            return;
+        }
+
         final CharSequence topic = fieldInputTopic.get();
-        final CharSequence content = fieldInputContent.get();
+        CharSequence content = fieldInputContent.get();
+        if (content == null) {
+            content = "";
+        }
+        assert topic != null;
         publishDisposable = repository.publish(topic.toString(), content.toString(), QoS.AT_MOST_ONCE, false)
                 .doOnSubscribe(disposable -> {
                     view.setEnabled(false);
@@ -76,5 +85,18 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
     @Override
     public void onBindFailure() {
 
+    }
+
+    public void setNavigator(Navigator navigator) {
+        this.navigator = navigator;
+    }
+
+    public interface Navigator {
+        /**
+         * 检查发布参数
+         *
+         * @return
+         */
+        boolean checkPublishParam();
     }
 }

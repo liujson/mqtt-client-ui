@@ -6,8 +6,11 @@ import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
 
+import org.greenrobot.eventbus.EventBus;
+
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
+import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
@@ -42,6 +45,11 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
         }
     }
 
+
+    public ConnectionServiceRepository getRepository() {
+        return repository;
+    }
+
     /**
      * 订阅主题
      *
@@ -65,7 +73,13 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
 
     @Override
     public void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder) {
-
+        if (serviceBinder.isSetup()) {
+            if (serviceBinder.getWrapper().getClient().isConnected()) {
+                EventBus.getDefault().post(new ConnectChangeEvent(true));
+            } else {
+                EventBus.getDefault().post(new ConnectChangeEvent(false));
+            }
+        }
     }
 
     @Override

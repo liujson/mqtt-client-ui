@@ -76,7 +76,7 @@
             android:background="@drawable/selector_btn_blue_style"
             android:enabled="@{vm.fieldAllEnable}"
             android:letterSpacing="0.08"
-            android:text="Submit"
+            android:text="Subscribe"
             android:textAllCaps="false"
             android:textColor="@color/selector_btn_text_blue_btn" />
 
