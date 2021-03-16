@@ -1,7 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
 
-
 import androidx.databinding.ObservableBoolean;
 import androidx.lifecycle.Lifecycle;
 
@@ -10,6 +9,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.Arrays;
 import java.util.List;
 
 import cn.liujson.client.ui.app.CustomApplication;
@@ -27,6 +27,7 @@ import cn.liujson.lib.mqtt.service.MqttBuilder;
 import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
 import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
 import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTWrapper;
+import cn.liujson.logger.LogUtils;
 import io.reactivex.Completable;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -96,6 +97,7 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
                     }
                 }, throwable -> {
                     loadProfilesDisposable = null;
+                    LogUtils.e("load connection profiles failure." + throwable.toString());
                     ToastHelper.showToast(CustomApplication.getApp(), "load connection profiles failure.");
                 });
     }
@@ -162,21 +164,23 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
     @Override
     public void connectComplete(boolean reconnect, String serverURI) {
         EventBus.getDefault().post(new ConnectChangeEvent(true));
+        LogUtils.d("MQTT 连接成功,是否重连：" + reconnect + ",serverUri:" + serverURI);
     }
 
     @Override
     public void connectionLost(Throwable cause) {
         EventBus.getDefault().post(new ConnectChangeEvent(false));
+        LogUtils.e("MQTT 失去连接：" + cause.toString());
     }
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-
+        LogUtils.d("MQTT 收到消息，topic：" + topic + ",message length:" + message.getPayload().length);
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-
+        LogUtils.d("MQTT 消息送达，topic：" + Arrays.toString(token.getTopics()));
     }
 
 

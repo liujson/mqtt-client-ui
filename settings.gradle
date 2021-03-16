@@ -1,3 +1,4 @@
+include ':liblogger'
 include ':libmqtt'
 include ':app'
 rootProject.name = "Refactor"

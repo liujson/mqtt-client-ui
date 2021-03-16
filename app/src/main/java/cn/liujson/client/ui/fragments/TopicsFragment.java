@@ -16,7 +16,6 @@ import org.greenrobot.eventbus.ThreadMode;
 import cn.liujson.client.databinding.FragmentTopicsBinding;
 import cn.liujson.client.ui.base.BaseFragment;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
-import cn.liujson.client.ui.viewmodel.PublishViewModel;
 import cn.liujson.client.ui.viewmodel.TopicsViewModel;
 import cn.liujson.client.ui.widget.OnSingleCheckedListener;
 

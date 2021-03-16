@@ -32,6 +32,8 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
 
     private Disposable subscribeDisposable;
 
+    private PublishViewModel.Navigator navigator;
+
     public TopicsViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);
 
@@ -85,5 +87,24 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
     @Override
     public void onBindFailure() {
 
+    }
+
+    public void setNavigator(PublishViewModel.Navigator navigator) {
+        this.navigator = navigator;
+    }
+
+    public interface Navigator {
+        /**
+         * 检查发布参数
+         *
+         * @return
+         */
+        boolean checkParam();
+
+
+        /**
+         * 读取 qos
+         */
+        QoS readQos();
     }
 }

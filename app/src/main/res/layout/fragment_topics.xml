@@ -22,8 +22,7 @@
             style="@style/et_input_style"
             android:enabled="@{vm.fieldAllEnable}"
             android:hint="Please input topic"
-            android:text="@={vm.fieldInputTopic}"
-            android:textSize="22sp" />
+            android:text="@={vm.fieldInputTopic}" />
 
 
         <com.google.android.material.chip.ChipGroup
@@ -51,25 +50,11 @@
                 android:text="QoS 2" />
         </com.google.android.material.chip.ChipGroup>
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_topic_retained"
-            style="@style/chip_group_qos_selection_style"
-            android:layout_below="@id/et_topic_input"
-            android:layout_toEndOf="@id/chip_group_topic_qos"
-            app:singleSelection="false">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/cb_retained"
-                style="@style/chip_qos_selection_style"
-                android:enabled="@{vm.fieldAllEnable}"
-                android:text="Retained" />
-        </com.google.android.material.chip.ChipGroup>
-
         <Button
             android:id="@+id/btn_submit"
             android:layout_width="100dp"
             android:layout_height="32dp"
-            android:layout_below="@id/chip_group_topic_retained"
+            android:layout_below="@id/chip_group_topic_qos"
             android:layout_marginTop="15dp"
             android:layout_marginEnd="10dp"
             android:layout_marginStart="5dp"

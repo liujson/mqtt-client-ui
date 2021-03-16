@@ -14,6 +14,7 @@ import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.lib.mqtt.api.QoS;
 
+import cn.liujson.logger.LogUtils;
 import io.reactivex.disposables.Disposable;
 
 /**
@@ -52,21 +53,29 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
         }
 
         final CharSequence topic = fieldInputTopic.get();
-        CharSequence content = fieldInputContent.get();
-        if (content == null) {
+        final CharSequence content;
+        if (fieldInputContent.get() == null) {
             content = "";
+        } else {
+            content = fieldInputContent.get();
         }
         assert topic != null;
-        publishDisposable = repository.publish(topic.toString(), content.toString(), QoS.AT_MOST_ONCE, false)
+        assert content != null;
+        publishDisposable = repository.publish(topic.toString(),
+                content.toString(),
+                navigator.readQos(),
+                navigator.isRetained())
                 .doOnSubscribe(disposable -> {
                     view.setEnabled(false);
                 })
                 .subscribe(() -> {
                     view.setEnabled(true);
                     ToastHelper.showToast(CustomApplication.getApp(), "发送成功");
+                    LogUtils.d("MQTT 发送成功,topic:" + topic + ",content:" + content);
                 }, throwable -> {
                     view.setEnabled(true);
                     ToastHelper.showToast(CustomApplication.getApp(), "发送异常");
+                    LogUtils.d("MQTT 发送失败,topic:" + topic);
                 });
     }
 
@@ -98,5 +107,16 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
          * @return
          */
         boolean checkPublishParam();
+
+
+        /**
+         * 读取 qos
+         */
+        QoS readQos();
+
+        /**
+         * 是否勾选 retained
+         */
+        boolean isRetained();
     }
 }

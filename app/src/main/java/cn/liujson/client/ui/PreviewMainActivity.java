@@ -6,15 +6,11 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
@@ -30,8 +26,7 @@ import net.lucode.hackware.magicindicator.buildins.commonnavigator.indicators.Wr
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.ColorTransitionPagerTitleView;
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.SimplePagerTitleView;
 
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
+
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -48,24 +43,17 @@ import cn.liujson.client.ui.fragments.PublishFragment;
 import cn.liujson.client.ui.fragments.TopicsFragment;
 import cn.liujson.client.ui.fragments.WorkingStatusFragment;
 import cn.liujson.client.ui.service.ConnectionService;
-import cn.liujson.client.ui.service.MqttMgr;
+
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 import cn.liujson.lib.mqtt.api.IMQTTBuilder;
-import cn.liujson.lib.mqtt.service.MqttBuilder;
-import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
-import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
-import io.reactivex.Completable;
-import io.reactivex.CompletableObserver;
-import io.reactivex.CompletableSource;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
+
+import cn.liujson.logger.LogUtils;
+
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
 
 
 public class PreviewMainActivity extends AppCompatActivity implements PreviewMainViewModel.Navigator {
@@ -100,6 +88,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
 
 
         mCompositeDisposable = new CompositeDisposable();
+
     }
 
     @Override
@@ -148,6 +137,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
      */
     @Override
     public void notifyChangeSpinner(List<ConnectionProfile> data) {
+        LogUtils.d(TAG, "通知spinner数据改变");
         dataList.clear();
         oriDataList.clear();
         for (ConnectionProfile datum : data) {
@@ -270,10 +260,12 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                         ToastHelper.showToast(this, "连接成功");
                         viewModel.fieldConnectEnable.set(false);
                         viewModel.fieldDisconnectEnable.set(true);
+                        LogUtils.d("MQTT 第一次连接成功");
                     }, throwable -> {
                         ToastHelper.showToast(this, "连接失败");
                         viewModel.fieldConnectEnable.set(true);
                         viewModel.fieldDisconnectEnable.set(false);
+                        LogUtils.e("MQTT 第一次连接失败：" + throwable.toString());
                     });
 
             mCompositeDisposable.add(subscribe);
@@ -299,8 +291,10 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                             viewModel.fieldDisconnectEnable.set(false);
                             ToastHelper.showToast(this, "断开成功");
                             EventBus.getDefault().post(new ConnectChangeEvent(false));
+                            LogUtils.d("MQTT 断开连接成功");
                         }, throwable -> {
                             ToastHelper.showToast(this, "断开失败");
+                            LogUtils.e("MQTT 断开连接失败：" + throwable.toString());
                         });
         mCompositeDisposable.add(subscribe);
     }

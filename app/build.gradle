@@ -49,6 +49,7 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
+    implementation project(path: ':liblogger')
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
@@ -92,5 +93,4 @@ dependencies {
     implementation 'me.jessyan:autosize:1.2.1'
 
     //https://github.com/orhanobut/logger
-    implementation 'com.orhanobut:logger:2.2.0'
 }
