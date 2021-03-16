@@ -8,21 +8,28 @@ import com.orhanobut.logger.Logger;
 
 
 /**
- * 日志记录框架
+ * 日志记录工具类（此工具类尽可能的描述可能出现的日志打印格式）
  * 基于 https://github.com/orhanobut/logger 日志框架封装
- * （此类描述可能出现的日志打印格式）
- *
+ * 【警告】：日志打印多少会有一些性能的影响，请尽量打印重要的信息。切勿打印包含隐私信息的日志，以免泄露隐私数据。
+ * 在应用正式发布时，建议关闭DEBUG日志。
  * @author liujson
  * @date 2021/3/15.
  */
 public class LogUtils {
 
+    /**
+     * 初始化添加日志适配器
+     * @param logAdapters
+     */
     public static void initLogAdapters(LogAdapter... logAdapters) {
         for (LogAdapter logAdapter : logAdapters) {
             Logger.addLogAdapter(logAdapter);
         }
     }
 
+    /**
+     * 清除所有日志适配器，有些LogAdapter中启动了线程，记得一并安全关闭退出，避免资源浪费。
+     */
     public static void clearLogAdapters() {
         Logger.clearLogAdapters();
     }

@@ -14,10 +14,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ececec"
-        android:padding="10dp"
+        android:paddingTop="10dp"
         tools:context=".ui.fragments.PublishFragment">
 
         <EditText
+            android:layout_marginStart="10dp"
             android:id="@+id/et_topic_input"
             style="@style/et_input_style"
             android:enabled="@{vm.fieldAllEnable}"
@@ -27,6 +28,7 @@
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/chip_group_topic_qos"
+            android:layout_marginStart="10dp"
             style="@style/chip_group_qos_selection_style"
             android:layout_below="@id/et_topic_input"
             app:checkedChip="@id/chip_qos0">
@@ -55,9 +57,9 @@
             android:layout_width="100dp"
             android:layout_height="32dp"
             android:layout_below="@id/chip_group_topic_qos"
+            android:layout_marginStart="15dp"
             android:layout_marginTop="15dp"
             android:layout_marginEnd="10dp"
-            android:layout_marginStart="5dp"
             android:background="@drawable/selector_btn_blue_style"
             android:enabled="@{vm.fieldAllEnable}"
             android:letterSpacing="0.08"
@@ -71,14 +73,48 @@
             android:layout_height="0.8dp"
             android:layout_below="@id/btn_submit"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
             android:background="#335533" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_topics_list"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/line1" />
+            android:layout_below="@id/line1"
+            android:orientation="horizontal">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_topics_list"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                app:recyclerAdapter="@{vm.adapter}"
+                app:recyclerData="@{vm.dataList}"
+                app:recyclerLayoutManager="@{vm.layoutManager}"
+                app:recyclerItemDecoration="@{vm.itemDecoration}"/>
+
+            <View
+                android:id="@+id/line2"
+                android:layout_width="0.8dp"
+                android:layout_height="match_parent"
+                android:background="#335533" />
+
+            <RelativeLayout
+                android:id="@+id/rl_message_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#ececec"
+                android:paddingStart="10dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/selector_log_card_bg"
+                    android:enabled="false" />
+            </RelativeLayout>
+        </LinearLayout>
 
     </RelativeLayout>
 </layout>

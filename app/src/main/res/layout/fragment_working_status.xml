@@ -7,13 +7,9 @@
 
     <RelativeLayout style="@style/status_rl_right_item">
 
-        <TextView
-            style="@style/status_tv_title_right_item"
-            android:text="MQTT连接状态" />
+        <TextView style="@style/status_tv_title_right_item" />
 
-        <TextView
-            style="@style/status_tv_description_right_item"
-            android:text="@{vm.fieldIpAddress}" />
+        <TextView style="@style/status_tv_description_right_item" />
     </RelativeLayout>
 
 </RelativeLayout>

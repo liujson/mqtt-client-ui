@@ -2,18 +2,26 @@ package cn.liujson.client.ui.viewmodel;
 
 import android.view.View;
 
+import androidx.databinding.ObservableArrayList;
 import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
+import androidx.databinding.ObservableList;
 import androidx.lifecycle.Lifecycle;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import org.greenrobot.eventbus.EventBus;
 
+import cn.liujson.client.R;
+import cn.liujson.client.ui.adapter.ConnectionProfilesAdapter;
+import cn.liujson.client.ui.adapter.TopicListAdapter;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
+import cn.liujson.client.ui.widget.divider.DividerLinearItemDecoration;
 import cn.liujson.lib.mqtt.api.QoS;
 import io.reactivex.disposables.Disposable;
 
@@ -25,6 +33,12 @@ import io.reactivex.disposables.Disposable;
  */
 public class TopicsViewModel extends BaseViewModel implements ConnectionServiceRepository.OnBindStatus {
 
+    public final ObservableList<String> dataList = new ObservableArrayList<>();
+    public final TopicListAdapter adapter = new TopicListAdapter(dataList);
+    public final LinearLayoutManager layoutManager = new LinearLayoutManager(CustomApplication.getApp());
+    public final DividerLinearItemDecoration itemDecoration = new DividerLinearItemDecoration(CustomApplication.getApp(),
+            DividerLinearItemDecoration.VERTICAL_LIST, 2, R.color.color_d6d6d6);
+
     public final ObservableBoolean fieldAllEnable = new ObservableBoolean(false);
     public final ObservableField<CharSequence> fieldInputTopic = new ObservableField<>();
 
@@ -33,6 +47,8 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
     private Disposable subscribeDisposable;
 
     private PublishViewModel.Navigator navigator;
+
+
 
     public TopicsViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);

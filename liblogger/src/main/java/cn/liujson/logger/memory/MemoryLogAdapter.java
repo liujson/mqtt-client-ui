@@ -3,6 +3,7 @@ package cn.liujson.logger.memory;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.orhanobut.logger.FormatStrategy;
 import com.orhanobut.logger.LogAdapter;
 
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ public class MemoryLogAdapter implements LogAdapter {
     @NonNull
     private final MemoryFormatStrategy formatStrategy;
 
-    private List<LogAdapter> logPrintListener = new ArrayList<>();
+    private List<FormatStrategy> logPrintListener = new ArrayList<>();
 
     public MemoryLogAdapter() {
         formatStrategy = new MemoryFormatStrategy();
@@ -36,7 +37,7 @@ public class MemoryLogAdapter implements LogAdapter {
     @Override
     public void log(int priority, @Nullable String tag, @NonNull String message) {
         formatStrategy.log(priority, tag, message);
-        final Iterator<LogAdapter> it = logPrintListener.iterator();
+        final Iterator<FormatStrategy> it = logPrintListener.iterator();
         while (it.hasNext()) {
             it.next().log(priority, tag, message);
         }
@@ -57,11 +58,11 @@ public class MemoryLogAdapter implements LogAdapter {
     /**
      * 添加日志打印监听者
      */
-    public void addLogPrintListener(LogAdapter logPrintListener) {
+    public void subscribeLogPrint(FormatStrategy logPrintListener) {
         this.logPrintListener.add(logPrintListener);
     }
 
-    public void removeLogPrintListener(LogAdapter logPrintListener) {
+    public void unsubscribeLogPrint(FormatStrategy logPrintListener) {
         this.logPrintListener.remove(logPrintListener);
     }
 }

@@ -7,6 +7,7 @@ import com.orhanobut.logger.LogAdapter;
 import com.orhanobut.logger.LogcatLogStrategy;
 
 /**
+ * Android 原生形式的 Logcat 打印
  * @author liujson
  * @date 2021/3/16.
  */
