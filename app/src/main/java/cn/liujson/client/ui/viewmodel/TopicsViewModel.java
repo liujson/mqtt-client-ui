@@ -1,5 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
+import android.util.Pair;
 import android.view.View;
 
 import androidx.databinding.ObservableArrayList;
@@ -12,6 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import cn.liujson.client.R;
 import cn.liujson.client.ui.adapter.ConnectionProfilesAdapter;
 import cn.liujson.client.ui.adapter.TopicListAdapter;
@@ -22,7 +27,9 @@ import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.divider.DividerLinearItemDecoration;
+import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.logger.LogUtils;
 import io.reactivex.disposables.Disposable;
 
 /**
@@ -31,9 +38,10 @@ import io.reactivex.disposables.Disposable;
  * @author liujson
  * @date 2021/3/10.
  */
-public class TopicsViewModel extends BaseViewModel implements ConnectionServiceRepository.OnBindStatus {
+public class TopicsViewModel extends BaseViewModel implements
+        ConnectionServiceRepository.OnBindStatus, IMQTTMessageReceiver {
 
-    public final ObservableList<String> dataList = new ObservableArrayList<>();
+    public final ObservableList<Pair<String, QoS>> dataList = new ObservableArrayList<>();
     public final TopicListAdapter adapter = new TopicListAdapter(dataList);
     public final LinearLayoutManager layoutManager = new LinearLayoutManager(CustomApplication.getApp());
     public final DividerLinearItemDecoration itemDecoration = new DividerLinearItemDecoration(CustomApplication.getApp(),
@@ -42,18 +50,40 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
     public final ObservableBoolean fieldAllEnable = new ObservableBoolean(false);
     public final ObservableField<CharSequence> fieldInputTopic = new ObservableField<>();
 
+    public final ObservableField<CharSequence> fieldMessageTopic = new ObservableField<>();
+    public final ObservableField<CharSequence> fieldMessageContent = new ObservableField<>();
+    public final ObservableBoolean fieldMessageEnable = new ObservableBoolean();
+    public final ObservableField<CharSequence> fieldMessageTime = new ObservableField<>();
+    public final ObservableField<CharSequence> fieldMessageQoS = new ObservableField<>();
+
+    /**
+     * 接收到消息的列表
+     */
+    private final Map<String, List<?>> receiveMessageList = new HashMap<>();
+
     private final ConnectionServiceRepository repository;
 
-    private Disposable subscribeDisposable;
+    private Disposable subscribeDisposable, unsubscribeDisposable;
 
-    private PublishViewModel.Navigator navigator;
+    private Navigator navigator;
 
+    private volatile boolean unsubscribe_ing = false;
 
 
     public TopicsViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);
 
         repository = new ConnectionServiceRepository(this);
+
+        adapter.setOnItemChildClickListener((adapter, view, position) -> {
+            if (adapter instanceof TopicListAdapter) {
+                if (view.getId() == R.id.btn_unsubscribe) {
+                    final List<Pair<String, QoS>> data = ((TopicListAdapter) adapter).getData();
+                    unsubscribe(data.get(position).first);
+                }
+            }
+        });
+        adapter.addChildClickViewIds(R.id.btn_unsubscribe);
     }
 
     @Override
@@ -61,11 +91,21 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
         if (subscribeDisposable != null) {
             subscribeDisposable.dispose();
         }
+        if (unsubscribeDisposable != null) {
+            unsubscribeDisposable.dispose();
+        }
+        repository.unregisterReceiver(this);
     }
 
 
     public ConnectionServiceRepository getRepository() {
         return repository;
+    }
+
+    public void updateDataList(List<Pair<String, QoS>> subList) {
+        dataList.clear();
+        dataList.addAll(subList);
+        adapter.notifyDataSetChanged();
     }
 
     /**
@@ -74,26 +114,60 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
      * @param view
      */
     public void subscribe(View view) {
-        // TODO: 2021/3/11  
+        if (navigator == null || !navigator.checkParam()) {
+            return;
+        }
         final CharSequence topic = fieldInputTopic.get();
-        subscribeDisposable = repository.subscribe(topic.toString(), QoS.AT_MOST_ONCE)
+        subscribeDisposable = repository.subscribe(topic.toString(), navigator.readQos())
                 .doOnSubscribe(disposable -> {
                     view.setEnabled(false);
                 })
                 .subscribe(() -> {
                     view.setEnabled(true);
+                    updateDataList(getRepository().getSubList());
                     ToastHelper.showToast(CustomApplication.getApp(), "订阅成功");
+                    LogUtils.i("MQTT 订阅成功，topic:" + topic);
                 }, throwable -> {
                     view.setEnabled(true);
                     ToastHelper.showToast(CustomApplication.getApp(), "订阅失败");
+                    LogUtils.i("MQTT 订阅失败，topic:" + topic);
                 });
     }
+
+    /**
+     * 取消订阅主题
+     *
+     * @param topic
+     */
+    public void unsubscribe(String topic) {
+        if (unsubscribe_ing) {
+            ToastHelper.showToast(CustomApplication.getApp(), "请稍后再试");
+            return;
+        }
+        unsubscribeDisposable = repository.unsubscribe(topic)
+                .doOnSubscribe(disposable -> {
+                    unsubscribe_ing = true;
+                })
+                .subscribe(() -> {
+                    unsubscribe_ing = false;
+                    updateDataList(getRepository().getSubList());
+                    ToastHelper.showToast(CustomApplication.getApp(), "取消订阅成功");
+                    LogUtils.i("MQTT 取消订阅成功，topic:" + topic);
+                    updateDataList(getRepository().getSubList());
+                }, throwable -> {
+                    unsubscribe_ing = false;
+                    ToastHelper.showToast(CustomApplication.getApp(), "取消订阅失败");
+                    LogUtils.i("MQTT 取消订阅失败，topic:" + topic);
+                });
+    }
+
 
     @Override
     public void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder) {
         if (serviceBinder.isSetup()) {
             if (serviceBinder.getWrapper().getClient().isConnected()) {
                 EventBus.getDefault().post(new ConnectChangeEvent(true));
+                repository.registerReceiver(this);
             } else {
                 EventBus.getDefault().post(new ConnectChangeEvent(false));
             }
@@ -105,8 +179,13 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
 
     }
 
-    public void setNavigator(PublishViewModel.Navigator navigator) {
+    public void setNavigator(Navigator navigator) {
         this.navigator = navigator;
+    }
+
+    @Override
+    public void onReceive(String topic, byte[] body) throws Exception {
+
     }
 
     public interface Navigator {
@@ -122,5 +201,11 @@ public class TopicsViewModel extends BaseViewModel implements ConnectionServiceR
          * 读取 qos
          */
         QoS readQos();
+    }
+
+
+    public static class MqttMsg{
+        public String topic;
+        public byte[] body;
     }
 }

@@ -89,6 +89,8 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
 
         mCompositeDisposable = new CompositeDisposable();
 
+        viewDataBinding.mViewPager.setUserInputEnabled(false);
+
     }
 
     @Override

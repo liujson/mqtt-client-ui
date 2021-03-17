@@ -2,6 +2,8 @@ package cn.liujson.client.ui.fragments;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -10,6 +12,7 @@ import android.view.ViewGroup;
 
 
 import cn.liujson.client.databinding.FragmentLogPreviewBinding;
+import cn.liujson.client.ui.viewmodel.LogPreviewViewModel;
 
 /**
  * 日志查看 Fragment
@@ -20,6 +23,8 @@ import cn.liujson.client.databinding.FragmentLogPreviewBinding;
 public class LogPreviewFragment extends Fragment {
 
     FragmentLogPreviewBinding binding;
+    LogPreviewViewModel viewModel;
+
     public LogPreviewFragment() {
         // Required empty public constructor
     }
@@ -45,5 +50,11 @@ public class LogPreviewFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentLogPreviewBinding.inflate(inflater, container, false);
         return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        binding.setVm(viewModel = new LogPreviewViewModel(getLifecycle()));
     }
 }

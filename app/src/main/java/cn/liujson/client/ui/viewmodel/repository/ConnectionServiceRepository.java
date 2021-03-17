@@ -4,11 +4,17 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.util.Pair;
+
+import androidx.annotation.NonNull;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+
+import java.util.Collections;
+import java.util.List;
 
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.service.ConnectionService;
@@ -59,6 +65,7 @@ public class ConnectionServiceRepository {
     }
 
 
+
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -87,6 +94,14 @@ public class ConnectionServiceRepository {
         if (serviceBinder != null) {
             serviceBinder.unregisterMessageReceiver(receiver);
         }
+    }
+
+
+    public List<Pair<String, QoS>> getSubList() {
+        if (!isBind() || !isSetup()) {
+            return Collections.emptyList();
+        }
+        return serviceBinder.getWrapper().getClient().getSubList();
     }
 
 
@@ -127,7 +142,7 @@ public class ConnectionServiceRepository {
         serviceBinder.setup(clientIMQTTWrapper);
     }
 
-    public void setCallback(MqttCallback callback){
+    public void setCallback(MqttCallback callback) {
         serviceBinder.getWrapper().getClient().setCallback(callback);
     }
 

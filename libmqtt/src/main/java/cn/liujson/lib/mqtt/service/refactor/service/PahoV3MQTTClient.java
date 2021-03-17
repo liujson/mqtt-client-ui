@@ -2,6 +2,7 @@ package cn.liujson.lib.mqtt.service.refactor.service;
 
 
 import android.text.TextUtils;
+import android.util.Pair;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -16,6 +17,9 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -147,6 +151,21 @@ public class PahoV3MQTTClient extends MqttAsyncClient {
                 }
             }
         });
+    }
+
+
+    /**
+     * 获取订阅列表
+     *
+     * @return
+     */
+    public List<Pair<String, QoS>> getSubList() {
+        ArrayList<Pair<String, QoS>> subList = new ArrayList<>();
+        for (Map.Entry<String, QoS> entry : activeSubs.entrySet()) {
+            subList.add(new Pair<>(entry.getKey(), entry.getValue()));
+        }
+
+        return subList;
     }
 
     /**

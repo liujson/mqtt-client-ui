@@ -17,61 +17,71 @@
         android:paddingTop="10dp"
         tools:context=".ui.fragments.PublishFragment">
 
-        <EditText
-            android:layout_marginStart="10dp"
-            android:id="@+id/et_topic_input"
-            style="@style/et_input_style"
-            android:enabled="@{vm.fieldAllEnable}"
-            android:hint="Please input topic"
-            android:text="@={vm.fieldInputTopic}" />
-
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_topic_qos"
-            android:layout_marginStart="10dp"
-            style="@style/chip_group_qos_selection_style"
-            android:layout_below="@id/et_topic_input"
-            app:checkedChip="@id/chip_qos0">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_qos0"
-                style="@style/chip_qos_selection_style"
+        <RelativeLayout
+            android:id="@+id/rl_sub_action"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/et_topic_input"
+                style="@style/et_input_style"
+                android:layout_width="350dp"
+                android:layout_height="38dp"
+                android:paddingBottom="2dp"
+                android:paddingTop="2dp"
+                android:layout_marginStart="10dp"
                 android:enabled="@{vm.fieldAllEnable}"
-                android:text="QoS 0" />
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:hint="Please input topic"
+                android:text="@={vm.fieldInputTopic}" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_qos1"
-                style="@style/chip_qos_selection_style"
+            <Button
+                android:id="@+id/btn_submit"
+                android:layout_width="100dp"
+                android:layout_height="32dp"
+                android:layout_toEndOf="@id/et_topic_input"
+                android:background="@drawable/selector_btn_blue_style"
                 android:enabled="@{vm.fieldAllEnable}"
-                android:text="QoS 1" />
+                android:letterSpacing="0.08"
+                android:onClick="@{v->vm.subscribe(v)}"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="15dp"
+                android:text="Subscribe"
+                android:textAllCaps="false"
+                android:textColor="@color/selector_btn_text_blue_btn" />
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_topic_qos"
+                style="@style/chip_group_qos_selection_style"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="30dp"
+                app:checkedChip="@id/chip_qos0">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_qos2"
-                style="@style/chip_qos_selection_style"
-                android:enabled="@{vm.fieldAllEnable}"
-                android:text="QoS 2" />
-        </com.google.android.material.chip.ChipGroup>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_qos0"
+                    style="@style/chip_qos_selection_style"
+                    android:enabled="@{vm.fieldAllEnable}"
+                    android:text="QoS 0" />
 
-        <Button
-            android:id="@+id/btn_submit"
-            android:layout_width="100dp"
-            android:layout_height="32dp"
-            android:layout_below="@id/chip_group_topic_qos"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginEnd="10dp"
-            android:background="@drawable/selector_btn_blue_style"
-            android:enabled="@{vm.fieldAllEnable}"
-            android:letterSpacing="0.08"
-            android:text="Subscribe"
-            android:textAllCaps="false"
-            android:textColor="@color/selector_btn_text_blue_btn" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_qos1"
+                    style="@style/chip_qos_selection_style"
+                    android:enabled="@{vm.fieldAllEnable}"
+                    android:text="QoS 1" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_qos2"
+                    style="@style/chip_qos_selection_style"
+                    android:enabled="@{vm.fieldAllEnable}"
+                    android:text="QoS 2" />
+            </com.google.android.material.chip.ChipGroup>
+        </RelativeLayout>
 
         <View
             android:id="@+id/line1"
             android:layout_width="match_parent"
             android:layout_height="0.8dp"
-            android:layout_below="@id/btn_submit"
+            android:layout_below="@id/rl_sub_action"
             android:layout_marginTop="10dp"
             android:background="#335533" />
 
@@ -88,8 +98,8 @@
                 android:layout_weight="1"
                 app:recyclerAdapter="@{vm.adapter}"
                 app:recyclerData="@{vm.dataList}"
-                app:recyclerLayoutManager="@{vm.layoutManager}"
-                app:recyclerItemDecoration="@{vm.itemDecoration}"/>
+                app:recyclerItemDecoration="@{vm.itemDecoration}"
+                app:recyclerLayoutManager="@{vm.layoutManager}" />
 
             <View
                 android:id="@+id/line2"
@@ -103,16 +113,92 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="#ececec"
-                android:paddingStart="10dp"
                 android:paddingTop="10dp"
-                android:paddingEnd="10dp"
                 android:paddingBottom="10dp">
-
-                <TextView
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_horizontal_msg_list"
                     android:layout_width="match_parent"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_height="120dp"/>
+                <View
+                    android:id="@+id/line3"
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:layout_below="@id/rv_horizontal_msg_list"
+                    android:layout_marginTop="10dp"
+                    android:background="#335533" />
+                <RelativeLayout
+                    android:layout_below="@id/line3"
+                    android:id="@+id/rl_message_title"
+                    android:layout_width="match_parent"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp">
+
+                    <TextView
+                        android:id="@+id/tv_message_topic"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-black"
+                        android:gravity="center_vertical"
+                        android:singleLine="true"
+                        android:text="@{vm.fieldMessageTopic}"
+                        android:textColor="@color/color_333333"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/tv_message_topic"
+                        android:layout_marginTop="15dp"
+                        android:background="@drawable/selector_grey_tip_bg"
+                        android:fontFamily="sans-serif-condensed-light"
+                        android:minWidth="105dp"
+                        android:paddingStart="10dp"
+                        android:paddingTop="2dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="2dp"
+                        android:singleLine="true"
+                        android:text="@{vm.fieldMessageTime}"
+                        android:textColor="@color/color_333333"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tv_message_qos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/tv_message_topic"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginTop="15dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/selector_grey_tip_bg"
+                        android:fontFamily="sans-serif-condensed"
+                        android:gravity="center"
+                        android:paddingStart="10dp"
+                        android:paddingTop="2dp"
+                        android:paddingEnd="10dp"
+                        android:text="@{vm.fieldMessageQoS}"
+                        android:paddingBottom="2dp"
+                        android:textColor="@color/color_333333"
+                        android:textSize="12sp" />
+                </RelativeLayout>
+
+                <cn.liujson.client.ui.widget.LogView
+                    android:layout_width="match_parent"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
                     android:layout_height="match_parent"
+                    android:layout_below="@id/rl_message_title"
                     android:background="@drawable/selector_log_card_bg"
-                    android:enabled="false" />
+                    android:enabled="@{vm.fieldMessageEnable}"
+                    android:fontFamily="sans-serif-black"
+                    android:letterSpacing="0.08"
+                    android:lineSpacingExtra="3dp"
+                    android:scrollbars="vertical"
+                    android:text="@{vm.fieldMessageContent}"
+                    android:textColor="#bdd7d7" />
             </RelativeLayout>
         </LinearLayout>
 
