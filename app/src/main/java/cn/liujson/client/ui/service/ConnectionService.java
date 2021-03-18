@@ -110,7 +110,7 @@ public class ConnectionService extends Service {
     }
 
 
-    public IMQTTWrapper<PahoV3MQTTClient> getClientWrapper() {
+    public synchronized IMQTTWrapper<PahoV3MQTTClient> getClientWrapper() {
         return mqttClient;
     }
 

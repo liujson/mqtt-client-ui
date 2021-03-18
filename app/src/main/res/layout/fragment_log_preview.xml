@@ -16,6 +16,7 @@
         tools:context=".ui.fragments.LogPreviewFragment">
 
         <cn.liujson.client.ui.widget.LogView
+            android:id="@+id/tv_log"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fontFamily="sans-serif-black"

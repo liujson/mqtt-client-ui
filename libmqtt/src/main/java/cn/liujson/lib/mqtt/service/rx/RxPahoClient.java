@@ -1,13 +1,16 @@
 package cn.liujson.lib.mqtt.service.rx;
 
-import android.text.TextUtils;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
-import org.eclipse.paho.client.mqttv3.MqttClient;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.util.ArrayList;
@@ -17,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.service.rx.paho.PahoMqttClient;
 import cn.liujson.lib.mqtt.util.MQTTUtils;
 import io.reactivex.Completable;
 
@@ -36,7 +40,7 @@ public class RxPahoClient implements IRxMqttClient {
      * MqttClient
      */
     @NonNull
-    private final MqttClient mqttClient;
+    private final PahoMqttClient mqttClient;
     /**
      * 连接参数
      */
@@ -49,6 +53,10 @@ public class RxPahoClient implements IRxMqttClient {
     private final LinkedHashMap<String, QoS> activeSubs = new LinkedHashMap<>();
 
     private final Object activeSubLock = new Object();
+    /**
+     * 代理一层
+     */
+    private MqttCallback mRealCallback;
 
     /**
      * @param params 连接参数
@@ -58,18 +66,24 @@ public class RxPahoClient implements IRxMqttClient {
      */
     public RxPahoClient(@NonNull ConnectionParams params) throws MqttException {
         Objects.requireNonNull(params);
-        if (params.getServerURIs() == null && params.getServerURIs().length == 0) {
-            throw new IllegalArgumentException("ServerURI must can not be null");
+        if (params.getServerURIs().length == 0) {
+            throw new IllegalArgumentException();
         }
         MemoryPersistence persistence = new MemoryPersistence();
-        /**
+        /*
          * MqttClient 内部实例化了MqttAsyncClient
          * 要连接的服务器地址，用URI指定。可以使用
          * {@link MqttConnectOptions#setServerURIs(String[])} 替换重复使用
          */
-        mqttClient = new MqttClient(params.getServerURIs()[0], params.getClientId(), persistence);
+        mqttClient = new PahoMqttClient(params.getServerURIs()[0], params.getClientId(), persistence);
         //设置默认超时的等待时间(ms)
         mqttClient.setTimeToWait(DEFAULT_TIMEOUT);
+        mqttClient.getDebug().dumpBaseDebug();
+        //set callback
+        mqttClient.setCallback(new InternalProxyCallback());
+
+        activeSubs.clear();
+
         this.params = params;
     }
 
@@ -82,12 +96,18 @@ public class RxPahoClient implements IRxMqttClient {
     }
 
     public String getCurrentServerURI() {
-
         return mqttClient.getCurrentServerURI();
     }
 
     public void setTimeToWait(long setTimeToWait) {
         mqttClient.setTimeToWait(setTimeToWait);
+    }
+
+    /**
+     * 设置callback
+     */
+    public void setCallback(MqttCallback callback) {
+        this.mRealCallback = callback;
     }
 
     /**
@@ -105,7 +125,7 @@ public class RxPahoClient implements IRxMqttClient {
     @Override
     public Completable connect() {
         return Completable.create(emitter -> {
-            final MqttConnectOptions options = params2Options(this.params);
+            final MqttConnectOptions options = MQTTUtils.params2Options(this.params);
             mqttClient.connect(options);
             emitter.onComplete();
         });
@@ -138,14 +158,11 @@ public class RxPahoClient implements IRxMqttClient {
     @Override
     public Completable unsubscribe(@NonNull String[] topics) {
         return Completable.create(emitter -> {
-            if (topics == null) {
-                emitter.onError(new IllegalArgumentException("topics is null"));
-                return;
-            }
+            Objects.requireNonNull(topics);
             mqttClient.unsubscribe(topics);
             synchronized (activeSubLock) {
-                for (int i = 0; i < topics.length; i++) {
-                    activeSubs.remove(topics[i]);
+                for (String topic : topics) {
+                    activeSubs.remove(topic);
                 }
             }
             emitter.onComplete();
@@ -178,58 +195,111 @@ public class RxPahoClient implements IRxMqttClient {
     public Completable disconnect() {
         return Completable.create(emitter -> {
             mqttClient.disconnect();
+            synchronized (activeSubLock) {
+                activeSubs.clear();
+            }
             emitter.onComplete();
         });
     }
 
+    @Override
+    public Completable close() {
+        return closeSafety();
+    }
+
+    /**
+     * 释放资源后所有回调会失效
+     */
+    public void release() {
+        setCallback(null);
+        mqttClient.setCallback(null);
+        activeSubs.clear();
+    }
+
     /**
      * 安全关闭连接
-     *
-     * @return
      */
     public Completable closeSafety() {
         return Completable.create(emitter -> {
             mqttClient.disconnect();
             mqttClient.close();
+            release();
             emitter.onComplete();
         });
     }
 
     /**
      * 强制关闭连接
-     *
-     * @return
      */
     public Completable closeForcibly(final long quiesceTimeout, final long disconnectTimeout) {
         return Completable.create(emitter -> {
             mqttClient.disconnectForcibly(quiesceTimeout, disconnectTimeout);
+            release();
             emitter.onComplete();
         });
     }
 
+    /**
+     * 内部 Callback 用来处理一些事物
+     */
+    class InternalProxyCallback implements MqttCallbackExtended {
 
-    public static MqttConnectOptions params2Options(ConnectionParams params) {
-        final MqttConnectOptions options = new MqttConnectOptions();
-        options.setServerURIs(params.getServerURIs());
-        options.setMaxReconnectDelay(params.getMaxReconnectDelay());
-        options.setAutomaticReconnect(params.isAutomaticReconnect());
-        options.setConnectionTimeout(params.getConnectionTimeout());
-        options.setKeepAliveInterval(params.getKeepAlive());
-        if (params.getWillTopic() != null && params.getWillMessage() != null) {
-            final Message willMessage = params.getWillMessage();
-            options.setWill(params.getWillTopic(),
-                    willMessage.getPayload(),
-                    willMessage.getQosInt(),
-                    willMessage.isRetained());
+        /**
+         * 触发条件是setAutomaticReconnect为True的时候,第一次连接成功和重连成功后会触发该方法
+         *
+         * @param reconnect 如何设置了cleanSession为false 重连后会订阅之前的主题，否则不会订阅之前的主题
+         * @param serverURI 服务端URI
+         */
+        @Override
+        public void connectComplete(boolean reconnect, String serverURI) {
+            if (mRealCallback != null && mRealCallback instanceof MqttCallbackExtended) {
+                ((MqttCallbackExtended) mRealCallback).connectComplete(reconnect, serverURI);
+            }
         }
-        if (TextUtils.isEmpty(params.getUsername())) {
-            options.setUserName(params.getUsername());
+
+        /**
+         * connectionLost 是在连接已经连上且丢失后走这里,掉线之后会在消息接收线程上回调
+         *
+         * @param cause 连接丢失的原因
+         */
+        @Override
+        public void connectionLost(Throwable cause) {
+            //连接丢失后清空订阅成功的内容
+            if (params.isCleanSession()) {
+                synchronized (activeSubLock) {
+                    activeSubs.clear();
+                }
+            }
+            if (mRealCallback != null) {
+                mRealCallback.connectionLost(cause);
+            }
         }
-        if (TextUtils.isEmpty(params.getPassword())) {
-            options.setPassword(params.getPassword().toCharArray());
+
+        /**
+         * 接收到消息会触发此方法
+         *
+         * @param topic   topic
+         * @param message message
+         * @throws Exception exception
+         */
+        @Override
+        public void messageArrived(String topic, MqttMessage message) throws Exception {
+            if (mRealCallback != null) {
+                mRealCallback.messageArrived(topic, message);
+            }
         }
-        options.setCleanSession(params.isCleanSession());
-        options.setMqttVersion(params.getMqttVersion());
-        return options;
+
+        /**
+         * 消息发送成功会触发此方法
+         *
+         * @param token token
+         */
+        @Override
+        public void deliveryComplete(IMqttDeliveryToken token) {
+            if (mRealCallback != null) {
+                mRealCallback.deliveryComplete(token);
+            }
+        }
     }
+
 }

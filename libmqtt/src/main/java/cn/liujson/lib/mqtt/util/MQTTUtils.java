@@ -8,11 +8,14 @@ import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 
 import java.util.ArrayList;
 
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
 import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.service.rx.ConnectionParams;
+import cn.liujson.lib.mqtt.service.rx.Message;
 import cn.liujson.lib.mqtt.util.random.RandomStringUtils;
 import cn.liujson.lib.mqtt.util.random.UUIDUtils;
 
@@ -151,5 +154,36 @@ public class MQTTUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * ConnectionParams 转 MqttConnectOptions
+     * @param params
+     * @return
+     */
+    public static MqttConnectOptions params2Options(ConnectionParams params) {
+        final MqttConnectOptions options = new MqttConnectOptions();
+        options.setServerURIs(params.getServerURIs());
+        options.setMaxReconnectDelay(params.getMaxReconnectDelay());
+        options.setAutomaticReconnect(params.isAutomaticReconnect());
+        options.setConnectionTimeout(params.getConnectionTimeout());
+        options.setKeepAliveInterval(params.getKeepAlive());
+        if (params.getWillTopic() != null && params.getWillMessage() != null) {
+            final Message willMessage = params.getWillMessage();
+            options.setWill(params.getWillTopic(),
+                    willMessage.getPayload(),
+                    willMessage.getQosInt(),
+                    willMessage.isRetained());
+        }
+        if (TextUtils.isEmpty(params.getUsername())) {
+            options.setUserName(params.getUsername());
+        }
+        if (TextUtils.isEmpty(params.getPassword())) {
+            assert params.getPassword() != null;
+            options.setPassword(params.getPassword().toCharArray());
+        }
+        options.setCleanSession(params.isCleanSession());
+        options.setMqttVersion(params.getMqttVersion());
+        return options;
     }
 }

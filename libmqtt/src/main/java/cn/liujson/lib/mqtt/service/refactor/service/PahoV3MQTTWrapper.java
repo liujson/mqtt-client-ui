@@ -16,7 +16,7 @@ import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
-import cn.liujson.lib.mqtt.service.refactor.adapter.SimpleMqttCallback;
+
 import cn.liujson.lib.mqtt.util.MQTTUtils;
 import io.reactivex.annotations.NonNull;
 

@@ -29,13 +29,13 @@ public interface IRxMqttClient {
      * @param qos    qos
      * @return
      */
-    Completable subscribe(@NonNull String[] topics,@NonNull QoS[] qosArr);
+    Completable subscribe(@NonNull String[] topics, @NonNull QoS[] qosArr);
 
 
     /**
      * 订阅
      */
-    Completable subscribe(@NonNull String topic,@NonNull QoS qos);
+    Completable subscribe(@NonNull String topic, @NonNull QoS qos);
 
     /**
      * 解除订阅
@@ -58,21 +58,28 @@ public interface IRxMqttClient {
      * @param qos
      * @return
      */
-    Completable publish(@NonNull String topic,@NonNull byte[] payload,@NonNull QoS qos, boolean retained);
+    Completable publish(@NonNull String topic, @NonNull byte[] payload, @NonNull QoS qos, boolean retained);
 
     /**
      * 发布
-     * @param topic 主题
+     *
+     * @param topic   主题
      * @param message 消息
      * @return
      */
-    Completable publish(@NonNull String topic,@NonNull Message message);
+    Completable publish(@NonNull String topic, @NonNull Message message);
+
     /**
      * 断开连接
      *
      * @return
      */
     Completable disconnect();
+
+    /**
+     * 关闭客户端
+     */
+    Completable close();
 
     //endregion 主动型动作
 }

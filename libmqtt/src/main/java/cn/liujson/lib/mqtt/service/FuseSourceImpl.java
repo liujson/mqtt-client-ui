@@ -16,7 +16,6 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Objects;
 
-import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTCallback;
 import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
@@ -30,7 +29,7 @@ import cn.liujson.lib.mqtt.util.MQTTUtils;
  * @author liujson
  * @date 2021/2/22.
  */
-public class FuseSourceImpl implements IMQTT {
+public class FuseSourceImpl {
 
     private static final String TAG = "FuseSourceMqtt";
 
@@ -82,18 +81,18 @@ public class FuseSourceImpl implements IMQTT {
     }
 
 
-    @Override
+
     public void connect(IMQTTCallback<Void> callback) {
         callbackConnection.connect(MQTTUtils.adapterCallback(callback));
     }
 
-    @Override
+
     public void subscribe(String topic, QoS qoS, IMQTTCallback<byte[]> callback) {
         callbackConnection.subscribe(new Topic[]{new Topic(topic, MQTTUtils.convertQoS(qoS))},
                 MQTTUtils.adapterCallback(callback));
     }
 
-    @Override
+
     public void subscribe(String[] topics, QoS[] qoS, IMQTTCallback<byte[]> callback) {
         if (qoS.length != topics.length) {
             throw new IllegalArgumentException("订阅失败，主题长度与质量长度不一致");
@@ -105,13 +104,13 @@ public class FuseSourceImpl implements IMQTT {
         callbackConnection.subscribe(desTopics, MQTTUtils.adapterCallback(callback));
     }
 
-    @Override
+
     public void unsubscribe(String topics, IMQTTCallback<Void> callback) {
         callbackConnection.unsubscribe(new UTF8Buffer[]{new UTF8Buffer(topics)},
                 MQTTUtils.adapterCallback(callback));
     }
 
-    @Override
+
     public void unsubscribe(String[] topics, IMQTTCallback<Void> callback) {
         if (topics == null) {
             throw new IllegalArgumentException("取消订阅参数不能为空");
@@ -123,7 +122,7 @@ public class FuseSourceImpl implements IMQTT {
         callbackConnection.unsubscribe(utf8Buffers, MQTTUtils.adapterCallback(callback));
     }
 
-    @Override
+
     public void publish(String topic, byte[] payload, QoS qos, boolean retained, IMQTTCallback<Void> callback) {
         //retain MQTT服务器只会为每一个Topic保存最近收到的一条RETAIN标志位为true的消息！
         // 也就是说，如果MQTT服务器上已经为某个Topic保存了一条Retained消息，
@@ -132,23 +131,23 @@ public class FuseSourceImpl implements IMQTT {
                 retained, MQTTUtils.adapterCallback(callback));
     }
 
-    @Override
+
     public void publish(String topic, String payload, QoS qos, boolean retained, IMQTTCallback<Void> callback) {
         callbackConnection.publish(new UTF8Buffer(topic), new UTF8Buffer(payload), MQTTUtils.convertQoS(qos),
                 retained, MQTTUtils.adapterCallback(callback));
     }
 
-    @Override
+
     public void disconnect(IMQTTCallback<Void> callback) {
         callbackConnection.disconnect(MQTTUtils.adapterCallback(callback));
     }
 
-    @Override
+
     public void setMessageReceiver(IMQTTMessageReceiver messageReceiver) {
         this.messageReceiver = messageReceiver;
     }
 
-    @Override
+
     public void disconnectForcibly() throws Exception {
         this.messageReceiver = null;
         callbackConnection.kill(null);

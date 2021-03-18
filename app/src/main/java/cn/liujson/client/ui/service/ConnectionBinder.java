@@ -2,14 +2,10 @@ package cn.liujson.client.ui.service;
 
 import android.os.Binder;
 
-import cn.liujson.lib.mqtt.api.IMQTT;
 import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
-import cn.liujson.lib.mqtt.exception.WrapMQTTException;
 import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
-import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
 import io.reactivex.Completable;
-import io.reactivex.Single;
 
 /**
  * @author liujson

@@ -1,4 +1,4 @@
-package cn.liujson.lib.mqtt.service.refactor.adapter;
+package cn.liujson.lib.mqtt.service.rx.paho;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
