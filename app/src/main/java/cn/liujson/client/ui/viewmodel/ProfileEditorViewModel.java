@@ -1,6 +1,5 @@
 package cn.liujson.client.ui.viewmodel;
 
-import androidx.databinding.BaseObservable;
 import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
@@ -13,7 +12,7 @@ import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.util.ToastHelper;
-import cn.liujson.lib.mqtt.util.MQTTUtils;
+import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -62,7 +61,7 @@ public class ProfileEditorViewModel extends BaseViewModel {
      * 生成随机 ClientID
      */
     public final void generate() {
-        fieldClientID.set(MQTTUtils.generateClientId());
+        fieldClientID.set(MqttUtils.generateClientId());
     }
 
     /**

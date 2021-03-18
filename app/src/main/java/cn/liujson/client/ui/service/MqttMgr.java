@@ -35,7 +35,7 @@ public class MqttMgr {
     /**
      * MQTT 连接数据
      */
-    private ConnectionService.ConnectionServiceBinder mBinder;
+    private ConnectionBinder mBinder;
 
     /**
      * 使其运行在前台
@@ -95,14 +95,14 @@ public class MqttMgr {
      * @return
      */
     @Nullable
-    public ConnectionService.ConnectionServiceBinder binder() {
+    public ConnectionBinder binder() {
         return mBinder;
     }
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mBinder = (ConnectionService.ConnectionServiceBinder) service;
+            mBinder = (ConnectionBinder) service;
         }
 
         @Override

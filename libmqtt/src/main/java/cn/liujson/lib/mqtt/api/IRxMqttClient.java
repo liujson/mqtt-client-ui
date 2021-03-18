@@ -1,8 +1,7 @@
-package cn.liujson.lib.mqtt.service.rx;
+package cn.liujson.lib.mqtt.api;
 
 import androidx.annotation.NonNull;
 
-import cn.liujson.lib.mqtt.api.QoS;
 import io.reactivex.Completable;
 
 /**

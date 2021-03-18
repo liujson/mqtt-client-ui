@@ -1,4 +1,4 @@
-package cn.liujson.lib.mqtt.service.rx.paho;
+package cn.liujson.lib.mqtt.service.paho;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;

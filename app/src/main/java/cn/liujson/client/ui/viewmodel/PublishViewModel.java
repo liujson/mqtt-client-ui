@@ -9,6 +9,7 @@ import androidx.lifecycle.Lifecycle;
 
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
+import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
@@ -87,7 +88,7 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
     }
 
     @Override
-    public void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder) {
+    public void onBindSuccess(ConnectionBinder serviceBinder) {
 
     }
 

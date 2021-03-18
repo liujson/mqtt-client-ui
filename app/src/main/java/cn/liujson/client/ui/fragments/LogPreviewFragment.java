@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 
 import com.orhanobut.logger.FormatStrategy;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import cn.liujson.client.databinding.FragmentLogPreviewBinding;
@@ -72,8 +74,18 @@ public class LogPreviewFragment extends Fragment {
         LogManager.getInstance().subscribeMemoryLog(new FormatStrategy() {
             @Override
             public void log(int priority, @Nullable String tag, @NonNull String message) {
-                handler.post(()->{
-                    refresh(message);
+                final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                final StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(dateFormat.format(new Date()));
+                stringBuilder.append('\t');
+                stringBuilder.append(LogUtils.Level.logLevelName(priority));
+                stringBuilder.append(" --- ");
+                stringBuilder.append(tag);
+                stringBuilder.append(" :");
+                stringBuilder.append(message);
+                //这里千万不要再使用LogUtils打印日志，否则会无限循环
+                handler.post(() -> {
+                    refresh(stringBuilder.toString());
                 });
             }
         });

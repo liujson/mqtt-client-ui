@@ -1,65 +1,105 @@
 package cn.liujson.client.ui.service;
 
-import android.os.Binder;
 
-import cn.liujson.lib.mqtt.api.IMQTTBuilder;
-import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
-import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
-import io.reactivex.Completable;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.api.backruning.AbstractPahoConnServiceBinder;
+import cn.liujson.lib.mqtt.util.MqttUtils;
+import cn.liujson.logger.LogUtils;
+
 
 /**
  * @author liujson
  * @date 2021/3/8.
  */
-public abstract class ConnectionBinder<C> extends Binder {
-
-    /**
-     * 配置Client成服务运行，服务运行会使其生命周期变长，请小心内存泄露
-     * setup 后消息接收监听器会被清除，请重新调用设置监听器 registerMessageReceiver
-     *
-     * @return
-     */
-    public abstract IMQTTWrapper<C> setup(IMQTTWrapper<C> imqttWrapper);
-
-    /**
-     * 是否已经配置
-     */
-    public abstract boolean isSetup();
+public class ConnectionBinder extends AbstractPahoConnServiceBinder {
 
 
-    /**
-     * 目标与已安装的是同一个（参数一致）
-     *
-     * @return
-     */
-    public abstract boolean isSame(IMQTTBuilder builder);
+    final List<OnRecMsgListener> recMsgListenerList = new ArrayList<>();
+    final List<OnConnectedListener> connectedListenerList = new ArrayList<>();
 
-    /**
-     * 注册消息接收监听器
-     */
-    public abstract void registerMessageReceiver(IMQTTMessageReceiver messageReceiver);
+    @Override
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
+        LogUtils.d("MQTT 消息抵达，topic:" + topic + ",message:" + new String(message.getPayload()));
+        //接受到消息会回调这里
+        final Iterator<OnRecMsgListener> it = recMsgListenerList.iterator();
+        while (it.hasNext()) {
+            it.next().onReceiveMessage(topic, message.getPayload(), MqttUtils.int2QoS(message.getQos()));
+        }
+    }
 
-    /**
-     * 取消注册消息接收监听器
-     */
-    public abstract void unregisterMessageReceiver(IMQTTMessageReceiver messageReceiver);
+    @Override
+    public void connectComplete(boolean reconnect, String serverURI) {
+        LogUtils.d("MQTT 连接完成，是否重连：" + reconnect + ",server uri:" + serverURI);
+        if (reconnect) {
+            // 如果cleanSession是true,重连后需要重新订阅topic
+        }
+        final Iterator<OnConnectedListener> it = connectedListenerList.iterator();
+        while (it.hasNext()) {
+            it.next().onConnectComplete(reconnect, serverURI);
+        }
+    }
 
-    /**
-     * 获取 ClientWrapper
-     */
-    public abstract IMQTTWrapper<C> getWrapper();
+    @Override
+    public void connectionLost(Throwable cause) {
+        super.connectionLost(cause);
+        LogUtils.d("MQTT 失去连接：" + cause.toString());
+    }
 
-    //region Rx 方法
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken token) {
+        super.deliveryComplete(token);
+        try {
+            LogUtils.d("MQTT 发布成功,topic:" + Arrays.toString(token.getTopics()) +
+                    ",message:" + new String(token.getMessage().getPayload()));
+        } catch (Exception e) {
+            LogUtils.d("MQTT 消息发布成功");
+        }
+    }
 
-    /**
-     * 安全关闭
-     */
-    public abstract Completable closeSafety();
 
-    /**
-     * 强制关闭
-     */
-    public abstract Completable closeForcibly();
+    public void addOnRecMsgListener(ConnectionBinder.OnRecMsgListener recMsgListener) {
+        if (!recMsgListenerList.contains(recMsgListener)) {
+            recMsgListenerList.add(recMsgListener);
+        }
+    }
 
-    //region Rx 方法
+    public void removeOnRecMsgListener(ConnectionBinder.OnRecMsgListener recMsgListener) {
+        recMsgListenerList.remove(recMsgListener);
+    }
+
+    public void addOnConnectedListener(ConnectionBinder.OnConnectedListener connectedListener) {
+        if (!connectedListenerList.contains(connectedListener)) {
+            connectedListenerList.add(connectedListener);
+        }
+    }
+
+    public void removeOnConnectedListener(ConnectionBinder.OnConnectedListener connectedListener) {
+        connectedListenerList.remove(connectedListener);
+    }
+
+    //-------------------------------------------------------------------------------------------
+
+    public interface OnRecMsgListener {
+        /**
+         * 接收到消息
+         */
+        void onReceiveMessage(String topic, byte[] payload, QoS qoS);
+    }
+
+    public interface OnConnectedListener {
+        /**
+         * 连接成功
+         */
+        void onConnectComplete(boolean reconnect, String serverURI);
+    }
+
+    //-------------------------------------------------------------------------------------------
 }

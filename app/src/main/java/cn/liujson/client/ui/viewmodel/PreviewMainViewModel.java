@@ -4,29 +4,27 @@ package cn.liujson.client.ui.viewmodel;
 import androidx.databinding.ObservableBoolean;
 import androidx.lifecycle.Lifecycle;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import org.greenrobot.eventbus.EventBus;
 
-import java.util.Arrays;
+
 import java.util.List;
 
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
+
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
-import cn.liujson.client.ui.service.ConnectionService;
+import cn.liujson.client.ui.service.ConnectionBinder;
+
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
-import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 
-import cn.liujson.lib.mqtt.exception.WrapMQTTException;
-import cn.liujson.lib.mqtt.service.MqttBuilder;
-import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
-import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
-import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTWrapper;
+
+import cn.liujson.lib.mqtt.api.ConnectionParams;
+import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
 import cn.liujson.logger.LogUtils;
 import io.reactivex.Completable;
 
@@ -38,7 +36,8 @@ import io.reactivex.schedulers.Schedulers;
  * @author liujson
  * @date 2021/3/4.
  */
-public class PreviewMainViewModel extends BaseViewModel implements ConnectionServiceRepository.OnBindStatus, MqttCallbackExtended {
+public class PreviewMainViewModel extends BaseViewModel implements
+        ConnectionServiceRepository.OnBindStatus,ConnectionBinder.OnRecMsgListener, ConnectionBinder.OnConnectedListener {
 
     public final ObservableBoolean fieldConnectEnable = new ObservableBoolean(false);
     public final ObservableBoolean fieldDisconnectEnable = new ObservableBoolean(false);
@@ -71,8 +70,9 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
             loadProfilesDisposable.dispose();
             loadProfilesDisposable = null;
         }
-        if (repository.isSetup()) {
-            repository.setCallback(null);
+        if (repository.isInstalled()) {
+            getRepository().removeOnRecMsgListener(this);
+            getRepository().removeOnConnectedListener(this);
         }
     }
 
@@ -102,17 +102,20 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
                 });
     }
 
-    public IMQTTBuilder profile2MQTTBuilder(ConnectionProfile profile) {
-        final MqttBuilder builder = new MqttBuilder();
-        builder.host("tcp://" + profile.brokerAddress + ":" + profile.brokerPort);
-        builder.cleanSession(profile.cleanSession);
-        return builder;
+    public ConnectionParams profile2Params(ConnectionProfile profile) {
+        return ConnectionParams.newBuilder()
+                .serverURI("tcp://" + profile.brokerAddress + ":" + profile.brokerPort)
+                .cleanSession(profile.cleanSession)
+                .clientId(profile.clientID)
+                .username(profile.username)
+                .password(profile.password)
+                .build();
     }
 
-    public IMQTTWrapper<PahoV3MQTTClient> create(IMQTTBuilder builder) {
+    public RxPahoClient create(ConnectionParams params) {
         try {
-            return new PahoV3MQTTWrapper(builder);
-        } catch (WrapMQTTException e) {
+            return new RxPahoClient(params);
+        } catch (Exception e) {
             return null;
         }
     }
@@ -122,14 +125,14 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
      * 如果当前存在已配置的且和目标builder相同不重新配置，否则重新配置；
      * 如果旧的还在连接着先尝试安全关闭，如果失败，采取强制关闭
      *
-     * @param builder
+     * @param params
      * @return
      */
-    public Completable setupAndConnect(IMQTTBuilder builder) {
+    public Completable setupAndConnect(ConnectionParams params) {
         Completable actionCompletable = getRepository()
                 .connect().observeOn(AndroidSchedulers.mainThread());
         //如果已经配置和已经连接上则断开连接然后再创建新的连接
-        if (getRepository().isSetup() && getRepository().isSame(builder)) {
+        if (getRepository().isInstalled() && getRepository().isSame(params)) {
             if (getRepository().isConnected()) {
                 actionCompletable = getRepository().closeSafety()
                         //如果安全断开失败则强制断开连接
@@ -138,17 +141,18 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
             }
         } else {
             //如果未安装则进行安装
-            final IMQTTWrapper<PahoV3MQTTClient> wrapper = create(builder);
-            if (wrapper != null) {
-                getRepository().setup(wrapper);
-                getRepository().setCallback(this);
+            final RxPahoClient pahoClient = create(params);
+            if (pahoClient != null) {
+                getRepository().install(pahoClient);
+                getRepository().addOnRecMsgListener(this);
+                getRepository().addOnConnectedListener(this);
             }
         }
         return actionCompletable;
     }
 
     @Override
-    public void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder) {
+    public void onBindSuccess(ConnectionBinder serviceBinder) {
         if (navigator != null) {
             navigator.onBindSuccess(serviceBinder);
         }
@@ -162,25 +166,13 @@ public class PreviewMainViewModel extends BaseViewModel implements ConnectionSer
     }
 
     @Override
-    public void connectComplete(boolean reconnect, String serverURI) {
+    public void onReceiveMessage(String topic, byte[] payload, QoS qoS) {
+
+    }
+
+    @Override
+    public void onConnectComplete(boolean reconnect, String serverURI) {
         EventBus.getDefault().post(new ConnectChangeEvent(true));
-        LogUtils.d("MQTT 连接成功,是否重连：" + reconnect + ",serverUri:" + serverURI);
-    }
-
-    @Override
-    public void connectionLost(Throwable cause) {
-        EventBus.getDefault().post(new ConnectChangeEvent(false));
-        LogUtils.e("MQTT 失去连接：" + cause.toString());
-    }
-
-    @Override
-    public void messageArrived(String topic, MqttMessage message) throws Exception {
-        LogUtils.d("MQTT 收到消息，topic：" + topic + ",message length:" + message.getPayload().length);
-    }
-
-    @Override
-    public void deliveryComplete(IMqttDeliveryToken token) {
-        LogUtils.d("MQTT 消息送达，topic：" + Arrays.toString(token.getTopics()));
     }
 
 

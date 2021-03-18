@@ -149,13 +149,14 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/tv_message_date"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@id/tv_message_topic"
                         android:layout_marginTop="15dp"
                         android:background="@drawable/selector_grey_tip_bg"
                         android:fontFamily="sans-serif-condensed-light"
-                        android:minWidth="105dp"
+                        android:minWidth="150dp"
                         android:paddingStart="10dp"
                         android:paddingTop="2dp"
                         android:paddingEnd="10dp"
@@ -186,6 +187,7 @@
                 </RelativeLayout>
 
                 <cn.liujson.client.ui.widget.LogView
+                    android:id="@+id/tv_log"
                     android:layout_width="match_parent"
                     android:layout_marginStart="10dp"
                     android:layout_marginEnd="10dp"

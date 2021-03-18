@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.os.Handler;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,9 @@ import android.view.ViewGroup;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import cn.liujson.client.R;
 import cn.liujson.client.databinding.FragmentTopicsBinding;
@@ -86,9 +90,9 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
         notifyTopicsChanged();
     }
 
-    private void notifyTopicsChanged(){
+    private void notifyTopicsChanged() {
         if (viewModel != null) {
-            if (viewModel.getRepository().isSetup()) {
+            if (viewModel.getRepository().isInstalled()) {
                 viewModel.updateDataList(viewModel.getRepository().getSubList());
             }
         }
@@ -132,5 +136,16 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
             return QoS.EXACTLY_ONCE;
         }
         return QoS.AT_MOST_ONCE;
+    }
+    Handler mHandler = new Handler();
+    @Override
+    public void onReceiveMessage(String topic, String message, QoS qoS) {
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        mHandler.post(()->{
+            binding.tvMessageTopic.setText(topic);
+            binding.tvMessageDate.setText(dateFormat.format(new Date()));
+            binding.tvMessageQos.setText(qoS.qoSName());
+            binding.tvLog.setText(message);
+        });
     }
 }

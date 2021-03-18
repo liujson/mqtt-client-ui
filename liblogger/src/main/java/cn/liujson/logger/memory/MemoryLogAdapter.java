@@ -62,6 +62,10 @@ public class MemoryLogAdapter implements LogAdapter {
         this.logPrintListener.add(logPrintListener);
     }
 
+    /**
+     * 客户端传入的FormatStrategy中千万不要再使用LogUtil.x打印日志否则停不下来
+     * @param logPrintListener
+     */
     public void unsubscribeLogPrint(FormatStrategy logPrintListener) {
         this.logPrintListener.remove(logPrintListener);
     }

@@ -1,11 +1,11 @@
-package cn.liujson.lib.mqtt.service.rx;
+package cn.liujson.lib.mqtt.api;
 
 import androidx.annotation.NonNull;
 
+import java.util.Arrays;
 import java.util.Objects;
 
-import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.lib.mqtt.util.MQTTUtils;
+import cn.liujson.lib.mqtt.util.MqttUtils;
 
 /**
  * MQTT 消息
@@ -42,13 +42,30 @@ public class Message {
     }
 
     public int getQosInt() {
-        return MQTTUtils.qoS2Int(qos);
+        return MqttUtils.qoS2Int(qos);
     }
 
     public Message setQos(@NonNull QoS qos) {
         Objects.requireNonNull(qos);
         this.qos = qos;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Message message = (Message) o;
+        return retained == message.retained &&
+                Arrays.equals(payload, message.payload) &&
+                qos == message.qos;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(retained, qos);
+        result = 31 * result + Arrays.hashCode(payload);
+        return result;
     }
 
     public static Message newMessage(){

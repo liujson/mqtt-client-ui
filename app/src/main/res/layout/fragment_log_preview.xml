@@ -19,7 +19,7 @@
             android:id="@+id/tv_log"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fontFamily="sans-serif-black"
+            android:fontFamily="sans-serif-condensed"
             android:letterSpacing="0.08"
             android:lineSpacingExtra="3dp"
             android:scrollbars="vertical"

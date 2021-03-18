@@ -2,6 +2,8 @@ package cn.liujson.lib.mqtt.service.rx;
 
 import androidx.annotation.NonNull;
 
+import cn.liujson.lib.mqtt.api.IRxMqttClient;
+import cn.liujson.lib.mqtt.api.Message;
 import cn.liujson.lib.mqtt.api.QoS;
 import io.reactivex.Completable;
 
@@ -10,7 +12,7 @@ import io.reactivex.Completable;
  * @author liujson
  * @date 2021/3/18.
  */
-public class RxFuseSourceClient implements IRxMqttClient{
+public class RxFuseSourceClient implements IRxMqttClient {
 
 
     @Override

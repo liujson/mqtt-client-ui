@@ -8,7 +8,6 @@ import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.databinding.ObservableList;
 import androidx.lifecycle.Lifecycle;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import org.greenrobot.eventbus.EventBus;
@@ -18,16 +17,15 @@ import java.util.List;
 import java.util.Map;
 
 import cn.liujson.client.R;
-import cn.liujson.client.ui.adapter.ConnectionProfilesAdapter;
 import cn.liujson.client.ui.adapter.TopicListAdapter;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
+import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.ConnectionService;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.divider.DividerLinearItemDecoration;
-import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.logger.LogUtils;
 import io.reactivex.disposables.Disposable;
@@ -39,7 +37,7 @@ import io.reactivex.disposables.Disposable;
  * @date 2021/3/10.
  */
 public class TopicsViewModel extends BaseViewModel implements
-        ConnectionServiceRepository.OnBindStatus, IMQTTMessageReceiver {
+        ConnectionServiceRepository.OnBindStatus, ConnectionBinder.OnRecMsgListener {
 
     public final ObservableList<Pair<String, QoS>> dataList = new ObservableArrayList<>();
     public final TopicListAdapter adapter = new TopicListAdapter(dataList);
@@ -94,7 +92,7 @@ public class TopicsViewModel extends BaseViewModel implements
         if (unsubscribeDisposable != null) {
             unsubscribeDisposable.dispose();
         }
-        repository.unregisterReceiver(this);
+        repository.removeOnRecMsgListener(this);
     }
 
 
@@ -163,14 +161,14 @@ public class TopicsViewModel extends BaseViewModel implements
 
 
     @Override
-    public void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder) {
-        if (serviceBinder.isSetup()) {
-            if (serviceBinder.getWrapper().getClient().isConnected()) {
+    public void onBindSuccess(ConnectionBinder serviceBinder) {
+        if (serviceBinder.isInstalled()) {
+            if (serviceBinder.getClient().isConnected()) {
                 EventBus.getDefault().post(new ConnectChangeEvent(true));
-                repository.registerReceiver(this);
             } else {
                 EventBus.getDefault().post(new ConnectChangeEvent(false));
             }
+            repository.addOnRecMsgListener(this);
         }
     }
 
@@ -184,9 +182,12 @@ public class TopicsViewModel extends BaseViewModel implements
     }
 
     @Override
-    public void onReceive(String topic, byte[] body) throws Exception {
-
+    public void onReceiveMessage(String topic, byte[] payload, QoS qoS) {
+        if (navigator != null) {
+            navigator.onReceiveMessage(topic, new String(payload), qoS);
+        }
     }
+
 
     public interface Navigator {
         /**
@@ -201,10 +202,15 @@ public class TopicsViewModel extends BaseViewModel implements
          * 读取 qos
          */
         QoS readQos();
+
+        /**
+         * 接收到消息
+         */
+        void onReceiveMessage(String topic, String message, QoS qoS);
     }
 
 
-    public static class MqttMsg{
+    public static class MqttMsg {
         public String topic;
         public byte[] body;
     }

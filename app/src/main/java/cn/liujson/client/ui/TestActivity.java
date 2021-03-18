@@ -3,28 +3,17 @@ package cn.liujson.client.ui;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 
-import java.io.UnsupportedEncodingException;
-
 import cn.liujson.client.R;
-import cn.liujson.client.ui.util.ToastHelper;
-import cn.liujson.lib.mqtt.api.IMQTTCallback;
-import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
-import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.lib.mqtt.service.MqttBuilder;
-import cn.liujson.lib.mqtt.service.rx.ConnectionParams;
+import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
 import cn.liujson.logger.LogUtils;
-import io.reactivex.Completable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class TestActivity extends AppCompatActivity implements IMQTTMessageReceiver {
+public class TestActivity extends AppCompatActivity {
 
     RxPahoClient rxPahoClient;
     @Override
@@ -87,10 +76,6 @@ public class TestActivity extends AppCompatActivity implements IMQTTMessageRecei
 
     }
 
-    @Override
-    public void onReceive(String topic, byte[] body) {
-
-    }
 
     public void close(View view) {
 

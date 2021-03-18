@@ -1,4 +1,4 @@
-package cn.liujson.lib.mqtt.service.rx;
+package cn.liujson.lib.mqtt.api;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -7,14 +7,14 @@ import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.internal.NetworkModuleService;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 
-import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.lib.mqtt.util.MQTTUtils;
+import cn.liujson.lib.mqtt.util.MqttUtils;
 
 /**
  * MQTT 客户端的连接参数
@@ -143,6 +143,32 @@ public class ConnectionParams implements Serializable {
 
     public int getMqttVersion() {
         return mqttVersion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConnectionParams that = (ConnectionParams) o;
+        return cleanSession == that.cleanSession &&
+                keepAlive == that.keepAlive &&
+                automaticReconnect == that.automaticReconnect &&
+                maxReconnectDelay == that.maxReconnectDelay &&
+                connectionTimeout == that.connectionTimeout &&
+                mqttVersion == that.mqttVersion &&
+                Objects.equals(clientId, that.clientId) &&
+                Objects.equals(username, that.username) &&
+                Objects.equals(password, that.password) &&
+                Objects.equals(willTopic, that.willTopic) &&
+                Objects.equals(willMessage, that.willMessage) &&
+                Arrays.equals(serverURIs, that.serverURIs);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(clientId, cleanSession, keepAlive, username, password, automaticReconnect, maxReconnectDelay, willTopic, willMessage, connectionTimeout, mqttVersion);
+        result = 31 * result + Arrays.hashCode(serverURIs);
+        return result;
     }
 
     public static class Builder {
@@ -317,7 +343,7 @@ public class ConnectionParams implements Serializable {
                 throw new NullPointerException("serverURIs must can not be null.");
             }
             if (clientId == null) {
-                clientId = MQTTUtils.generateClientId();
+                clientId = MqttUtils.generateClientId();
             }
             if (willTopic != null && willMessage != null) {
                 validateWill(willTopic, willMessage.getPayload());

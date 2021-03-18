@@ -19,9 +19,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import cn.liujson.lib.mqtt.api.ConnectionParams;
+import cn.liujson.lib.mqtt.api.IRxMqttClient;
+import cn.liujson.lib.mqtt.api.Message;
 import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.lib.mqtt.service.rx.paho.PahoMqttClient;
-import cn.liujson.lib.mqtt.util.MQTTUtils;
+import cn.liujson.lib.mqtt.service.paho.PahoMqttClient;
+import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.Completable;
 
 /**
@@ -87,6 +90,11 @@ public class RxPahoClient implements IRxMqttClient {
         this.params = params;
     }
 
+    @NonNull
+    public ConnectionParams getParams() {
+        return params;
+    }
+
     public String getClientId() {
         return mqttClient.getClientId();
     }
@@ -125,7 +133,7 @@ public class RxPahoClient implements IRxMqttClient {
     @Override
     public Completable connect() {
         return Completable.create(emitter -> {
-            final MqttConnectOptions options = MQTTUtils.params2Options(this.params);
+            final MqttConnectOptions options = MqttUtils.params2Options(this.params);
             mqttClient.connect(options);
             emitter.onComplete();
         });
@@ -140,7 +148,7 @@ public class RxPahoClient implements IRxMqttClient {
                 emitter.onError(new IllegalArgumentException("topics.length != qosArr.length"));
                 return;
             }
-            mqttClient.subscribe(topics, MQTTUtils.qoS2IntArr(qosArr));
+            mqttClient.subscribe(topics, MqttUtils.qoS2IntArr(qosArr));
             synchronized (activeSubLock) {
                 for (int i = 0; i < topics.length; i++) {
                     activeSubs.put(topics[i], qosArr[i]);
@@ -177,7 +185,7 @@ public class RxPahoClient implements IRxMqttClient {
     @Override
     public Completable publish(@NonNull String topic, @NonNull byte[] payload, @NonNull QoS qos, boolean retained) {
         return Completable.create(emitter -> {
-            mqttClient.publish(topic, payload, MQTTUtils.qoS2Int(qos), retained);
+            mqttClient.publish(topic, payload, MqttUtils.qoS2Int(qos), retained);
             emitter.onComplete();
         });
     }
@@ -212,7 +220,6 @@ public class RxPahoClient implements IRxMqttClient {
      */
     public void release() {
         setCallback(null);
-        mqttClient.setCallback(null);
         activeSubs.clear();
     }
 

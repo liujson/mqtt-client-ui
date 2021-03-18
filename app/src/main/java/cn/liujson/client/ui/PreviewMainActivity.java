@@ -42,12 +42,13 @@ import cn.liujson.client.ui.fragments.LogPreviewFragment;
 import cn.liujson.client.ui.fragments.PublishFragment;
 import cn.liujson.client.ui.fragments.TopicsFragment;
 import cn.liujson.client.ui.fragments.WorkingStatusFragment;
+import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.ConnectionService;
 
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
-import cn.liujson.lib.mqtt.api.IMQTTBuilder;
 
+import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.logger.LogUtils;
 
 
@@ -255,9 +256,9 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
     public void connectClick(View view) {
         if (!dataList.isEmpty()) {
             final ConnectionProfile profile = oriDataList.get(viewDataBinding.spinner.getSelectedIndex());
-            final IMQTTBuilder builder = viewModel.profile2MQTTBuilder(profile);
+            final ConnectionParams params = viewModel.profile2Params(profile);
             //执行连接逻辑
-            Disposable subscribe = viewModel.setupAndConnect(builder)
+            Disposable subscribe = viewModel.setupAndConnect(params)
                     .subscribe(() -> {
                         ToastHelper.showToast(this, "连接成功");
                         viewModel.fieldConnectEnable.set(false);
@@ -291,6 +292,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                         .subscribe(() -> {
                             viewModel.fieldConnectEnable.set(true);
                             viewModel.fieldDisconnectEnable.set(false);
+                            viewModel.getRepository().uninstall();
                             ToastHelper.showToast(this, "断开成功");
                             EventBus.getDefault().post(new ConnectChangeEvent(false));
                             LogUtils.d("MQTT 断开连接成功");
@@ -302,7 +304,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
     }
 
     @Override
-    public void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder) {
+    public void onBindSuccess(ConnectionBinder serviceBinder) {
         ToastHelper.showToast(this, "绑定服务成功");
     }
 

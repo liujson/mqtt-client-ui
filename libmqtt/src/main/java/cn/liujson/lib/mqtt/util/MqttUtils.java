@@ -12,10 +12,9 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 
 import java.util.ArrayList;
 
-import cn.liujson.lib.mqtt.api.IMQTTCallback;
 import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.lib.mqtt.service.rx.ConnectionParams;
-import cn.liujson.lib.mqtt.service.rx.Message;
+import cn.liujson.lib.mqtt.api.ConnectionParams;
+import cn.liujson.lib.mqtt.api.Message;
 import cn.liujson.lib.mqtt.util.random.RandomStringUtils;
 import cn.liujson.lib.mqtt.util.random.UUIDUtils;
 
@@ -23,7 +22,7 @@ import cn.liujson.lib.mqtt.util.random.UUIDUtils;
  * @author liujson
  * @date 2021/2/21.
  */
-public class MQTTUtils {
+public class MqttUtils {
 
     private static final String TAG = "MQTTUtils";
 
@@ -73,47 +72,6 @@ public class MQTTUtils {
             qosArr[i] = qoS2Int(qoSs[i]);
         }
         return qosArr;
-    }
-
-    /**
-     * 桥接adapter
-     *
-     * @return
-     */
-    public static <T> org.fusesource.mqtt.client.Callback<T> adapterCallback(IMQTTCallback<T> iMQTTCallback) {
-        return new org.fusesource.mqtt.client.Callback<T>() {
-            @Override
-            public void onSuccess(T value) {
-                if (iMQTTCallback != null) {
-                    iMQTTCallback.onSuccess(value);
-                }
-            }
-
-            @Override
-            public void onFailure(Throwable value) {
-                if (iMQTTCallback != null) {
-                    iMQTTCallback.onFailure(value);
-                }
-            }
-        };
-    }
-
-    public static <T> IMqttActionListener adapterActionListener(IMQTTCallback<T> iMQTTCallback) {
-        return new IMqttActionListener() {
-            @Override
-            public void onSuccess(IMqttToken asyncActionToken) {
-                if (iMQTTCallback != null) {
-                    iMQTTCallback.onSuccess(null);
-                }
-            }
-
-            @Override
-            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                if (iMQTTCallback != null) {
-                    iMQTTCallback.onFailure(exception);
-                }
-            }
-        };
     }
 
 
@@ -175,10 +133,10 @@ public class MQTTUtils {
                     willMessage.getQosInt(),
                     willMessage.isRetained());
         }
-        if (TextUtils.isEmpty(params.getUsername())) {
+        if (!TextUtils.isEmpty(params.getUsername())) {
             options.setUserName(params.getUsername());
         }
-        if (TextUtils.isEmpty(params.getPassword())) {
+        if (!TextUtils.isEmpty(params.getPassword())) {
             assert params.getPassword() != null;
             options.setPassword(params.getPassword().toCharArray());
         }

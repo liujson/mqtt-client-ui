@@ -6,26 +6,16 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.util.Pair;
 
-import androidx.annotation.NonNull;
-
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-
-import java.util.Collections;
 import java.util.List;
 
 import cn.liujson.client.ui.app.CustomApplication;
-import cn.liujson.client.ui.service.ConnectionService;
+import cn.liujson.client.ui.service.ConnectionBinder;
+
 import cn.liujson.client.ui.service.MqttMgr;
-import cn.liujson.lib.mqtt.api.IMQTTBuilder;
-import cn.liujson.lib.mqtt.api.IMQTTMessageReceiver;
 import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.lib.mqtt.exception.WrapMQTTException;
-import cn.liujson.lib.mqtt.service.refactor.IMQTTWrapper;
-import cn.liujson.lib.mqtt.service.refactor.service.PahoV3MQTTClient;
-import cn.liujson.lib.mqtt.util.MQTTUtils;
+
+
+import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
 import io.reactivex.Completable;
 
 import io.reactivex.Single;
@@ -41,7 +31,7 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class ConnectionServiceRepository {
 
-    private ConnectionService.ConnectionServiceBinder serviceBinder;
+    private ConnectionBinder serviceBinder;
 
     private final OnBindStatus onbindStatus;
 
@@ -65,11 +55,10 @@ public class ConnectionServiceRepository {
     }
 
 
-
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            serviceBinder = (ConnectionService.ConnectionServiceBinder) service;
+            serviceBinder = (ConnectionBinder) service;
             if (onbindStatus != null) {
                 onbindStatus.onBindSuccess(serviceBinder);
             }
@@ -84,111 +73,107 @@ public class ConnectionServiceRepository {
         }
     };
 
-    public void registerReceiver(IMQTTMessageReceiver receiver) {
-        if (serviceBinder != null) {
-            serviceBinder.registerMessageReceiver(receiver);
-        }
-    }
-
-    public void unregisterReceiver(IMQTTMessageReceiver receiver) {
-        if (serviceBinder != null) {
-            serviceBinder.unregisterMessageReceiver(receiver);
-        }
-    }
-
-
-    public List<Pair<String, QoS>> getSubList() {
-        if (!isBind() || !isSetup()) {
-            return Collections.emptyList();
-        }
-        return serviceBinder.getWrapper().getClient().getSubList();
-    }
-
 
     public boolean isBind() {
         return serviceBinder != null;
     }
 
-    public boolean isSetup() {
-        return serviceBinder.isSetup();
+    public boolean isInstalled() {
+        return serviceBinder.isInstalled();
     }
 
-    public boolean isSame(IMQTTBuilder builder) {
-        return serviceBinder.isSame(builder);
+    public boolean isSame(Object object) {
+        return serviceBinder.isSame(object);
     }
 
     public boolean isConnected() {
-        return isSetup() && serviceBinder.getWrapper().getClient().isConnected();
+        return serviceBinder.isInstalled() && serviceBinder.getClient().isConnected();
     }
 
-    public Single<Boolean> rxIsConnected() {
-        return rxIsSetup().flatMap(aBoolean ->
-                Single.just(serviceBinder.getWrapper().getClient().isConnected()));
-    }
 
-    public Single<Boolean> rxIsSetup() {
+    public Single<Boolean> rxIsInstalled() {
         return Single.create((SingleOnSubscribe<Boolean>) emitter -> {
-            if (!isBind()) {
-                throw new WrapMQTTException("serviceBinder 服务连接失败");
-            }
-            if (!isSetup()) {
-                throw new WrapMQTTException("未安装Client为服务");
+            if (!isInstalled()) {
+                throw new IllegalStateException("未安装Client为服务");
             }
             emitter.onSuccess(true);
         }).subscribeOn(AndroidSchedulers.mainThread());
     }
 
-    public void setup(IMQTTWrapper<PahoV3MQTTClient> clientIMQTTWrapper) {
-        serviceBinder.setup(clientIMQTTWrapper);
+    public void install(RxPahoClient client) {
+        serviceBinder.install(client);
     }
 
-    public void setCallback(MqttCallback callback) {
-        serviceBinder.getWrapper().getClient().setCallback(callback);
+    public void uninstall() {
+        serviceBinder.uninstall();
+    }
+
+    public List<Pair<String, QoS>> getSubList() {
+        return serviceBinder.getClient().getActiveSubs();
+    }
+
+    public void addOnRecMsgListener(ConnectionBinder.OnRecMsgListener recMsgListener) {
+        serviceBinder.addOnRecMsgListener(recMsgListener);
+    }
+
+    public void removeOnRecMsgListener(ConnectionBinder.OnRecMsgListener recMsgListener) {
+        serviceBinder.removeOnRecMsgListener(recMsgListener);
+    }
+
+    public void addOnConnectedListener(ConnectionBinder.OnConnectedListener connectedListener) {
+        serviceBinder.addOnConnectedListener(connectedListener);
+    }
+
+    public void removeOnConnectedListener(ConnectionBinder.OnConnectedListener connectedListener) {
+        serviceBinder.removeOnConnectedListener(connectedListener);
     }
 
     public Completable connect() {
-        return rxIsSetup().flatMapCompletable(isSetup ->
-                serviceBinder.getWrapper().getClient().rxConnect());
+        return rxIsInstalled().flatMapCompletable(isSetup ->
+                serviceBinder.getClient().connect())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     public Completable subscribe(String topic, QoS qoS) {
-        return Completable.create(emitter -> {
-            serviceBinder.getWrapper().getClient()
-                    .subscribe(topic, MQTTUtils.qoS2Int(qoS)).waitForCompletion(DEFAULT_TIME_OUT);
-            emitter.onComplete();
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+        return serviceBinder.getClient()
+                .subscribe(topic, qoS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     public Completable unsubscribe(String topic) {
-        return Completable.create(emitter -> {
-            serviceBinder.getWrapper().getClient()
-                    .unsubscribe(topic).waitForCompletion(DEFAULT_TIME_OUT);
-            emitter.onComplete();
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+        return serviceBinder.getClient()
+                .unsubscribe(topic)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     public Completable publish(String topic, String message, QoS qoS, boolean retained) {
-        return Completable.create(emitter -> {
-            serviceBinder.getWrapper().getClient()
-                    .publish(topic, message.getBytes(),
-                            MQTTUtils.qoS2Int(qoS), retained).waitForCompletion(DEFAULT_TIME_OUT);
-            emitter.onComplete();
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+        return serviceBinder.getClient()
+                .publish(topic, message.getBytes(),
+                        qoS, retained)
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
     public Completable closeSafety() {
-        return rxIsSetup().flatMapCompletable(isSetup ->
-                serviceBinder.closeSafety());
+        return rxIsInstalled().flatMapCompletable(isSetup ->
+                serviceBinder.getClient().closeSafety())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     public Completable closeForcibly() {
-        return rxIsSetup().flatMapCompletable(isSetup ->
-                serviceBinder.closeForcibly());
+        return rxIsInstalled().flatMapCompletable(isSetup ->
+                serviceBinder.getClient()
+                        .closeForcibly(DEFAULT_TIME_OUT << 1, DEFAULT_TIME_OUT))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     public interface OnBindStatus {
 
-        void onBindSuccess(ConnectionService.ConnectionServiceBinder serviceBinder);
+        void onBindSuccess(ConnectionBinder serviceBinder);
 
         void onBindFailure();
     }
