@@ -12,6 +12,11 @@ import android.os.IBinder;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Objects;
+
+import cn.liujson.client.ui.app.CustomApplication;
+import cn.liujson.client.ui.util.ToastHelper;
+
 /**
  * MQTTServiceManager
  *
@@ -19,6 +24,8 @@ import androidx.annotation.Nullable;
  * @date 2021/3/5.
  */
 public class MqttMgr {
+
+    private Context mContext;
 
     private MqttMgr() {
 
@@ -50,6 +57,18 @@ public class MqttMgr {
         }
     }
 
+
+    /**
+     * 初始化 MQTT 服务
+     *
+     * @param context
+     */
+    public void init(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        this.mContext = context;
+        bindToApplication(context.getApplicationContext());
+    }
+
     /**
      * 后台运行服务
      */
@@ -60,11 +79,11 @@ public class MqttMgr {
     /**
      * 绑定服务到 Application
      */
-    public void bindToApplication(@NonNull Application application) {
-        bindService(application, mServiceConnection);
+    private boolean bindToApplication(@NonNull Context application) {
+        return bindService(application.getApplicationContext(), mServiceConnection);
     }
 
-    public void unbindToApplication(@NonNull Context context) {
+    private void unbindToApplication(@NonNull Context context) {
         unbindService(context, mServiceConnection);
     }
 
@@ -76,8 +95,8 @@ public class MqttMgr {
     }
 
 
-    public void bindService(@NonNull Context context, @NonNull ServiceConnection serviceConnection) {
-        context.bindService(getServiceIntent(context), serviceConnection, Context.BIND_AUTO_CREATE);
+    public boolean bindService(@NonNull Context context, @NonNull ServiceConnection serviceConnection) {
+        return context.bindService(getServiceIntent(context), serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     public void unbindService(@NonNull Context context, @NonNull ServiceConnection serviceConnection) {
@@ -103,12 +122,13 @@ public class MqttMgr {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mBinder = (ConnectionBinder) service;
+            ToastHelper.showToast(CustomApplication.getApp(), "MQTT后台服务绑定成功");
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             mBinder = null;
-            //Service 断开连接了
+            ToastHelper.showToast(CustomApplication.getApp(), "MQTT后台服务绑定失败");
         }
     };
 }

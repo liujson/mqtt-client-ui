@@ -79,13 +79,13 @@ public class PublishFragment extends BaseFragment implements PublishViewModel.Na
         binding.chipGroupTopicQos.setOnCheckedChangeListener(new OnSingleCheckedListener(binding.chipGroupTopicQos));
         binding.setVm(viewModel = new PublishViewModel(getLifecycle()));
         viewModel.setNavigator(this);
-        viewModel.getRepository().bindConnectionService(getContext());
+
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        viewModel.getRepository().unbindConnectionService();
+
     }
 
     @Override

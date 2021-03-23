@@ -45,7 +45,7 @@ public enum QoS {
             case EXACTLY_ONCE:
                 return "QoS 2";
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("QoS name not exist");
         }
     }
 }

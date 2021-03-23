@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import cn.liujson.logger.LogRecord;
+
 /**
  * 内存缓存日志 Adapter
  * 日志会被记录到内存中暂时存储
@@ -51,7 +53,7 @@ public class MemoryLogAdapter implements LogAdapter {
         formatStrategy.quitSafely();
     }
 
-    public LinkedList<String> cacheList() {
+    public LinkedList<LogRecord> cacheList() {
         return formatStrategy.cacheList();
     }
 

@@ -1,5 +1,8 @@
 package cn.liujson.client.ui.viewmodel.adapter;
 
+import android.widget.ImageView;
+
+import androidx.annotation.DrawableRes;
 import androidx.databinding.BindingAdapter;
 import androidx.databinding.ObservableList;
 import androidx.recyclerview.widget.RecyclerView;

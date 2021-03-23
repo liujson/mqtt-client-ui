@@ -7,6 +7,8 @@
     <string name="broker_address_cannot_be_null">Broker address cannot be null</string>
     <string name="broker_port_cannot_be_null">Broker port cannot be null</string>
     <string name="client_id_cannot_be_null">Client ID cannot be null</string>
+    <string name="connection_timeout_cannot_be_null">Connection timeout cannot be null</string>
+    <string name="keep_alive_interval_cannot_be_null">Keep alive interval cannot be null</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
 

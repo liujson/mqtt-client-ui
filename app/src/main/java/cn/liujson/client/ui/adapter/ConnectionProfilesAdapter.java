@@ -1,5 +1,7 @@
 package cn.liujson.client.ui.adapter;
 
+import android.view.View;
+
 import androidx.annotation.NonNull;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
@@ -29,9 +31,11 @@ public class ConnectionProfilesAdapter extends BaseQuickAdapter<ConnectionProfil
 
     @Override
     protected void convert(@NotNull BaseViewHolder holder, ItemProfile itemProfile) {
-        SwipeLayout swipeLayout = holder.findView(R.id.swipe);
+        final SwipeLayout swipeLayout = holder.findView(R.id.swipe);
         holder.setText(R.id.tv_profile_name, itemProfile.profileName);
         holder.setText(R.id.tv_broker, itemProfile.brokerAddress + ":" + itemProfile.brokerPort);
+
+        assert swipeLayout != null;
 
         swipeLayout.addSwipeListener(new SwipeLayout.SwipeListener() {
             @Override
@@ -41,7 +45,7 @@ public class ConnectionProfilesAdapter extends BaseQuickAdapter<ConnectionProfil
 
             @Override
             public void onOpen(SwipeLayout layout) {
-                YoYo.with(Techniques.Tada).duration(500).delay(100).playOn(layout.findViewById(R.id.rl_actions));
+//                YoYo.with(Techniques.Tada).duration(500).delay(100).playOn(layout.findViewById(R.id.rl_actions));
             }
 
             @Override

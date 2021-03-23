@@ -354,7 +354,7 @@ public class ConnectionParams implements Serializable {
 
         private void validateWill(String dest, Object payload) {
             if ((dest == null) || (payload == null)) {
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("Will message illegal argument");
             }
 
             MqttTopic.validate(dest, false/* wildcards NOT allowed */);

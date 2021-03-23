@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="logs_horizontal_scroll" type="id" />
+    <item name="logs_wrapper_relative" type="id" />
+    <item name="logs_rv_list" type="id" />
+
+    <dimen name="logs_dp5">5dp</dimen>
+    <dimen name="logs_dp_rv_width">2000dp</dimen>
+
+    <color name="logs_bg_color">#bdd7d7</color>
+</resources>

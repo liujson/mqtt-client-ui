@@ -2,7 +2,7 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <style name="text_style_1">
-        <item name="android:layout_width">135dp</item>
+        <item name="android:layout_width">185dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#636363</item>
@@ -38,28 +38,22 @@
 
     <style name="status_rl_right_item">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:padding">3dp</item>
-        <item name="android:layout_height">65dp</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:layout_height">50dp</item>
     </style>
 
-    <style name="status_tv_title_right_item">
-        <item name="android:layout_width">wrap_content</item>
+    <style name="status_tv_title">
+        <item name="android:layout_width">220dp</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">#191919</item>
-        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">#333333</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:gravity">left</item>
+        <item name="android:layout_marginStart">10dp</item>
         <item name="android:layout_centerVertical">true</item>
     </style>
 
-    <style name="status_tv_description_right_item">
-        <item name="android:layout_width">600dp</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:maxLines">2</item>
-        <item name="android:textColor">#666666</item>
-        <item name="android:gravity">center|right</item>
-        <item name="android:layout_alignParentEnd">true</item>
-        <item name="android:paddingEnd">5dp</item>
-        <item name="android:textSize">22sp</item>
-    </style>
+
 
     <style name="chip_qos_selection_style">
         <item name="android:layout_width">wrap_content</item>
@@ -93,5 +87,19 @@
         <item name="android:paddingEnd">8dp</item>
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <style name="status_iv_state">
+        <item name="android:layout_width">30dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:layout_marginEnd">35dp</item>
+        <item name="android:layout_alignParentEnd">true</item>
+        <item name="android:layout_centerVertical">true</item>
+    </style>
+
+    <style name="line_view_horizontal_color_bbb">
+        <item name="android:background">#BBBBBB</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0.8dp</item>
     </style>
 </resources>

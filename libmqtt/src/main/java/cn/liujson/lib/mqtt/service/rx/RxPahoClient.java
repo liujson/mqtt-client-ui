@@ -11,6 +11,8 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.logging.Logger;
+import org.eclipse.paho.client.mqttv3.logging.LoggerFactory;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.IRxMqttClient;
 import cn.liujson.lib.mqtt.api.Message;
 import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.service.paho.PahoLoggerImpl;
 import cn.liujson.lib.mqtt.service.paho.PahoMqttClient;
 import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.Completable;
@@ -70,7 +73,7 @@ public class RxPahoClient implements IRxMqttClient {
     public RxPahoClient(@NonNull ConnectionParams params) throws MqttException {
         Objects.requireNonNull(params);
         if (params.getServerURIs().length == 0) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("ServerURI can not be empty");
         }
         MemoryPersistence persistence = new MemoryPersistence();
         /*
@@ -81,7 +84,6 @@ public class RxPahoClient implements IRxMqttClient {
         mqttClient = new PahoMqttClient(params.getServerURIs()[0], params.getClientId(), persistence);
         //设置默认超时的等待时间(ms)
         mqttClient.setTimeToWait(DEFAULT_TIMEOUT);
-        mqttClient.getDebug().dumpBaseDebug();
         //set callback
         mqttClient.setCallback(new InternalProxyCallback());
 
@@ -102,6 +104,11 @@ public class RxPahoClient implements IRxMqttClient {
     public boolean isConnected() {
         return mqttClient.isConnected();
     }
+
+    public boolean isClosed() {
+        return mqttClient.isClosed();
+    }
+
 
     public String getCurrentServerURI() {
         return mqttClient.getCurrentServerURI();

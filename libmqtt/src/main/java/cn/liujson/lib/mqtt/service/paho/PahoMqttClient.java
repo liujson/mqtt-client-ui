@@ -448,4 +448,14 @@ public class PahoMqttClient implements IMqttClient {
         return (aClient.getDebug());
     }
 
+
+    //-------------------------------------展出来的方法----------------------------------------------
+
+    /**
+     * 是否连接已经关闭
+     */
+    public boolean isClosed() {
+        return aClient.isClosed();
+    }
+
 }

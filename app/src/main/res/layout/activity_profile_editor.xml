@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <import type="android.view.View"/>
         <variable
             name="vm"
             type="cn.liujson.client.ui.viewmodel.ProfileEditorViewModel" />
@@ -19,7 +19,7 @@
         <RelativeLayout
             android:id="@+id/rl_title_bar"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="60dp"
             android:background="#ececec"
             android:elevation="10dp">
 
@@ -40,22 +40,48 @@
                 android:text="Edit Profile"
                 android:textColor="#000000"
                 android:textSize="24sp" />
+
+            <Button
+                android:id="@+id/btn_save"
+                android:layout_width="100dp"
+                android:layout_height="43dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="15dp"
+                android:background="@drawable/selector_btn_blue_style"
+                android:onClick="@{v->vm.applyProfile()}"
+                android:text="Apply"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF" />
         </RelativeLayout>
 
         <ScrollView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="676dp"
             android:layout_below="@id/rl_title_bar"
-            android:layout_centerHorizontal="true">
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="35dp"
+            android:overScrollMode="never">
 
             <RelativeLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
+
+                <View
+                    android:id="@+id/line00"
+                    android:layout_width="700dp"
+                    android:layout_height="0.8dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:background="#c8c8c8" />
 
                 <LinearLayout
                     android:id="@+id/linear_01"
                     style="@style/config_linear_item_style"
-                    android:layout_marginTop="35dp">
+                    android:layout_below="@id/line00">
 
                     <TextView
                         style="@style/text_style_1"
@@ -130,25 +156,9 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/linear_4"
-                    style="@style/config_linear_item_style"
-                    android:layout_below="@id/linear_3">
-
-                    <TextView
-                        style="@style/text_style_1"
-                        android:text="Clean Session" />
-
-                    <CheckBox
-                        android:id="@+id/cb_clean_session"
-                        style="@style/et_edit_style_1"
-                        android:background="@null"
-                        android:checked="@={vm.fieldCleanSession}" />
-                </LinearLayout>
-
-                <LinearLayout
                     android:id="@+id/linear_5"
                     style="@style/config_linear_item_style"
-                    android:layout_below="@id/linear_4">
+                    android:layout_below="@id/linear_3">
 
                     <TextView
                         style="@style/text_style_1"
@@ -176,18 +186,122 @@
                         android:text="@={vm.fieldPassword}" />
                 </LinearLayout>
 
-                <Button
-                    android:id="@+id/btn_save"
-                    android:layout_width="120dp"
-                    android:layout_height="38dp"
+                <View
+                    android:id="@+id/line01"
+                    android:layout_width="700dp"
+                    android:layout_height="0.8dp"
                     android:layout_below="@id/linear_6"
                     android:layout_centerHorizontal="true"
-                    android:layout_marginTop="20dp"
-                    android:background="@drawable/selector_btn_blue_style"
-                    android:onClick="@{v->vm.applyProfile()}"
-                    android:text="Apply"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF" />
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:background="#c8c8c8" />
+
+                <LinearLayout
+                    android:id="@+id/linear_clean_session"
+                    style="@style/config_linear_item_style"
+                    android:layout_below="@id/line01">
+
+                    <TextView
+                        style="@style/text_style_1"
+                        android:text="Clean Session" />
+
+                    <CheckBox
+                        android:id="@+id/cb_clean_session"
+                        style="@style/et_edit_style_1"
+                        android:background="@null"
+                        android:checked="@={vm.fieldCleanSession}" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linear_7"
+                    style="@style/config_linear_item_style"
+                    android:layout_below="@id/linear_clean_session">
+
+                    <TextView
+                        style="@style/text_style_1"
+                        android:text="Auto Reconnect" />
+
+                    <CheckBox
+                        android:id="@+id/cb_auto_reconnect"
+                        style="@style/et_edit_style_1"
+                        android:background="@null"
+                        android:checked="@={vm.fieldAutoReconnect}" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linear_max_reconnect_delay"
+                    style="@style/config_linear_item_style"
+                    android:visibility="@{vm.fieldAutoReconnect?View.VISIBLE:View.GONE}"
+                    android:layout_below="@id/linear_7">
+
+                    <TextView
+                        style="@style/text_style_1"
+                        android:text="Max Reconnect Delay" />
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/et_max_reconnect_delay"
+                        style="@style/et_edit_style_1"
+                        android:inputType="number"
+                        android:text="@={vm.fieldMaxReconnectDelay}" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linear_8"
+                    style="@style/config_linear_item_style"
+                    android:layout_below="@id/linear_max_reconnect_delay">
+
+                    <TextView
+                        style="@style/text_style_1"
+                        android:text="Connection Timeout" />
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/et_connection_timeout"
+                        style="@style/et_edit_style_1"
+                        android:inputType="number"
+                        android:text="@={vm.fieldConnectionTimeout}" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linear_9"
+                    style="@style/config_linear_item_style"
+                    android:layout_below="@id/linear_8">
+
+                    <TextView
+                        style="@style/text_style_1"
+                        android:text="Keep Alive Interval" />
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/et_keep_alive_interval"
+                        style="@style/et_edit_style_1"
+                        android:inputType="number"
+                        android:text="@={vm.fieldKeepAliveInterval}" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/line02"
+                    android:layout_width="700dp"
+                    android:layout_height="0.8dp"
+                    android:layout_below="@id/linear_9"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:background="#c8c8c8" />
+
             </RelativeLayout>
         </ScrollView>
     </RelativeLayout>

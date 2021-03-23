@@ -6,11 +6,14 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
@@ -45,6 +48,7 @@ import cn.liujson.client.ui.fragments.WorkingStatusFragment;
 import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.ConnectionService;
 
+import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 
@@ -61,7 +65,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
 
     private static final String TAG = "PreviewMainActivity";
 
-    public static final String[] mTitleList = new String[]{"Publish", "Topics", "Log", "Status"};
+    public static final String[] mTitleList = new String[]{"Publish", "Topics", "Status", "Log"};
 
     private ActivityPreviewMainBinding viewDataBinding;
 
@@ -73,6 +77,18 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
 
     private CompositeDisposable mCompositeDisposable;
 
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            ToastHelper.showToast(getApplicationContext(), "MQTT服务绑定成功");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            ToastHelper.showToast(getApplicationContext(), "MQTT服务绑定失败");
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,16 +98,16 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
         viewModel.setNavigator(this);
         viewDataBinding.setVm(viewModel);
 
-        viewModel.getRepository().bindConnectionService(this);
-
         initSpinner();
         initViewPager();
-
 
         mCompositeDisposable = new CompositeDisposable();
 
         viewDataBinding.mViewPager.setUserInputEnabled(false);
 
+
+        //把MQTT绑定到这个服务
+        MqttMgr.instance().bindToActivity(this, serviceConnection);
     }
 
     @Override
@@ -99,7 +115,17 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
         super.onResume();
         if (viewModel != null) {
             viewModel.loadProfiles();
+            if (viewModel.getRepository().isBind() && viewModel.getRepository().isInstalled()) {
+                if (viewModel.getRepository().isConnected()) {
+                    viewModel.fieldConnectEnable.set(true);
+                    viewModel.fieldDisconnectEnable.set(false);
+                }else {
+                    viewModel.fieldConnectEnable.set(false);
+                    viewModel.fieldDisconnectEnable.set(true);
+                }
+            }
         }
+
     }
 
     @Override
@@ -109,8 +135,8 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
             mCompositeDisposable.clear();
             mCompositeDisposable = null;
         }
-
-        viewModel.getRepository().unbindConnectionService();
+        //解除服务绑定
+        MqttMgr.instance().unbindService(this, serviceConnection);
     }
 
     /**
@@ -160,14 +186,14 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
     private void initViewPager() {
         PublishFragment publishFragment = PublishFragment.newInstance();
         TopicsFragment topicsFragment = TopicsFragment.newInstance();
-        LogPreviewFragment logPreviewFragment = LogPreviewFragment.newInstance();
         WorkingStatusFragment workingStatusFragment = WorkingStatusFragment.newInstance();
+        LogPreviewFragment logPreviewFragment = LogPreviewFragment.newInstance();
 
         ArrayList<Fragment> fragmentList = new ArrayList<>();
         fragmentList.add(publishFragment);
         fragmentList.add(topicsFragment);
-        fragmentList.add(logPreviewFragment);
         fragmentList.add(workingStatusFragment);
+        fragmentList.add(logPreviewFragment);
 
         viewDataBinding.mViewPager.setAdapter(new PageFragmentStateAdapter(getSupportFragmentManager(), getLifecycle(), fragmentList));
 
@@ -301,15 +327,5 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                             LogUtils.e("MQTT 断开连接失败：" + throwable.toString());
                         });
         mCompositeDisposable.add(subscribe);
-    }
-
-    @Override
-    public void onBindSuccess(ConnectionBinder serviceBinder) {
-        ToastHelper.showToast(this, "绑定服务成功");
-    }
-
-    @Override
-    public void onBindFailure() {
-        ToastHelper.showToast(this, "绑定服务失败");
     }
 }

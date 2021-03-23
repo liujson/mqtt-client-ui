@@ -29,4 +29,15 @@ public class ConnectionProfile {
     public String username;
     @ColumnInfo(name = "password")
     public String password;
+
+
+    @ColumnInfo(name = "connection_timeout")
+    public int connectionTimeout;
+    @ColumnInfo(name = "keep_alive_interval")
+    public int keepAliveInterval;
+    @ColumnInfo(name = "auto_reconnect")
+    public boolean autoReconnect;
+    @ColumnInfo(name = "max_reconnect_delay", defaultValue = "128000")
+    public int maxReconnectDelay;
+
 }

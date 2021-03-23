@@ -2,8 +2,12 @@ package cn.liujson.client.ui.app;
 
 import android.app.Application;
 
+import org.eclipse.paho.client.mqttv3.logging.LoggerFactory;
+
 import cn.liujson.client.ui.db.DatabaseHelper;
+import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.LogManager;
+import cn.liujson.lib.mqtt.service.paho.PahoLoggerImpl;
 import cn.liujson.logger.LogUtils;
 import cn.liujson.logger.disk.SdcardLogAdapter;
 import cn.liujson.logger.logcat.LogcatLogAdapter;
@@ -28,9 +32,11 @@ public class CustomApplication extends Application {
         LogManager.getInstance().init(this);
 
         LogUtils.i("Start App");
+        //Paho
+        LoggerFactory.setLogger(PahoLoggerImpl.class.getName());
 
         //启动Mqtt服务
-//        MqttServiceManager.getInstance().bindToApplication(this);
+        MqttMgr.instance().init(this);
     }
 
     public static CustomApplication getApp() {

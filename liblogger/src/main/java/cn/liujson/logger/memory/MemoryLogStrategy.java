@@ -12,6 +12,8 @@ import com.orhanobut.logger.LogStrategy;
 import java.util.LinkedList;
 import java.util.Objects;
 
+import cn.liujson.logger.LogRecord;
+
 
 /**
  * @author liujson
@@ -28,7 +30,7 @@ public class MemoryLogStrategy implements LogStrategy {
     /**
      * 缓存列表
      */
-    static final LinkedList<String> memoryLogQueue = new LinkedList<>();
+    static final LinkedList<LogRecord> memoryLogQueue = new LinkedList<>();
 
     public MemoryLogStrategy(@NonNull Handler handler) {
         this.handler = Objects.requireNonNull(handler);
@@ -37,7 +39,7 @@ public class MemoryLogStrategy implements LogStrategy {
 
     @Override
     public void log(int priority, @Nullable String tag, @NonNull String message) {
-        this.handler.obtainMessage(MSG_OFFER, priority, 0, message);
+        this.handler.sendMessage(this.handler.obtainMessage(MSG_OFFER, priority, 0, message));
     }
 
 
@@ -45,7 +47,7 @@ public class MemoryLogStrategy implements LogStrategy {
         return memoryLogQueue.size();
     }
 
-    public final LinkedList<String> cacheList() {
+    public final LinkedList<LogRecord> cacheList() {
         return memoryLogQueue;
     }
 
@@ -101,10 +103,10 @@ public class MemoryLogStrategy implements LogStrategy {
                     if (message.length() > maxLength) {
                         message = message.substring(0, maxLength);
                     }
-                    memoryLogQueue.offer(message);
+                    memoryLogQueue.offer(new LogRecord(msg.arg1, message));
                     break;
                 default:
-                    throw new IllegalArgumentException();
+                    break;
             }
         }
     }

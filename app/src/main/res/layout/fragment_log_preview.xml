@@ -9,20 +9,8 @@
             type="cn.liujson.client.ui.viewmodel.LogPreviewViewModel" />
     </data>
 
-    <FrameLayout
+    <cn.liujson.client.ui.widget.LogsPreviewView
+        android:id="@+id/logs_preview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/selector_log_card_bg"
-        tools:context=".ui.fragments.LogPreviewFragment">
-
-        <cn.liujson.client.ui.widget.LogView
-            android:id="@+id/tv_log"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fontFamily="sans-serif-condensed"
-            android:letterSpacing="0.08"
-            android:lineSpacingExtra="3dp"
-            android:scrollbars="vertical"
-            android:textColor="#bdd7d7" />
-    </FrameLayout>
+        android:layout_height="match_parent"/>
 </layout>

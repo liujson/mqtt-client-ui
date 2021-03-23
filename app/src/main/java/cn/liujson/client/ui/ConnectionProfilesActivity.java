@@ -94,7 +94,7 @@ public class ConnectionProfilesActivity extends AppCompatActivity implements OnC
                     }
                     break;
                 default:
-                    throw new RuntimeException();
+                    throw new RuntimeException("状态码错误，必须是：NEW_REQUEST_CODE or EDIT_REQUEST_CODE");
             }
         }
     }

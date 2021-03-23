@@ -81,6 +81,16 @@ public class ProfileEditorActivity extends AppCompatActivity implements ProfileE
             viewDataBinding.etClientId.setError(getString(R.string.client_id_cannot_be_null));
             return false;
         }
+        if (TextUtils.isEmpty(viewModel.fieldConnectionTimeout.get())) {
+            viewDataBinding.etConnectionTimeout.setError(getString(R.string.connection_timeout_cannot_be_null));
+            return false;
+        }
+        if (viewModel.fieldAutoReconnect.get()) {
+            if (TextUtils.isEmpty(viewModel.fieldKeepAliveInterval.get())) {
+                viewDataBinding.etKeepAliveInterval.setError(getString(R.string.keep_alive_interval_cannot_be_null));
+                return false;
+            }
+        }
         return true;
     }
 
@@ -101,6 +111,10 @@ public class ProfileEditorActivity extends AppCompatActivity implements ProfileE
             viewModel.fieldCleanSession.set(connectionProfile.cleanSession);
             viewModel.fieldUsername.set(connectionProfile.username);
             viewModel.fieldPassword.set(connectionProfile.password);
+            viewModel.fieldConnectionTimeout.set(String.valueOf(connectionProfile.connectionTimeout));
+            viewModel.fieldKeepAliveInterval.set(String.valueOf(connectionProfile.keepAliveInterval));
+            viewModel.fieldAutoReconnect.set(connectionProfile.autoReconnect);
+            viewModel.fieldMaxReconnectDelay.set(String.valueOf(connectionProfile.maxReconnectDelay));
         }
     }
 

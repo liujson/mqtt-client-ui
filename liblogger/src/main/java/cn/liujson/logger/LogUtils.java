@@ -140,6 +140,7 @@ public class LogUtils {
             return this.level;
         }
 
+        @NonNull
         public static Level value2Level(int level) {
             switch (level) {
                 case Logger.VERBOSE:

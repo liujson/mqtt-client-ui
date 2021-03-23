@@ -16,13 +16,17 @@ import android.view.ViewGroup;
 import com.orhanobut.logger.FormatStrategy;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import cn.liujson.client.databinding.FragmentLogPreviewBinding;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.util.LogManager;
 import cn.liujson.client.ui.viewmodel.LogPreviewViewModel;
+import cn.liujson.client.ui.widget.LogsPreviewView;
+import cn.liujson.logger.LogRecord;
 import cn.liujson.logger.LogUtils;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -38,6 +42,10 @@ public class LogPreviewFragment extends Fragment {
 
     FragmentLogPreviewBinding binding;
     LogPreviewViewModel viewModel;
+
+    final Handler handler = new Handler();
+
+    LogsPreviewView logsPreview;
 
     public LogPreviewFragment() {
         // Required empty public constructor
@@ -70,35 +78,42 @@ public class LogPreviewFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         binding.setVm(viewModel = new LogPreviewViewModel(getLifecycle()));
-        final Handler handler = new Handler();
-        LogManager.getInstance().subscribeMemoryLog(new FormatStrategy() {
-            @Override
-            public void log(int priority, @Nullable String tag, @NonNull String message) {
-                final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                final StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append(dateFormat.format(new Date()));
-                stringBuilder.append('\t');
-                stringBuilder.append(LogUtils.Level.logLevelName(priority));
-                stringBuilder.append(" --- ");
-                stringBuilder.append(tag);
-                stringBuilder.append(" :");
-                stringBuilder.append(message);
-                //这里千万不要再使用LogUtils打印日志，否则会无限循环
-                handler.post(() -> {
-                    refresh(stringBuilder.toString());
-                });
-            }
+        logsPreview = binding.logsPreview;
+        loadMemoryLogs();
+        LogManager.getInstance().subscribeMemoryLog((priority, tag, message) -> {
+            //这里千万不要再使用LogUtils打印日志，否则会无限循环
+            handler.post(() -> {
+                logsPreview.log(priority2Level(priority), tag, message);
+            });
         });
     }
 
-
-    public void refresh(String result) {
-        binding.tvLog.append(result + "\n\n");
-        //let text view to move to the last line.
-        int offset = binding.tvLog.getLineCount() * binding.tvLog.getLineHeight();
-        if (offset > binding.tvLog.getHeight()) {
-            binding.tvLog.scrollTo(0, offset - binding.tvLog.getHeight());
+    private void loadMemoryLogs() {
+        final List<LogRecord> logRecords = LogManager.getInstance().memoryCacheLogList();
+        final int logQueueSize = logsPreview.getLogQueueSize();
+        List<LogsPreviewView.LogRecord> logRecordList = new ArrayList<>();
+        int size = Math.min(logRecords.size(), logQueueSize);
+        for (int i = 0; i < size; i++) {
+            LogRecord logRecord = logRecords.get(i);
+            final LogsPreviewView.Level level = priority2Level(logRecord.getPriority());
+            LogsPreviewView.LogRecord record = new LogsPreviewView.LogRecord(level, logRecord.getFormatMessage());
+            logRecordList.add(record);
         }
+
+        logsPreview.addLogs(logRecordList);
     }
 
+    private LogsPreviewView.Level priority2Level(int priority) {
+        switch (LogUtils.Level.value2Level(priority)) {
+            case INFO:
+            case DEBUG:
+            case WARN:
+                return LogsPreviewView.Level.D;
+            case ERROR:
+            case ASSERT:
+                return LogsPreviewView.Level.E;
+            default:
+                return LogsPreviewView.Level.I;
+        }
+    }
 }

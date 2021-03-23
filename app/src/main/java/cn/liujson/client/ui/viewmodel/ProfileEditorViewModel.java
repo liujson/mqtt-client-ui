@@ -4,6 +4,7 @@ import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import cn.liujson.client.ui.ProfileEditorActivity;
@@ -12,10 +13,12 @@ import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.util.ToastHelper;
+import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import kotlinx.coroutines.Delay;
 
 /**
  * @author liujson
@@ -29,7 +32,12 @@ public class ProfileEditorViewModel extends BaseViewModel {
     public final ObservableField<String> fieldClientID = new ObservableField<>();
     public final ObservableField<String> fieldUsername = new ObservableField<>();
     public final ObservableField<String> fieldPassword = new ObservableField<>();
+    public final ObservableField<String> fieldKeepAliveInterval = new ObservableField<>("60");
+    public final ObservableField<String> fieldConnectionTimeout = new ObservableField<>("30");
+    public final ObservableField<String> fieldMaxReconnectDelay
+            = new ObservableField<>(String.valueOf(ConnectionParams.MAX_RECONNECT_DELAY_DEFAULT));
     public final ObservableBoolean fieldCleanSession = new ObservableBoolean(true);
+    public final ObservableBoolean fieldAutoReconnect = new ObservableBoolean(true);
 
     private Navigator navigator;
 
@@ -75,11 +83,17 @@ public class ProfileEditorViewModel extends BaseViewModel {
         connectionProfile.id = (int) profileID;
         connectionProfile.profileName = fieldProfileName.get();
         connectionProfile.brokerAddress = fieldBrokerAddress.get();
-        connectionProfile.brokerPort = Integer.parseInt(fieldBrokerPort.get());
+        connectionProfile.brokerPort = Integer.parseInt(Objects.requireNonNull(fieldBrokerPort.get()));
         connectionProfile.clientID = fieldClientID.get();
         connectionProfile.username = fieldUsername.get();
         connectionProfile.password = fieldPassword.get();
         connectionProfile.cleanSession = fieldCleanSession.get();
+        connectionProfile.connectionTimeout = Integer.parseInt(Objects.requireNonNull(fieldConnectionTimeout.get()));
+        connectionProfile.keepAliveInterval = Integer.parseInt(Objects.requireNonNull(fieldKeepAliveInterval.get()));
+        connectionProfile.autoReconnect = fieldAutoReconnect.get();
+        if(fieldAutoReconnect.get()){
+            connectionProfile.maxReconnectDelay = Integer.parseInt(Objects.requireNonNull(fieldMaxReconnectDelay.get()));
+        }
 
         if (openMode == ProfileEditorActivity.Mode.NEW) {
             save(connectionProfile);

@@ -11,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * MqttAsyncClient 继承为方便扩展
+ *
  * @author liujson
  * @date 2021/3/18.
  * @see org.eclipse.paho.client.mqttv3.MqttAsyncClient
@@ -39,8 +40,15 @@ public class PahoMqttAsyncClient extends MqttAsyncClient {
     }
 
 
+    //-------------------------------------展出来的方法----------------------------------------------
+
     @Override
     protected MqttTopic getTopic(String topic) {
         return super.getTopic(topic);
+    }
+
+
+    public boolean isClosed() {
+        return comms.isClosed();
     }
 }

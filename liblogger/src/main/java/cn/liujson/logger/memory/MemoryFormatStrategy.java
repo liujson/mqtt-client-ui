@@ -2,6 +2,7 @@ package cn.liujson.logger.memory;
 
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.text.TextUtils;
 
 
 import androidx.annotation.NonNull;
@@ -11,10 +12,12 @@ import com.orhanobut.logger.FormatStrategy;
 
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Locale;
 
+import cn.liujson.logger.LogRecord;
 import cn.liujson.logger.LogUtils;
 
 /**
@@ -38,6 +41,7 @@ public class MemoryFormatStrategy implements FormatStrategy {
     private final SimpleDateFormat dateFormat;
 
     private final Date date;
+
 
     public MemoryFormatStrategy() {
         ht = new HandlerThread("MemoryCacheLog");
@@ -68,7 +72,7 @@ public class MemoryFormatStrategy implements FormatStrategy {
         return logStrategy.logSize();
     }
 
-    public LinkedList<String> cacheList() {
+    public LinkedList<LogRecord> cacheList() {
         return logStrategy.cacheList();
     }
 
@@ -76,31 +80,21 @@ public class MemoryFormatStrategy implements FormatStrategy {
     @Override
     public void log(int priority, @Nullable String tag, @NonNull String message) {
 
+
         date.setTime(System.currentTimeMillis());
 
         StringBuilder builder = new StringBuilder();
 
-        // machine-readable date/time
-        builder.append(Long.toString(date.getTime()));
-
-        // human-readable date/time
-        builder.append(SEPARATOR);
         builder.append(dateFormat.format(date));
-
-        // level
-        builder.append(SEPARATOR);
-        builder.append(LogUtils.Level.logLevelName(priority));
-
+        builder.append("    ");
         // tag
         if (tag == null) {
             tag = DEFAULT_TAG;
         }
-        builder.append(SEPARATOR);
-        builder.append(tag);
-        logStrategy.log(priority, tag, message);
-
-        // message
-        builder.append(SEPARATOR);
+        builder.append(String.format("%-16s", LogUtils.Level.logLevelName(priority)));
+        builder.append(" --- ");
+        builder.append(String.format("%-32s", tag));
+        builder.append(" ---  :");
         builder.append(message);
 
         logStrategy.log(priority, tag, builder.toString());

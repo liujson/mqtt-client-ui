@@ -11,6 +11,7 @@ import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.ConnectionService;
+import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.lib.mqtt.api.QoS;
@@ -24,7 +25,7 @@ import io.reactivex.disposables.Disposable;
  * @author liujson
  * @date 2021/3/10.
  */
-public class PublishViewModel extends BaseViewModel implements ConnectionServiceRepository.OnBindStatus {
+public class PublishViewModel extends BaseViewModel {
 
     public final ObservableBoolean fieldAllEnable = new ObservableBoolean(false);
     public final ObservableField<CharSequence> fieldInputContent = new ObservableField<>();
@@ -38,7 +39,7 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
 
     public PublishViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);
-        repository = new ConnectionServiceRepository(this);
+        repository = new ConnectionServiceRepository();
     }
 
     public ConnectionServiceRepository getRepository() {
@@ -85,16 +86,6 @@ public class PublishViewModel extends BaseViewModel implements ConnectionService
         if (publishDisposable != null) {
             publishDisposable.dispose();
         }
-    }
-
-    @Override
-    public void onBindSuccess(ConnectionBinder serviceBinder) {
-
-    }
-
-    @Override
-    public void onBindFailure() {
-
     }
 
     public void setNavigator(Navigator navigator) {

@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
@@ -73,14 +74,16 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
         binding.chipGroupTopicQos.setOnCheckedChangeListener(new OnSingleCheckedListener(binding.chipGroupTopicQos));
         binding.setVm(viewModel = new TopicsViewModel(getLifecycle()));
         viewModel.setNavigator(this);
-        viewModel.getRepository().bindConnectionService(getContext());
+
+
+
     }
 
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        viewModel.getRepository().unbindConnectionService();
+
     }
 
 

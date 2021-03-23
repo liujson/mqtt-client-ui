@@ -18,6 +18,7 @@ import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.service.ConnectionBinder;
 
+import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 
@@ -37,7 +38,7 @@ import io.reactivex.schedulers.Schedulers;
  * @date 2021/3/4.
  */
 public class PreviewMainViewModel extends BaseViewModel implements
-        ConnectionServiceRepository.OnBindStatus,ConnectionBinder.OnRecMsgListener, ConnectionBinder.OnConnectedListener {
+        ConnectionBinder.OnRecMsgListener, ConnectionBinder.OnConnectedListener {
 
     public final ObservableBoolean fieldConnectEnable = new ObservableBoolean(false);
     public final ObservableBoolean fieldDisconnectEnable = new ObservableBoolean(false);
@@ -56,7 +57,7 @@ public class PreviewMainViewModel extends BaseViewModel implements
     public PreviewMainViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);
 
-        repository = new ConnectionServiceRepository(this);
+        repository = new ConnectionServiceRepository();
     }
 
     public ConnectionServiceRepository getRepository() {
@@ -103,9 +104,14 @@ public class PreviewMainViewModel extends BaseViewModel implements
     }
 
     public ConnectionParams profile2Params(ConnectionProfile profile) {
+        // TODO: 2021/3/19  配置连接参数
         return ConnectionParams.newBuilder()
                 .serverURI("tcp://" + profile.brokerAddress + ":" + profile.brokerPort)
                 .cleanSession(profile.cleanSession)
+                .automaticReconnect(profile.autoReconnect)
+                .maxReconnectDelay(profile.maxReconnectDelay)
+                .keepAlive(profile.keepAliveInterval)
+                .connectionTimeout(profile.connectionTimeout)
                 .clientId(profile.clientID)
                 .username(profile.username)
                 .password(profile.password)
@@ -138,6 +144,9 @@ public class PreviewMainViewModel extends BaseViewModel implements
                         //如果安全断开失败则强制断开连接
                         .onErrorResumeNext(throwable -> getRepository().closeForcibly())
                         .andThen(actionCompletable);
+            } else if (getRepository().isClosed()) {
+                //如果client被关闭,表示客户端不再能用了，从Service卸载客户端
+                getRepository().uninstall();
             }
         } else {
             //如果未安装则进行安装
@@ -151,19 +160,6 @@ public class PreviewMainViewModel extends BaseViewModel implements
         return actionCompletable;
     }
 
-    @Override
-    public void onBindSuccess(ConnectionBinder serviceBinder) {
-        if (navigator != null) {
-            navigator.onBindSuccess(serviceBinder);
-        }
-    }
-
-    @Override
-    public void onBindFailure() {
-        if (navigator != null) {
-            navigator.onBindFailure();
-        }
-    }
 
     @Override
     public void onReceiveMessage(String topic, byte[] payload, QoS qoS) {
@@ -176,7 +172,7 @@ public class PreviewMainViewModel extends BaseViewModel implements
     }
 
 
-    public interface Navigator extends ConnectionServiceRepository.OnBindStatus {
+    public interface Navigator {
         /**
          * 通知更新
          */

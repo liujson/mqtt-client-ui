@@ -1,5 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
+import android.os.Handler;
 import android.util.Pair;
 import android.view.View;
 
@@ -23,6 +24,7 @@ import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.ConnectionService;
+import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.divider.DividerLinearItemDecoration;
@@ -37,7 +39,7 @@ import io.reactivex.disposables.Disposable;
  * @date 2021/3/10.
  */
 public class TopicsViewModel extends BaseViewModel implements
-        ConnectionServiceRepository.OnBindStatus, ConnectionBinder.OnRecMsgListener {
+        ConnectionBinder.OnRecMsgListener {
 
     public final ObservableList<Pair<String, QoS>> dataList = new ObservableArrayList<>();
     public final TopicListAdapter adapter = new TopicListAdapter(dataList);
@@ -71,7 +73,7 @@ public class TopicsViewModel extends BaseViewModel implements
     public TopicsViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);
 
-        repository = new ConnectionServiceRepository(this);
+        repository = new ConnectionServiceRepository();
 
         adapter.setOnItemChildClickListener((adapter, view, position) -> {
             if (adapter instanceof TopicListAdapter) {
@@ -82,6 +84,17 @@ public class TopicsViewModel extends BaseViewModel implements
             }
         });
         adapter.addChildClickViewIds(R.id.btn_unsubscribe);
+
+        new Handler().postDelayed(()->{
+            if (getRepository().isBind() && getRepository().isInstalled()) {
+                if (getRepository().isConnected()) {
+                    EventBus.getDefault().post(new ConnectChangeEvent(true));
+                } else {
+                    EventBus.getDefault().post(new ConnectChangeEvent(false));
+                }
+                getRepository().addOnRecMsgListener(this);
+            }
+        },2000);
     }
 
     @Override
@@ -159,23 +172,6 @@ public class TopicsViewModel extends BaseViewModel implements
                 });
     }
 
-
-    @Override
-    public void onBindSuccess(ConnectionBinder serviceBinder) {
-        if (serviceBinder.isInstalled()) {
-            if (serviceBinder.getClient().isConnected()) {
-                EventBus.getDefault().post(new ConnectChangeEvent(true));
-            } else {
-                EventBus.getDefault().post(new ConnectChangeEvent(false));
-            }
-            repository.addOnRecMsgListener(this);
-        }
-    }
-
-    @Override
-    public void onBindFailure() {
-
-    }
 
     public void setNavigator(Navigator navigator) {
         this.navigator = navigator;

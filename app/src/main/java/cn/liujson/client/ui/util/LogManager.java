@@ -6,6 +6,7 @@ import com.orhanobut.logger.FormatStrategy;
 
 import java.util.List;
 
+import cn.liujson.logger.LogRecord;
 import cn.liujson.logger.LogUtils;
 import cn.liujson.logger.disk.SdcardLogAdapter;
 import cn.liujson.logger.logcat.LogcatLogAdapter;
@@ -58,7 +59,7 @@ public class LogManager {
         memoryLogAdapter.unsubscribeLogPrint(listener);
     }
 
-    public List<String> memoryCacheLogList() {
+    public List<LogRecord> memoryCacheLogList() {
         return memoryLogAdapter.cacheList();
     }
 }
