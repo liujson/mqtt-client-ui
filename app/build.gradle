@@ -92,5 +92,7 @@ dependencies {
     //https://github.com/JessYanCoding/AndroidAutoSize
     implementation 'me.jessyan:autosize:1.2.1'
 
-    //https://github.com/orhanobut/logger
+    //过度滑动效果（弹性滑动）
+    //https://github.com/EverythingMe/overscroll-decor
+    implementation 'me.everything:overscroll-decor-android:1.1.0'
 }

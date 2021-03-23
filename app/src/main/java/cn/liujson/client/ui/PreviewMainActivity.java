@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
@@ -49,6 +50,7 @@ import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.ConnectionService;
 
 import cn.liujson.client.ui.service.MqttMgr;
+import cn.liujson.client.ui.util.InputMethodUtils;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 
@@ -119,7 +121,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                 if (viewModel.getRepository().isConnected()) {
                     viewModel.fieldConnectEnable.set(true);
                     viewModel.fieldDisconnectEnable.set(false);
-                }else {
+                } else {
                     viewModel.fieldConnectEnable.set(false);
                     viewModel.fieldDisconnectEnable.set(true);
                 }
@@ -327,5 +329,12 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                             LogUtils.e("MQTT 断开连接失败：" + throwable.toString());
                         });
         mCompositeDisposable.add(subscribe);
+    }
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        InputMethodUtils.hideSoftInput(this);
+        return super.onTouchEvent(event);
     }
 }

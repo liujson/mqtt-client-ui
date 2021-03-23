@@ -157,6 +157,9 @@ public class LogsPreviewView extends RelativeLayout {
         this.logRecords.clear();
         this.logRecords.addAll(logRecords);
         adapter.notifyDataSetChanged();
+        if (!logRecords.isEmpty()) {
+            mLogRecyclerView.smoothScrollToPosition(logRecords.size() - 1);
+        }
     }
 
     public void log(@NonNull Level level, String tag, @NonNull String message) {
@@ -177,6 +180,9 @@ public class LogsPreviewView extends RelativeLayout {
         logRecord.message = logFormat == null ? "" : logFormat.toString();
         logRecords.add(logRecord);
         adapter.notifyDataSetChanged();
+        if (!logRecords.isEmpty()) {
+            mLogRecyclerView.smoothScrollToPosition(logRecords.size() - 1);
+        }
     }
 
     /**
@@ -204,7 +210,7 @@ public class LogsPreviewView extends RelativeLayout {
     /**
      * 日志预览 Adapter
      */
-    private class LogsPreviewAdapter extends BaseQuickAdapter<LogRecord, BaseViewHolder> {
+    private static class LogsPreviewAdapter extends BaseQuickAdapter<LogRecord, BaseViewHolder> {
 
         public LogsPreviewAdapter(@Nullable List<LogRecord> data) {
             super(R.layout.item_rv_logs_preview, data);

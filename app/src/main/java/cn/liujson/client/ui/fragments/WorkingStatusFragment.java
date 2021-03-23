@@ -20,6 +20,7 @@ import cn.liujson.client.databinding.FragmentWorkingStatusBinding;
 import cn.liujson.client.ui.base.BaseFragment;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.viewmodel.WorkingStatusViewModel;
+import me.everything.android.ui.overscroll.OverScrollDecoratorHelper;
 
 /**
  * 工作状态 Fragment
@@ -37,6 +38,8 @@ public class WorkingStatusFragment extends BaseFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         binding = FragmentWorkingStatusBinding.inflate(inflater, container, false);
+        //弹性滑动效果
+        OverScrollDecoratorHelper.setUpOverScroll(binding.scrollView);
         return binding.getRoot();
     }
 

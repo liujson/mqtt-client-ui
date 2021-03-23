@@ -23,6 +23,7 @@ import cn.liujson.client.R;
 import cn.liujson.client.databinding.FragmentTopicsBinding;
 import cn.liujson.client.ui.base.BaseFragment;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
+import cn.liujson.client.ui.util.InputMethodUtils;
 import cn.liujson.client.ui.viewmodel.TopicsViewModel;
 import cn.liujson.client.ui.widget.OnSingleCheckedListener;
 import cn.liujson.lib.mqtt.api.QoS;
@@ -76,14 +77,12 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
         viewModel.setNavigator(this);
 
 
-
     }
 
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-
     }
 
 
@@ -91,6 +90,13 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
     public void onResume() {
         super.onResume();
         notifyTopicsChanged();
+        if (viewModel != null) {
+            if (viewModel.getRepository().isBind() && viewModel.getRepository().isInstalled()) {
+                EventBus.getDefault().post(new ConnectChangeEvent(true));
+            } else {
+                EventBus.getDefault().post(new ConnectChangeEvent(false));
+            }
+        }
     }
 
     private void notifyTopicsChanged() {
@@ -125,6 +131,7 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
             binding.etTopicInput.setError("can not be null");
             return false;
         }
+        InputMethodUtils.hideSoftInput(getActivity());
         return true;
     }
 
@@ -140,11 +147,13 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
         }
         return QoS.AT_MOST_ONCE;
     }
+
     Handler mHandler = new Handler();
+
     @Override
     public void onReceiveMessage(String topic, String message, QoS qoS) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        mHandler.post(()->{
+        mHandler.post(() -> {
             binding.tvMessageTopic.setText(topic);
             binding.tvMessageDate.setText(dateFormat.format(new Date()));
             binding.tvMessageQos.setText(qoS.qoSName());

@@ -1,6 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
-import android.os.Handler;
+
 import android.util.Pair;
 import android.view.View;
 
@@ -11,9 +11,8 @@ import androidx.databinding.ObservableList;
 import androidx.lifecycle.Lifecycle;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import org.greenrobot.eventbus.EventBus;
-
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +20,7 @@ import cn.liujson.client.R;
 import cn.liujson.client.ui.adapter.TopicListAdapter;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
-import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.service.ConnectionBinder;
-import cn.liujson.client.ui.service.ConnectionService;
-import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.divider.DividerLinearItemDecoration;
@@ -40,6 +36,10 @@ import io.reactivex.disposables.Disposable;
  */
 public class TopicsViewModel extends BaseViewModel implements
         ConnectionBinder.OnRecMsgListener {
+    /**
+     * 每个主题最大缓存消息数 50 条
+     */
+    public static final int TOPIC_CACHE_MESSAGE_SIZE = 50;
 
     public final ObservableList<Pair<String, QoS>> dataList = new ObservableArrayList<>();
     public final TopicListAdapter adapter = new TopicListAdapter(dataList);
@@ -59,7 +59,7 @@ public class TopicsViewModel extends BaseViewModel implements
     /**
      * 接收到消息的列表
      */
-    private final Map<String, List<?>> receiveMessageList = new HashMap<>();
+    private final Map<String, LinkedList<MqttMsg>> receiveMessageList = new HashMap<>();
 
     private final ConnectionServiceRepository repository;
 
@@ -85,16 +85,9 @@ public class TopicsViewModel extends BaseViewModel implements
         });
         adapter.addChildClickViewIds(R.id.btn_unsubscribe);
 
-        new Handler().postDelayed(()->{
-            if (getRepository().isBind() && getRepository().isInstalled()) {
-                if (getRepository().isConnected()) {
-                    EventBus.getDefault().post(new ConnectChangeEvent(true));
-                } else {
-                    EventBus.getDefault().post(new ConnectChangeEvent(false));
-                }
-                getRepository().addOnRecMsgListener(this);
-            }
-        },2000);
+        if (getRepository().isBind()) {
+            repository.addOnRecMsgListener(this);
+        }
     }
 
     @Override
@@ -182,6 +175,7 @@ public class TopicsViewModel extends BaseViewModel implements
         if (navigator != null) {
             navigator.onReceiveMessage(topic, new String(payload), qoS);
         }
+        //添加到消息缓存
     }
 
 

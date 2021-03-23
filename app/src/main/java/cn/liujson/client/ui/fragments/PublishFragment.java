@@ -25,6 +25,7 @@ import cn.liujson.client.databinding.FragmentPublishBinding;
 import cn.liujson.client.ui.base.BaseFragment;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.service.ConnectionService;
+import cn.liujson.client.ui.util.InputMethodUtils;
 import cn.liujson.client.ui.viewmodel.PublishViewModel;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.OnSingleCheckedListener;
@@ -110,7 +111,7 @@ public class PublishFragment extends BaseFragment implements PublishViewModel.Na
             binding.etTopicInput.setError("can not be blank");
             return false;
         }
-
+        InputMethodUtils.hideSoftInput(getActivity());
         return true;
     }
 
