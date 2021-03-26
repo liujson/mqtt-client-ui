@@ -4,6 +4,8 @@ import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -91,13 +93,16 @@ public class ProfileEditorViewModel extends BaseViewModel {
         connectionProfile.connectionTimeout = Integer.parseInt(Objects.requireNonNull(fieldConnectionTimeout.get()));
         connectionProfile.keepAliveInterval = Integer.parseInt(Objects.requireNonNull(fieldKeepAliveInterval.get()));
         connectionProfile.autoReconnect = fieldAutoReconnect.get();
-        if(fieldAutoReconnect.get()){
+        if (fieldAutoReconnect.get()) {
             connectionProfile.maxReconnectDelay = Integer.parseInt(Objects.requireNonNull(fieldMaxReconnectDelay.get()));
         }
 
         if (openMode == ProfileEditorActivity.Mode.NEW) {
+            connectionProfile.createDate = Calendar.getInstance().getTime();
+            connectionProfile.updateDate = connectionProfile.createDate;
             save(connectionProfile);
         } else if (openMode == ProfileEditorActivity.Mode.EDIT) {
+            connectionProfile.updateDate = Calendar.getInstance().getTime();
             update(connectionProfile);
         } else {
             throw new RuntimeException("error data openMode = " + openMode);

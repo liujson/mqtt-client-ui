@@ -4,6 +4,8 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.util.Date;
+
 /**
  * MQTT 连接配置信息
  *
@@ -39,5 +41,8 @@ public class ConnectionProfile {
     public boolean autoReconnect;
     @ColumnInfo(name = "max_reconnect_delay", defaultValue = "128000")
     public int maxReconnectDelay;
-
+    @ColumnInfo(name = "create_date")
+    public Date createDate;
+    @ColumnInfo(name = "update_date")
+    public Date updateDate;
 }

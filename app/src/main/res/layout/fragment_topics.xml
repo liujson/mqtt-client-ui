@@ -122,7 +122,10 @@
                     android:layout_width="match_parent"
                     android:layout_marginStart="10dp"
                     android:layout_marginEnd="10dp"
-                    android:layout_height="120dp"/>
+                    android:layout_height="120dp"
+                    app:recyclerAdapter="@{vm.msgAdapter}"
+                    app:recyclerData="@{vm.msgDataList}"
+                    app:recyclerLayoutManager="@{vm.msgLayoutManager}"/>
                 <View
                     android:id="@+id/line3"
                     android:layout_width="match_parent"

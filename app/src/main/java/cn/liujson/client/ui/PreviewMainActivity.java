@@ -40,6 +40,7 @@ import cn.liujson.client.R;
 
 import cn.liujson.client.databinding.ActivityPreviewMainBinding;
 import cn.liujson.client.ui.adapter.PageFragmentStateAdapter;
+import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.fragments.LogPreviewFragment;
@@ -83,6 +84,22 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             ToastHelper.showToast(getApplicationContext(), "MQTT服务绑定成功");
+            //查询数据库，是否包含标记为星号的连接项，存在则尝试对其进行连接
+            if(viewModel!=null){
+                final Disposable subscribe = viewModel.initStarProfileConnect()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(() -> {
+                            ToastHelper.showToast(CustomApplication.getApp(), "初始化连接成功");
+                            viewModel.fieldConnectEnable.set(false);
+                            viewModel.fieldDisconnectEnable.set(true);
+                            LogUtils.d("MQTT 初始化连接成功");
+                        }, throwable -> {
+                            ToastHelper.showToast(CustomApplication.getApp(), "初始化连接失败");
+                            viewModel.fieldConnectEnable.set(true);
+                            viewModel.fieldDisconnectEnable.set(false);
+                            LogUtils.e("MQTT 初始化连接失败：" + throwable.toString());
+                        });
+            }
         }
 
         @Override
@@ -119,15 +136,14 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
             viewModel.loadProfiles();
             if (viewModel.getRepository().isBind() && viewModel.getRepository().isInstalled()) {
                 if (viewModel.getRepository().isConnected()) {
-                    viewModel.fieldConnectEnable.set(true);
-                    viewModel.fieldDisconnectEnable.set(false);
-                } else {
                     viewModel.fieldConnectEnable.set(false);
                     viewModel.fieldDisconnectEnable.set(true);
+                } else {
+                    viewModel.fieldConnectEnable.set(true);
+                    viewModel.fieldDisconnectEnable.set(false);
                 }
             }
         }
-
     }
 
     @Override
@@ -177,7 +193,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
         viewDataBinding.spinner.setItems(dataList);
         oriDataList.addAll(data);
 
-        if (!data.isEmpty()) {
+        if (!data.isEmpty() && !viewModel.getRepository().isBind() || !viewModel.getRepository().isInstalled()) {
             viewModel.fieldConnectEnable.set(true);
         }
     }

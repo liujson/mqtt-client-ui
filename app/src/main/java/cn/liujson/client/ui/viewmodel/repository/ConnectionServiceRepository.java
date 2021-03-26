@@ -118,6 +118,13 @@ public class ConnectionServiceRepository {
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
+    public Completable subscribe(String[] topic, QoS[] qoS) {
+        return binder().getClient()
+                .subscribe(topic, qoS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
     public Completable unsubscribe(String topic) {
         return binder().getClient()
                 .unsubscribe(topic)

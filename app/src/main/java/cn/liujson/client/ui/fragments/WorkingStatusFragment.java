@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,19 +17,27 @@ import android.view.ViewGroup;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.concurrent.TimeUnit;
+
 import cn.liujson.client.databinding.FragmentWorkingStatusBinding;
 import cn.liujson.client.ui.base.BaseFragment;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
+import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.WorkingStatusViewModel;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import me.everything.android.ui.overscroll.OverScrollDecoratorHelper;
 
 /**
  * 工作状态 Fragment
  */
-public class WorkingStatusFragment extends BaseFragment {
+public class WorkingStatusFragment extends BaseFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private WorkingStatusViewModel viewModel;
     private FragmentWorkingStatusBinding binding;
+
+    private Disposable refreshingDisposable;
 
     public static WorkingStatusFragment newInstance() {
         return new WorkingStatusFragment();
@@ -38,17 +47,19 @@ public class WorkingStatusFragment extends BaseFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         binding = FragmentWorkingStatusBinding.inflate(inflater, container, false);
-        //弹性滑动效果
-        OverScrollDecoratorHelper.setUpOverScroll(binding.scrollView);
+        binding.swipe.setOnRefreshListener(this);
         return binding.getRoot();
     }
-
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(this).get(WorkingStatusViewModel.class);
         binding.setVm(viewModel);
+        final Observer<WorkingStatusViewModel.WorkingStatus> networkConnectedObserver = status -> {
+            WorkingStatusViewModel.bindWorkingStatus(binding.ivNetworkConnectedStatus, status);
+        };
+        viewModel.getFieldNetworkConnectedStatus().observe(this, networkConnectedObserver);
         final Observer<WorkingStatusViewModel.WorkingStatus> serviceBindObserver = status -> {
             WorkingStatusViewModel.bindWorkingStatus(binding.ivServiceBindStatus, status);
         };
@@ -88,6 +99,32 @@ public class WorkingStatusFragment extends BaseFragment {
     public void onConnectChangeEvent(ConnectChangeEvent event) {
         if (viewModel != null) {
             viewModel.refreshStatus();
+        }
+    }
+
+    @Override
+    public void onRefresh() {
+        ToastHelper.showToast(this.getContext(), "Refreshing...");
+        refreshingDisposable = Observable.timer(2, TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(time -> {
+                    refreshingDisposable = null;
+                    binding.swipe.setRefreshing(false);
+                    if (viewModel != null) {
+                        viewModel.refreshStatus();
+                    }
+                }, throwable -> {
+                    refreshingDisposable = null;
+                    ToastHelper.showToast(this.getContext(), "Refresh failure.");
+                    binding.swipe.setRefreshing(false);
+                });
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (refreshingDisposable != null) {
+            refreshingDisposable.dispose();
         }
     }
 }

@@ -10,11 +10,10 @@
             type="cn.liujson.client.ui.viewmodel.WorkingStatusViewModel" />
     </data>
 
-    <ScrollView
-        android:id="@+id/scroll_view"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
         <LinearLayout
             android:id="@+id/linear_wrapper"
             android:layout_width="match_parent"
@@ -25,6 +24,21 @@
             android:paddingEnd="10dp"
             android:paddingBottom="15dp"
             tools:context=".ui.fragments.WorkingStatusFragment">
+
+            <View style="@style/line_view_horizontal_color_bbb" />
+
+            <RelativeLayout style="@style/status_rl_right_item">
+
+                <TextView
+                    android:id="@+id/tv_network_connected_status"
+                    style="@style/status_tv_title"
+                    android:text="Network connected" />
+
+                <ImageView
+                    android:id="@+id/iv_network_connected_status"
+                    style="@style/status_iv_state"
+                    android:src="@mipmap/ic_status_successful_gray" />
+            </RelativeLayout>
 
             <View style="@style/line_view_horizontal_color_bbb" />
 
@@ -88,6 +102,9 @@
 
             <View style="@style/line_view_horizontal_color_bbb" />
 
+
+            <View style="@style/line_view_horizontal_color_bbb" />
+
             <RelativeLayout
                 android:id="@+id/rl_service_check_ping_status"
                 style="@style/status_rl_right_item">
@@ -115,5 +132,5 @@
 
             <View style="@style/line_view_horizontal_color_bbb" />
         </LinearLayout>
-    </ScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </layout>

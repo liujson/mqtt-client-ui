@@ -1,6 +1,5 @@
 package cn.liujson.client.ui.adapter;
 
-import android.util.Pair;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
@@ -17,15 +16,28 @@ import cn.liujson.lib.mqtt.api.QoS;
  * @author liujson
  * @date 2021/3/16.
  */
-public class TopicListAdapter extends BaseQuickAdapter<Pair<String, QoS>, BaseViewHolder> {
+public class TopicListAdapter extends BaseQuickAdapter<TopicListAdapter.SubTopicItem, BaseViewHolder> {
 
-    public TopicListAdapter(@Nullable List<Pair<String, QoS>> data) {
+    public TopicListAdapter(@Nullable List<SubTopicItem> data) {
         super(R.layout.item_sub_topic_list, data);
     }
 
     @Override
-    protected void convert(@NotNull BaseViewHolder holder, Pair<String, QoS> s) {
-        holder.setText(R.id.tv_topic, s.first);
-        holder.setText(R.id.tv_qos, s.second.qoSName());
+    protected void convert(@NotNull BaseViewHolder holder, SubTopicItem s) {
+        holder.setText(R.id.tv_topic, s.topic);
+        holder.setText(R.id.tv_qos, s.qos.qoSName());
+        holder.setText(R.id.tv_message_num, String.valueOf(s.msgCount));
+    }
+
+
+    public static class SubTopicItem {
+        public String topic;
+        public QoS qos;
+        public int msgCount;
+
+        public SubTopicItem(String topic, QoS qos) {
+            this.topic = topic;
+            this.qos = qos;
+        }
     }
 }

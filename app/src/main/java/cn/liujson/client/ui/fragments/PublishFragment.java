@@ -133,5 +133,4 @@ public class PublishFragment extends BaseFragment implements PublishViewModel.Na
         return binding.cbRetained.isChecked();
     }
 
-
 }

@@ -1,14 +1,18 @@
 package cn.liujson.client.ui.viewmodel.adapter;
 
+import android.view.View;
 import android.widget.ImageView;
 
 import androidx.annotation.DrawableRes;
 import androidx.databinding.BindingAdapter;
+import androidx.databinding.InverseBindingAdapter;
 import androidx.databinding.ObservableList;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
+
+import java.util.List;
 
 /**
  * @author liujson
@@ -21,7 +25,7 @@ public class ViewBindAdapter {
     public static <T, VH extends BaseQuickAdapter<T, BaseViewHolder>>
     void bindRecyclerViewAdapter(RecyclerView recyclerView, VH adapter,
                                  RecyclerView.LayoutManager layoutManager,
-                                 ObservableList<T> dataList) {
+                                 List<T> dataList) {
         if (adapter != null && dataList != null && recyclerView.getAdapter() == adapter) {
             if (adapter.getData() == dataList) {
                 adapter.notifyDataSetChanged();
@@ -34,12 +38,9 @@ public class ViewBindAdapter {
 
 
     @BindingAdapter("recyclerItemDecoration")
-    public static void bindRecyclerItemDecoration(RecyclerView recyclerView,RecyclerView.ItemDecoration itemDecoration) {
+    public static void bindRecyclerItemDecoration(RecyclerView recyclerView, RecyclerView.ItemDecoration itemDecoration) {
         if (itemDecoration != null) {
             recyclerView.addItemDecoration(itemDecoration);
         }
     }
-
-
-
 }

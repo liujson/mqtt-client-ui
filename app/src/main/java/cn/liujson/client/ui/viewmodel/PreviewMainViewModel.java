@@ -1,21 +1,32 @@
 package cn.liujson.client.ui.viewmodel;
 
 
+import android.annotation.SuppressLint;
+
 import androidx.databinding.ObservableBoolean;
 import androidx.lifecycle.Lifecycle;
+import androidx.room.EmptyResultSetException;
 
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 
 import org.greenrobot.eventbus.EventBus;
 
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Stream;
 
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.DatabaseHelper;
+import cn.liujson.client.ui.db.dao.ConnectionProfileDao;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
+import cn.liujson.client.ui.db.entities.ConnectionProfileStar;
 import cn.liujson.client.ui.service.ConnectionBinder;
 
 import cn.liujson.client.ui.service.MqttMgr;
@@ -23,14 +34,28 @@ import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 
 
+import cn.liujson.client.ui.widget.popup.MarkStarPopupView;
 import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
+import cn.liujson.lib.mqtt.util.MqttUtils;
 import cn.liujson.logger.LogUtils;
 import io.reactivex.Completable;
 
+import io.reactivex.CompletableEmitter;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableOnSubscribe;
+import io.reactivex.CompletableSource;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
+import io.reactivex.internal.operators.mixed.ObservableConcatMapCompletable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -49,6 +74,8 @@ public class PreviewMainViewModel extends BaseViewModel implements
 
 
     private final ConnectionServiceRepository repository;
+
+    private List<MarkStarPopupView.TopicWrapper> initStarTopics = new CopyOnWriteArrayList<>();
 
     public void setNavigator(Navigator navigator) {
         this.navigator = navigator;
@@ -85,10 +112,16 @@ public class PreviewMainViewModel extends BaseViewModel implements
         if (loadProfilesDisposable != null) {
             loadProfilesDisposable.dispose();
         }
-        loadProfilesDisposable = DatabaseHelper
+        final ConnectionProfileDao dao = DatabaseHelper
                 .getInstance()
-                .connectionProfileDao()
-                .loadProfiles()
+                .connectionProfileDao();
+        loadProfilesDisposable = dao.count().flatMap(size -> {
+            if (size > 0) {
+                return dao
+                        .loadProfiles();
+            }
+            return Single.error(new EmptyResultSetException("Connection profile is empty"));
+        })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(data -> {
@@ -98,6 +131,10 @@ public class PreviewMainViewModel extends BaseViewModel implements
                     }
                 }, throwable -> {
                     loadProfilesDisposable = null;
+                    if (throwable instanceof EmptyResultSetException) {
+                        //do anything
+                        return;
+                    }
                     LogUtils.e("load connection profiles failure." + throwable.toString());
                     ToastHelper.showToast(CustomApplication.getApp(), "load connection profiles failure.");
                 });
@@ -140,10 +177,11 @@ public class PreviewMainViewModel extends BaseViewModel implements
         //如果已经配置和已经连接上则断开连接然后再创建新的连接
         if (getRepository().isInstalled() && getRepository().isSame(params)) {
             if (getRepository().isConnected()) {
-                actionCompletable = getRepository().closeSafety()
-                        //如果安全断开失败则强制断开连接
-                        .onErrorResumeNext(throwable -> getRepository().closeForcibly())
-                        .andThen(actionCompletable);
+                return Completable.error(new RuntimeException("MQTT 客户端已连接，请不要重复连接"));
+//                actionCompletable = getRepository().closeSafety()
+//                        //如果安全断开失败则强制断开连接
+//                        .onErrorResumeNext(throwable -> getRepository().closeForcibly())
+//                        .andThen(actionCompletable);
             } else if (getRepository().isClosed()) {
                 //如果client被关闭,表示客户端不再能用了，从Service卸载客户端
                 getRepository().uninstall();
@@ -158,6 +196,56 @@ public class PreviewMainViewModel extends BaseViewModel implements
             }
         }
         return actionCompletable;
+    }
+
+    /**
+     * 对标星的连接项进行连接
+     */
+
+    public Completable initStarProfileConnect() {
+        return DatabaseHelper
+                .getInstance()
+                .starDao()
+                .getMarkedStar()
+                .subscribeOn(Schedulers.io())
+                .flatMap(profileStar -> {
+                    //获取初始化需要连接的Topics
+                    initStarTopics.clear();
+                    initStarTopics.addAll(JSON.parseObject(profileStar.defineTopics, new TypeReference<List<MarkStarPopupView.TopicWrapper>>(){}));
+                    return DatabaseHelper
+                            .getInstance().connectionProfileDao().queryProfileById(profileStar.connectionProfileId);
+                })
+                .flatMapCompletable(connectionProfile -> {
+                    final ConnectionParams params = profile2Params(connectionProfile);
+                    return setupAndConnect(params);
+                })
+                .andThen(autoSubscribe());
+    }
+
+    /**
+     * 初始化自动订阅
+     *
+     * @return
+     */
+    private Completable autoSubscribe() {
+        return Observable.just(0)
+                .flatMapCompletable(new Function<Integer, CompletableSource>() {
+                    @Override
+                    public CompletableSource apply(@NonNull Integer o) throws Exception {
+                        //订阅初始化需要的主题
+                        final String[] topics = new String[initStarTopics.size()];
+                        final QoS[] qoSArr = new QoS[initStarTopics.size()];
+                        for (int i = 0; i < initStarTopics.size(); i++) {
+                            topics[i] = initStarTopics.get(i).topic;
+                            qoSArr[i] = MqttUtils.int2QoS(initStarTopics.get(i).qos);
+                        }
+                        if (topics.length > 0) {
+                            return getRepository().subscribe(topics, qoSArr);
+                        } else {
+                            return Completable.complete();
+                        }
+                    }
+                });
     }
 
 

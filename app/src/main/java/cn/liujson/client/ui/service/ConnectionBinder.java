@@ -1,14 +1,19 @@
 package cn.liujson.client.ui.service;
 
 
+import android.os.Handler;
+import android.os.Looper;
+
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.api.backruning.AbstractPahoConnServiceBinder;
 import cn.liujson.lib.mqtt.util.MqttUtils;
@@ -25,14 +30,18 @@ public class ConnectionBinder extends AbstractPahoConnServiceBinder {
     final List<OnRecMsgListener> recMsgListenerList = new ArrayList<>();
     final List<OnConnectedListener> connectedListenerList = new ArrayList<>();
 
+    Handler mHandler = new Handler(Looper.myLooper());
+
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         LogUtils.d("MQTT 消息抵达，topic:" + topic + ",message:" + new String(message.getPayload()));
-        //接受到消息会回调这里
-        final Iterator<OnRecMsgListener> it = recMsgListenerList.iterator();
-        while (it.hasNext()) {
-            it.next().onReceiveMessage(topic, message.getPayload(), MqttUtils.int2QoS(message.getQos()));
-        }
+        mHandler.post(() -> {
+            //接受到消息会回调这里
+            final Iterator<OnRecMsgListener> it = recMsgListenerList.iterator();
+            while (it.hasNext()) {
+                it.next().onReceiveMessage(topic, message.getPayload(), MqttUtils.int2QoS(message.getQos()));
+            }
+        });
     }
 
     @Override
@@ -50,7 +59,8 @@ public class ConnectionBinder extends AbstractPahoConnServiceBinder {
     @Override
     public void connectionLost(Throwable cause) {
         super.connectionLost(cause);
-        LogUtils.d("MQTT 失去连接：" + cause.toString());
+        LogUtils.e(cause, "MQTT 失去连接");
+        EventBus.getDefault().post(new ConnectChangeEvent(false));
     }
 
     @Override

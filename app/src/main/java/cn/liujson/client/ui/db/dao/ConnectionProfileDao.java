@@ -47,4 +47,11 @@ public interface ConnectionProfileDao {
     Completable updateProfile(ConnectionProfile profile);
 
 
+    @Query("SELECT * FROM connection_profile" +
+            " INNER JOIN connection_profile_star " +
+            "ON connection_profile.id = connection_profile_id")
+    Single<List<ConnectionProfile>> queryStarProfileById();
+
+    @Query("SELECT COUNT(*) FROM connection_profile")
+    Single<Long> count();
 }

@@ -14,13 +14,16 @@ import androidx.lifecycle.ViewModel;
 import java.util.Objects;
 
 import cn.liujson.client.R;
+import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.MqttMgr;
+import cn.liujson.client.ui.util.NetworkUtils;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
 
 public class WorkingStatusViewModel extends ViewModel {
 
+    private MutableLiveData<WorkingStatus> fieldNetworkConnectedStatus;
     private MutableLiveData<WorkingStatus> fieldServiceBindStatus;
     private MutableLiveData<WorkingStatus> fieldClientInstalledStatus;
     private MutableLiveData<WorkingStatus> fieldClientConnectedStatus;
@@ -28,6 +31,13 @@ public class WorkingStatusViewModel extends ViewModel {
     private MutableLiveData<WorkingStatus> fieldCheckPingStatus;
 
     private MutableLiveData<String> fieldCheckPingTime = new MutableLiveData<>("check time ");
+
+    public MutableLiveData<WorkingStatus> getFieldNetworkConnectedStatus() {
+        if (fieldNetworkConnectedStatus == null) {
+            fieldNetworkConnectedStatus = new MutableLiveData<>();
+        }
+        return fieldNetworkConnectedStatus;
+    }
 
     public MutableLiveData<WorkingStatus> getFieldServiceBindStatus() {
         if (fieldServiceBindStatus == null) {
@@ -72,6 +82,11 @@ public class WorkingStatusViewModel extends ViewModel {
      * 刷新状态
      */
     public void refreshStatus() {
+        if (NetworkUtils.isConnected(CustomApplication.getApp())) {
+            getFieldNetworkConnectedStatus().setValue(WorkingStatus.OK);
+        } else {
+            getFieldNetworkConnectedStatus().setValue(WorkingStatus.ERR);
+        }
         final ConnectionBinder binder = MqttMgr.instance().binder();
         getFieldCheckPingStatus().setValue(WorkingStatus.DISABLE);
         if (binder == null) {
@@ -90,12 +105,19 @@ public class WorkingStatusViewModel extends ViewModel {
         }
         getFieldClientInstalledStatus().setValue(WorkingStatus.OK);
         final RxPahoClient rxPahoClient = binder.getClient();
-        if (rxPahoClient.isConnected()) {
-            getFieldClientConnectedStatus().setValue(WorkingStatus.OK);
-            getFieldClientClosedStatus().setValue(WorkingStatus.DISABLE);
-        } else if (rxPahoClient.isClosed()) {
-            getFieldClientClosedStatus().setValue(WorkingStatus.OK);
+        final boolean connected = rxPahoClient.isConnected();
+        final boolean closed = rxPahoClient.isClosed();
+        if (connected || closed) {
+            if (connected) {
+                getFieldClientConnectedStatus().setValue(WorkingStatus.OK);
+                getFieldClientClosedStatus().setValue(WorkingStatus.DISABLE);
+            } else {
+                getFieldClientConnectedStatus().setValue(WorkingStatus.DISABLE);
+                getFieldClientClosedStatus().setValue(WorkingStatus.ERR);
+            }
+        } else {
             getFieldClientConnectedStatus().setValue(WorkingStatus.DISABLE);
+            getFieldClientClosedStatus().setValue(WorkingStatus.DISABLE);
         }
     }
 
@@ -118,8 +140,6 @@ public class WorkingStatusViewModel extends ViewModel {
             }
         }
     }
-
-
 
 
     public enum WorkingStatus {

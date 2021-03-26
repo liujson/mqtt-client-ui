@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
 import android.text.TextUtils;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,10 +18,13 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import cn.liujson.client.R;
 import cn.liujson.client.databinding.FragmentTopicsBinding;
+import cn.liujson.client.ui.adapter.TopicListAdapter;
 import cn.liujson.client.ui.base.BaseFragment;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.util.InputMethodUtils;
@@ -76,7 +80,6 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
         binding.setVm(viewModel = new TopicsViewModel(getLifecycle()));
         viewModel.setNavigator(this);
 
-
     }
 
 
@@ -102,7 +105,12 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
     private void notifyTopicsChanged() {
         if (viewModel != null) {
             if (viewModel.getRepository().isInstalled()) {
-                viewModel.updateDataList(viewModel.getRepository().getSubList());
+                final List<Pair<String, QoS>> pairList = viewModel.getRepository().getSubList();
+                final List<TopicListAdapter.SubTopicItem> subTopicItems = new ArrayList<>();
+                for (Pair<String, QoS> sPair : pairList) {
+                    subTopicItems.add(new TopicListAdapter.SubTopicItem(sPair.first, sPair.second));
+                }
+                viewModel.updateDataList(subTopicItems);
             }
         }
     }
