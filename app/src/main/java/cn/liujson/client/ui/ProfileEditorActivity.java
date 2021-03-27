@@ -12,6 +12,7 @@ import java.io.Serializable;
 
 import cn.liujson.client.R;
 import cn.liujson.client.databinding.ActivityProfileEditorBinding;
+import cn.liujson.client.ui.base.BaseActivity;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.util.InputMethodUtils;
 import cn.liujson.client.ui.util.ToastHelper;
@@ -21,7 +22,7 @@ import me.everything.android.ui.overscroll.OverScrollDecoratorHelper;
 /**
  * 配置界面
  */
-public class ProfileEditorActivity extends AppCompatActivity implements ProfileEditorViewModel.Navigator {
+public class ProfileEditorActivity extends BaseActivity implements ProfileEditorViewModel.Navigator {
 
     ActivityProfileEditorBinding viewDataBinding;
     ProfileEditorViewModel viewModel;
@@ -137,9 +138,5 @@ public class ProfileEditorActivity extends AppCompatActivity implements ProfileE
         viewDataBinding = null;
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        InputMethodUtils.hideSoftInput(this);
-        return super.onTouchEvent(event);
-    }
+
 }

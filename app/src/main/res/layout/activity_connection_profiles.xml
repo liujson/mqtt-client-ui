@@ -23,7 +23,7 @@
         <RelativeLayout
             android:id="@+id/rl_title_bar"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="@dimen/action_bar_height"
             android:background="#ececec"
             android:elevation="10dp">
 
@@ -58,28 +58,21 @@
             app:recyclerData="@{vm.dataList}"
             app:recyclerLayoutManager="@{vm.layoutManager}" />
 
-        <RelativeLayout
-            android:id="@+id/rl_actions"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btn_add_profile"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentBottom="true"
-            android:layout_marginEnd="30dp"
-            android:layout_marginBottom="20dp">
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btn_add_profile"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:layout_centerInParent="true"
-                android:background="@null"
-                android:onClick="@{clickListener}"
-                android:src="@drawable/ic_action_add"
-                app:fabCustomSize="42dp"
-                app:backgroundTint="@android:color/white"
-                app:fabSize="normal" />
-        </RelativeLayout>
-
+            android:layout_marginEnd="50dp"
+            android:layout_marginBottom="30dp"
+            android:background="@null"
+            android:onClick="@{clickListener}"
+            android:src="@drawable/ic_action_add"
+            app:fabCustomSize="42dp"
+            app:backgroundTint="@android:color/white"
+            app:fabSize="normal"
+            android:contentDescription="Add a connection profile" />
 
     </RelativeLayout>
 </layout>

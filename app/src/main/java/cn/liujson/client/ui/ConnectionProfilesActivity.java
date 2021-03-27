@@ -13,9 +13,10 @@ import android.view.View.OnClickListener;
 import cn.liujson.client.R;
 
 import cn.liujson.client.databinding.ActivityConnectionProfilesBinding;
+import cn.liujson.client.ui.base.BaseActivity;
 import cn.liujson.client.ui.viewmodel.ConnectionProfilesViewModel;
 
-public class ConnectionProfilesActivity extends AppCompatActivity implements OnClickListener
+public class ConnectionProfilesActivity extends BaseActivity implements OnClickListener
         , ConnectionProfilesViewModel.Navigator {
 
     ActivityConnectionProfilesBinding viewDataBinding;

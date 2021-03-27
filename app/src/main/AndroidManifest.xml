@@ -20,7 +20,7 @@
             android:name="design_height_in_dp"
             android:value="800" />
 
-        <activity android:name=".ui.TestActivity">
+        <activity android:name=".ui.DemoActivity">
 
         </activity>
         <activity

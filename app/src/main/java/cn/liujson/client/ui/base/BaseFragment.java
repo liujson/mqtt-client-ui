@@ -29,4 +29,5 @@ public abstract class BaseFragment extends Fragment {
     public boolean useEventBus() {
         return false;
     }
+
 }

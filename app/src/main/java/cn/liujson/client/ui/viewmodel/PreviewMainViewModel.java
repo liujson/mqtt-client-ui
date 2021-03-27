@@ -1,7 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
 
-import android.annotation.SuppressLint;
 
 import androidx.databinding.ObservableBoolean;
 import androidx.lifecycle.Lifecycle;
@@ -14,10 +13,9 @@ import com.alibaba.fastjson.TypeReference;
 import org.greenrobot.eventbus.EventBus;
 
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Stream;
+
 
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
@@ -26,10 +24,10 @@ import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.dao.ConnectionProfileDao;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
-import cn.liujson.client.ui.db.entities.ConnectionProfileStar;
+
 import cn.liujson.client.ui.service.ConnectionBinder;
 
-import cn.liujson.client.ui.service.MqttMgr;
+
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 
@@ -42,20 +40,17 @@ import cn.liujson.lib.mqtt.util.MqttUtils;
 import cn.liujson.logger.LogUtils;
 import io.reactivex.Completable;
 
-import io.reactivex.CompletableEmitter;
-import io.reactivex.CompletableObserver;
-import io.reactivex.CompletableOnSubscribe;
+
 import io.reactivex.CompletableSource;
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
+
 import io.reactivex.Single;
-import io.reactivex.SingleSource;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
-import io.reactivex.internal.operators.mixed.ObservableConcatMapCompletable;
+
 import io.reactivex.schedulers.Schedulers;
 
 /**

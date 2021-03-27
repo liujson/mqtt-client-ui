@@ -219,7 +219,8 @@ public class RxPahoClient implements IRxMqttClient {
 
     @Override
     public Completable close() {
-        return closeSafety();
+        //强制关闭
+        return closeForcibly(10000, 5000);
     }
 
     /**

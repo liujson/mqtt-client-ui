@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey;
 
 import java.util.Date;
 
+import cn.liujson.lib.mqtt.api.QoS;
+
 /**
  * MQTT 连接配置信息
  *
@@ -17,6 +19,7 @@ public class ConnectionProfile {
 
     @PrimaryKey(autoGenerate = true)
     public int id;
+
     @ColumnInfo(name = "profile_name")
     public String profileName;
     @ColumnInfo(name = "broker_address")
@@ -32,7 +35,6 @@ public class ConnectionProfile {
     @ColumnInfo(name = "password")
     public String password;
 
-
     @ColumnInfo(name = "connection_timeout")
     public int connectionTimeout;
     @ColumnInfo(name = "keep_alive_interval")
@@ -41,8 +43,18 @@ public class ConnectionProfile {
     public boolean autoReconnect;
     @ColumnInfo(name = "max_reconnect_delay", defaultValue = "128000")
     public int maxReconnectDelay;
+
     @ColumnInfo(name = "create_date")
     public Date createDate;
     @ColumnInfo(name = "update_date")
     public Date updateDate;
+
+    @ColumnInfo(name = "will_topic")
+    public String willTopic;
+    @ColumnInfo(name = "will_message")
+    public String willMessage;
+    @ColumnInfo(name = "will_qos")
+    public QoS willQoS;
+    @ColumnInfo(name = "will_retained")
+    public boolean willRetained;
 }

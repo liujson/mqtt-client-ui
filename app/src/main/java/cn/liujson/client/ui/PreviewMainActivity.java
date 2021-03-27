@@ -1,8 +1,9 @@
 package cn.liujson.client.ui;
 
-import androidx.appcompat.app.AppCompatActivity;
+
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.room.EmptyResultSetException;
 import androidx.viewpager2.widget.ViewPager2;
 
 
@@ -41,14 +42,14 @@ import cn.liujson.client.R;
 import cn.liujson.client.databinding.ActivityPreviewMainBinding;
 import cn.liujson.client.ui.adapter.PageFragmentStateAdapter;
 import cn.liujson.client.ui.app.CustomApplication;
+import cn.liujson.client.ui.base.BaseActivity;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.fragments.LogPreviewFragment;
 import cn.liujson.client.ui.fragments.PublishFragment;
 import cn.liujson.client.ui.fragments.TopicsFragment;
 import cn.liujson.client.ui.fragments.WorkingStatusFragment;
-import cn.liujson.client.ui.service.ConnectionBinder;
-import cn.liujson.client.ui.service.ConnectionService;
+
 
 import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.InputMethodUtils;
@@ -64,7 +65,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 
-public class PreviewMainActivity extends AppCompatActivity implements PreviewMainViewModel.Navigator {
+public class PreviewMainActivity extends BaseActivity implements PreviewMainViewModel.Navigator {
 
     private static final String TAG = "PreviewMainActivity";
 
@@ -85,7 +86,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
         public void onServiceConnected(ComponentName name, IBinder service) {
             ToastHelper.showToast(getApplicationContext(), "MQTT服务绑定成功");
             //查询数据库，是否包含标记为星号的连接项，存在则尝试对其进行连接
-            if(viewModel!=null){
+            if (viewModel != null) {
                 final Disposable subscribe = viewModel.initStarProfileConnect()
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(() -> {
@@ -94,6 +95,10 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                             viewModel.fieldDisconnectEnable.set(true);
                             LogUtils.d("MQTT 初始化连接成功");
                         }, throwable -> {
+                            if (throwable instanceof EmptyResultSetException) {
+                                //do anything
+                                return;
+                            }
                             ToastHelper.showToast(CustomApplication.getApp(), "初始化连接失败");
                             viewModel.fieldConnectEnable.set(true);
                             viewModel.fieldDisconnectEnable.set(false);
@@ -240,6 +245,7 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
                 simplePagerTitleView.setNormalColor(0xFF323232);
                 simplePagerTitleView.setSelectedColor(0xFFFFFFFF);
                 simplePagerTitleView.setText(mTitleList[index]);
+                simplePagerTitleView.setTextSize(getResources().getDimensionPixelSize(R.dimen.menu_text_size));
                 simplePagerTitleView.setOnClickListener(v -> viewDataBinding.mViewPager.setCurrentItem(index));
                 return simplePagerTitleView;
             }
@@ -348,9 +354,5 @@ public class PreviewMainActivity extends AppCompatActivity implements PreviewMai
     }
 
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        InputMethodUtils.hideSoftInput(this);
-        return super.onTouchEvent(event);
-    }
+
 }

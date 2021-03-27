@@ -21,7 +21,7 @@
         <RelativeLayout
             android:id="@+id/rl_title_bar"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="@dimen/action_bar_height"
             android:background="#ececec"
             android:elevation="10dp">
 
