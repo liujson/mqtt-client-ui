@@ -12,4 +12,10 @@
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
 
+    <string-array name="qos_arr">
+        <item>QoS 0</item>
+        <item>QoS 1</item>
+        <item>QoS 2</item>
+    </string-array>
+
 </resources>

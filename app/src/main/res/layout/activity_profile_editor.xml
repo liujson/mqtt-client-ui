@@ -319,10 +319,42 @@
                 </LinearLayout>
 
                 <RelativeLayout
-                    android:id="@+id/rl_lwt_message"
+                    android:id="@+id/rl_lwt_qos_retained"
                     style="@style/config_linear_item_style"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/rl_lwt_topic">
+                    <TextView
+                        android:id="@+id/tv_qos_title"
+                        style="@style/text_style_1" />
+                    <org.angmarch.views.NiceSpinner
+                        android:id="@+id/tv_lwt_qos"
+                        android:layout_toEndOf="@id/tv_qos_title"
+                        android:layout_width="100dp"
+                        android:layout_height="42dp"
+                        app:arrowTint="#4e9be7"
+                        android:layout_marginStart="10dp"
+                        app:textTint="@color/color_333333"
+                        android:layout_margin="10dp"
+                        app:popupTextAlignment="center"
+                        android:textAlignment="center"
+                        app:backgroundSelector="@drawable/selector_spinner_item_bg"
+                        app:entries="@array/qos_arr"/>
+                    <CheckBox
+                        android:layout_toEndOf="@id/tv_lwt_qos"
+                        android:id="@+id/cb_lwt_retaiend"
+                        style="@style/et_edit_style_1"
+                        android:layout_centerVertical="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@null" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/rl_lwt_message"
+                    style="@style/config_linear_item_style"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/rl_lwt_qos_retained">
 
                     <TextView
                         android:id="@+id/tv_lwt_message"
