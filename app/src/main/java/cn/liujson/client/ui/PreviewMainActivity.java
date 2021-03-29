@@ -85,6 +85,8 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             ToastHelper.showToast(getApplicationContext(), "MQTT服务绑定成功");
+            viewModel.fieldConnectEnable.set(true);
+            viewModel.fieldDisconnectEnable.set(false);
             //查询数据库，是否包含标记为星号的连接项，存在则尝试对其进行连接
             if (viewModel != null) {
                 final Disposable subscribe = viewModel.initStarProfileConnect()
@@ -198,8 +200,20 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         viewDataBinding.spinner.setItems(dataList);
         oriDataList.addAll(data);
 
-        if (!data.isEmpty() && !viewModel.getRepository().isBind() || !viewModel.getRepository().isInstalled()) {
+        if (data.isEmpty()) {
+            viewModel.fieldConnectEnable.set(false);
+            viewModel.fieldDisconnectEnable.set(false);
+        } else if (!viewModel.getRepository().isBind()) {
+            viewModel.fieldConnectEnable.set(false);
+            viewModel.fieldDisconnectEnable.set(false);
+        } else if (viewModel.getRepository().isBind() &&
+                viewModel.getRepository().isInstalled() &&
+                viewModel.getRepository().isConnected()) {
+            viewModel.fieldConnectEnable.set(false);
+            viewModel.fieldDisconnectEnable.set(true);
+        } else {
             viewModel.fieldConnectEnable.set(true);
+            viewModel.fieldDisconnectEnable.set(false);
         }
     }
 
@@ -352,7 +366,6 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
                         });
         mCompositeDisposable.add(subscribe);
     }
-
 
 
 }

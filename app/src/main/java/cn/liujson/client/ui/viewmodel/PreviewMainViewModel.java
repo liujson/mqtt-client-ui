@@ -13,6 +13,7 @@ import com.alibaba.fastjson.TypeReference;
 import org.greenrobot.eventbus.EventBus;
 
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -127,7 +128,7 @@ public class PreviewMainViewModel extends BaseViewModel implements
                 }, throwable -> {
                     loadProfilesDisposable = null;
                     if (throwable instanceof EmptyResultSetException) {
-                        //do anything
+                        navigator.notifyChangeSpinner(Collections.emptyList());
                         return;
                     }
                     LogUtils.e("load connection profiles failure." + throwable.toString());

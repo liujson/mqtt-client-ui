@@ -10,11 +10,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 
+import com.lxj.xpopup.XPopup;
+import com.lxj.xpopup.core.BasePopupView;
+
 import cn.liujson.client.R;
 
 import cn.liujson.client.databinding.ActivityConnectionProfilesBinding;
 import cn.liujson.client.ui.base.BaseActivity;
 import cn.liujson.client.ui.viewmodel.ConnectionProfilesViewModel;
+import cn.liujson.client.ui.widget.popup.AffirmPopupView;
+import cn.liujson.client.ui.widget.popup.interfaces.OnPopupClickListener;
 
 public class ConnectionProfilesActivity extends BaseActivity implements OnClickListener
         , ConnectionProfilesViewModel.Navigator {
@@ -77,9 +82,18 @@ public class ConnectionProfilesActivity extends BaseActivity implements OnClickL
 
     @Override
     public void delProfile(long id) {
-        if (viewModel != null) {
-            viewModel.delProfile((int) id);
-        }
+        AffirmPopupView affirmPopupView = new AffirmPopupView(this, "温馨提示", "是否删除该连接参数?");
+        new XPopup.Builder(this)
+                .dismissOnBackPressed(false)
+                .dismissOnTouchOutside(false)
+                .asCustom(affirmPopupView)
+                .show();
+        affirmPopupView.setOnAffirmBtnClickListener((popupView, v) -> {
+            if (viewModel != null) {
+                viewModel.delProfile((int) id);
+            }
+            popupView.dismiss();
+        });
     }
 
 

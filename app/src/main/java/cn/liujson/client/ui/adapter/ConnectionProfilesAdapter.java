@@ -30,6 +30,7 @@ import cn.liujson.client.R;
 
 
 import cn.liujson.client.ui.app.CustomApplication;
+import cn.liujson.client.ui.app.runtime.RuntimeRequire;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.dao.ConnectionProfileStarDao;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
@@ -38,6 +39,9 @@ import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.widget.popup.MarkStarPopupView;
 import cn.liujson.logger.LogUtils;
 
+import io.reactivex.Completable;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -166,6 +170,8 @@ public class ConnectionProfilesAdapter extends BaseQuickAdapter<ConnectionProfil
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(() -> {
                     ToastHelper.showToast(CustomApplication.getApp(), "Saved!");
+                    //保存到Runtime
+                    RuntimeRequire.getInstance().updateDefineTopics(topics);
                     checkBox.setChecked(true);
                 }, throwable -> {
                     if (throwable instanceof EmptyResultSetException) {

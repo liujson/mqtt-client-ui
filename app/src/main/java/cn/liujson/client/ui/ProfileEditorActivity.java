@@ -98,6 +98,7 @@ public class ProfileEditorActivity extends BaseActivity implements ProfileEditor
                 return false;
             }
         }
+
         return true;
     }
 

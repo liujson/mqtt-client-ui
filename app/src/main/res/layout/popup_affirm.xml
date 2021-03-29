@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="520dp"
+    android:layout_height="280dp"
+    android:layout_margin="15dp"
+    android:background="@drawable/bg_marked_star_popup"
+    android:elevation="5dp">
+
+    <RelativeLayout
+        android:id="@+id/rl_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/color_333333"
+            android:layout_marginTop="35dp"
+            android:textSize="32sp"
+            android:letterSpacing="0.06"
+            android:fontFamily="sans-serif-black"
+            android:layout_centerHorizontal="true"
+            android:text="提示"/>
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#363636"
+            android:textSize="24sp"
+            android:letterSpacing="0.07"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/tv_title"
+            android:layout_marginTop="35dp"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"
+            />
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="280dp"
+        android:layout_marginBottom="15dp"
+        android:layout_marginEnd="15dp"
+        android:padding="8dp"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="100dp"
+            android:layout_height="35dp"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/selector_btn_white_style"
+            android:textColor="@color/color_333333"
+            android:textAllCaps="false"
+            android:text="Cancel"/>
+        <Button
+            android:id="@+id/btn_ok"
+            android:layout_width="100dp"
+            android:layout_height="35dp"
+            android:layout_marginEnd="35dp"
+            android:layout_toStartOf="@id/btn_cancel"
+            android:background="@drawable/selector_btn_blue_style"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:text="Ok"/>
+    </RelativeLayout>
+</RelativeLayout>

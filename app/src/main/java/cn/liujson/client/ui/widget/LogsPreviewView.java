@@ -22,12 +22,14 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 import cn.liujson.client.R;
+import cn.liujson.logger.LogUtils;
 
 /**
  * @author liujson
@@ -284,21 +286,28 @@ public class LogsPreviewView extends RelativeLayout {
         private final SimpleDateFormat mSimpleDateFormat
                 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
 
+        private final Date date;
+
+        public DefaultLogFormatStrategy() {
+            date = new Date();
+        }
+
         @Override
         public CharSequence format(@NonNull Level level, String tag, @NonNull String message, long timeMillis) {
+
             StringBuilder builder = new StringBuilder();
-            builder.append("> ");
+
             if (timeMillis > 0) {
-                final Calendar instance = Calendar.getInstance();
-                instance.setTimeInMillis(timeMillis);
-                final String format = mSimpleDateFormat.format(instance.getTime());
-                builder.append(format);
+                date.setTime(System.currentTimeMillis());
+                builder.append(mSimpleDateFormat.format(new Date()));
+                builder.append("    ");
+
+                builder.append(String.format("%-16s", LogUtils.Level.logLevelName(level.level)));
+                builder.append(" --- ");
+                builder.append(String.format("%-32s", tag == null ? "NO_TAG" : tag));
             }
-            if (!TextUtils.isEmpty(tag)) {
-                builder.append('\t');
-                builder.append(tag);
-            }
-            builder.append(" --- \t:");
+
+            builder.append(" ---  :");
             builder.append(message);
             return builder.toString();
         }
