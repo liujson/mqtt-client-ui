@@ -1,11 +1,12 @@
 package cn.liujson.client.ui.viewmodel;
 
+import android.text.TextUtils;
+
 import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -16,11 +17,12 @@ import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.lib.mqtt.api.ConnectionParams;
+import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import kotlinx.coroutines.Delay;
+
 
 /**
  * @author liujson
@@ -40,6 +42,10 @@ public class ProfileEditorViewModel extends BaseViewModel {
             = new ObservableField<>(String.valueOf(ConnectionParams.MAX_RECONNECT_DELAY_DEFAULT));
     public final ObservableBoolean fieldCleanSession = new ObservableBoolean(true);
     public final ObservableBoolean fieldAutoReconnect = new ObservableBoolean(true);
+
+    public final ObservableField<String> fieldLwtTopic = new ObservableField<>();
+    public final ObservableField<String> fieldLwtMessage = new ObservableField<>();
+    public final ObservableBoolean fieldLwtRetained = new ObservableBoolean();
 
     private Navigator navigator;
 
@@ -95,6 +101,13 @@ public class ProfileEditorViewModel extends BaseViewModel {
         connectionProfile.autoReconnect = fieldAutoReconnect.get();
         if (fieldAutoReconnect.get()) {
             connectionProfile.maxReconnectDelay = Integer.parseInt(Objects.requireNonNull(fieldMaxReconnectDelay.get()));
+        }
+
+        if (!TextUtils.isEmpty(fieldLwtTopic.get()) && !TextUtils.isEmpty(fieldLwtMessage.get())) {
+            connectionProfile.willTopic = fieldLwtTopic.get();
+            connectionProfile.willMessage = fieldLwtMessage.get();
+            connectionProfile.willQoS = navigator.readWillQos();
+            connectionProfile.willRetained = navigator.isWillRetained();
         }
 
         if (openMode == ProfileEditorActivity.Mode.NEW) {
@@ -204,6 +217,16 @@ public class ProfileEditorViewModel extends BaseViewModel {
          * @return
          */
         boolean checkApplyParam();
+
+        /**
+         * 读取 qos
+         */
+        QoS readWillQos();
+
+        /**
+         * 是否勾选 retained
+         */
+        boolean isWillRetained();
 
         /**
          * 应用成功

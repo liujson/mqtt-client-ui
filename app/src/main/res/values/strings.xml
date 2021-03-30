@@ -9,6 +9,8 @@
     <string name="client_id_cannot_be_null">Client ID cannot be null</string>
     <string name="connection_timeout_cannot_be_null">Connection timeout cannot be null</string>
     <string name="keep_alive_interval_cannot_be_null">Keep alive interval cannot be null</string>
+    <string name="lwt_topic_cannot_be_null">LWT topic cannot be null</string>
+    <string name="lwt_message_cannot_be_null">LWT message cannot be null</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
 

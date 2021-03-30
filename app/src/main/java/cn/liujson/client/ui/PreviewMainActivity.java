@@ -208,7 +208,7 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             viewModel.fieldDisconnectEnable.set(false);
         } else if (viewModel.getRepository().isBind() &&
                 viewModel.getRepository().isInstalled() &&
-                viewModel.getRepository().isConnected()) {
+                (viewModel.getRepository().isConnected() || viewModel.getRepository().isConnecting())) {
             viewModel.fieldConnectEnable.set(false);
             viewModel.fieldDisconnectEnable.set(true);
         } else {

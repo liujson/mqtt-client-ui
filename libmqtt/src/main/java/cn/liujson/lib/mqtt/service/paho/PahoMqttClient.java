@@ -458,4 +458,10 @@ public class PahoMqttClient implements IMqttClient {
         return aClient.isClosed();
     }
 
+    /**
+     * 是否连接已经关闭
+     */
+    public boolean isConnecting() {
+        return aClient.isConnecting();
+    }
 }

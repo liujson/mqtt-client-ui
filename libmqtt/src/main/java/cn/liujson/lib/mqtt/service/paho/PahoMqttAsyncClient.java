@@ -51,4 +51,8 @@ public class PahoMqttAsyncClient extends MqttAsyncClient {
     public boolean isClosed() {
         return comms.isClosed();
     }
+
+    public boolean isConnecting() {
+        return comms.isConnecting();
+    }
 }

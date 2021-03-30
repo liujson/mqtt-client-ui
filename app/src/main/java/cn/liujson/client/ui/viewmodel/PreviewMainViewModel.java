@@ -1,6 +1,7 @@
 package cn.liujson.client.ui.viewmodel;
 
 
+import android.text.TextUtils;
 
 import androidx.databinding.ObservableBoolean;
 import androidx.lifecycle.Lifecycle;
@@ -138,7 +139,7 @@ public class PreviewMainViewModel extends BaseViewModel implements
 
     public ConnectionParams profile2Params(ConnectionProfile profile) {
         // TODO: 2021/3/19  配置连接参数
-        return ConnectionParams.newBuilder()
+        ConnectionParams.Builder builder = ConnectionParams.newBuilder()
                 .serverURI("tcp://" + profile.brokerAddress + ":" + profile.brokerPort)
                 .cleanSession(profile.cleanSession)
                 .automaticReconnect(profile.autoReconnect)
@@ -147,8 +148,12 @@ public class PreviewMainViewModel extends BaseViewModel implements
                 .connectionTimeout(profile.connectionTimeout)
                 .clientId(profile.clientID)
                 .username(profile.username)
-                .password(profile.password)
-                .build();
+                .password(profile.password);
+        if (!TextUtils.isEmpty(profile.willTopic) && !TextUtils.isEmpty(profile.willMessage)) {
+            builder.setWill(profile.willTopic, profile.willMessage.getBytes(), profile.willQoS, profile.willRetained);
+        }
+        return builder.build();
+
     }
 
     public RxPahoClient create(ConnectionParams params) {
@@ -207,7 +212,8 @@ public class PreviewMainViewModel extends BaseViewModel implements
                 .flatMap(profileStar -> {
                     //获取初始化需要连接的Topics
                     initStarTopics.clear();
-                    initStarTopics.addAll(JSON.parseObject(profileStar.defineTopics, new TypeReference<List<MarkStarPopupView.TopicWrapper>>(){}));
+                    initStarTopics.addAll(JSON.parseObject(profileStar.defineTopics, new TypeReference<List<MarkStarPopupView.TopicWrapper>>() {
+                    }));
                     return DatabaseHelper
                             .getInstance().connectionProfileDao().queryProfileById(profileStar.connectionProfileId);
                 })

@@ -1,12 +1,10 @@
 package cn.liujson.client.ui;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.MotionEvent;
 
 import java.io.Serializable;
 
@@ -14,9 +12,10 @@ import cn.liujson.client.R;
 import cn.liujson.client.databinding.ActivityProfileEditorBinding;
 import cn.liujson.client.ui.base.BaseActivity;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
-import cn.liujson.client.ui.util.InputMethodUtils;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.ProfileEditorViewModel;
+import cn.liujson.lib.mqtt.api.QoS;
+import cn.liujson.lib.mqtt.util.MqttUtils;
 import me.everything.android.ui.overscroll.OverScrollDecoratorHelper;
 
 /**
@@ -99,7 +98,29 @@ public class ProfileEditorActivity extends BaseActivity implements ProfileEditor
             }
         }
 
+        //如果遗嘱topic和遗嘱消息不为空
+        if (!TextUtils.isEmpty(viewModel.fieldLwtTopic.get()) || !TextUtils.isEmpty(viewModel.fieldLwtMessage.get())) {
+            if (TextUtils.isEmpty(viewModel.fieldLwtTopic.get())) {
+                viewDataBinding.etLwtTopic.setError(getString(R.string.lwt_topic_cannot_be_null));
+                return false;
+            }
+            if (TextUtils.isEmpty(viewModel.fieldLwtMessage.get())) {
+                viewDataBinding.etLwtMessage.setError(getString(R.string.lwt_message_cannot_be_null));
+                return false;
+            }
+        }
         return true;
+    }
+
+    @Override
+    public QoS readWillQos() {
+        final int selectedIndex = viewDataBinding.tvLwtQos.getSelectedIndex();
+        return MqttUtils.int2QoS(selectedIndex);
+    }
+
+    @Override
+    public boolean isWillRetained() {
+        return viewDataBinding.cbLwtRetained.isChecked();
     }
 
     @Override
@@ -123,6 +144,12 @@ public class ProfileEditorActivity extends BaseActivity implements ProfileEditor
             viewModel.fieldKeepAliveInterval.set(String.valueOf(connectionProfile.keepAliveInterval));
             viewModel.fieldAutoReconnect.set(connectionProfile.autoReconnect);
             viewModel.fieldMaxReconnectDelay.set(String.valueOf(connectionProfile.maxReconnectDelay));
+
+            viewModel.fieldLwtTopic.set(connectionProfile.willTopic);
+            viewModel.fieldLwtMessage.set(connectionProfile.willMessage);
+            viewModel.fieldLwtRetained.set(connectionProfile.willRetained);
+
+            viewDataBinding.tvLwtQos.setSelectedIndex(MqttUtils.qoS2Int(connectionProfile.willQoS));
         }
     }
 
@@ -138,6 +165,4 @@ public class ProfileEditorActivity extends BaseActivity implements ProfileEditor
         viewModel = null;
         viewDataBinding = null;
     }
-
-
 }

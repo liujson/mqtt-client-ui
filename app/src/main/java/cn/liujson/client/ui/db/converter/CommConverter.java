@@ -9,13 +9,13 @@ import cn.liujson.lib.mqtt.util.MqttUtils;
 
 public class CommConverter {
     @TypeConverter
-    public static Date revertDate(long value) {
-        return new Date(value);
+    public static Date revertDate(Long value) {
+        return value != null ? new Date(value) : null;
     }
 
     @TypeConverter
-    public static long converterDate(Date value) {
-        return value.getTime();
+    public static Long converterDate(Date value) {
+        return value == null ? null : value.getTime();
     }
 
     @TypeConverter

@@ -67,6 +67,10 @@ public class ConnectionServiceRepository {
         return binder().getClient().isClosed();
     }
 
+    public boolean isConnecting() {
+        return binder().getClient().isConnecting();
+    }
+
     public Single<Boolean> rxIsInstalled() {
         return Single.create((SingleOnSubscribe<Boolean>) emitter -> {
             if (!isInstalled()) {

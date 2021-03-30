@@ -315,6 +315,7 @@
 
                     <androidx.appcompat.widget.AppCompatEditText
                         android:id="@+id/et_lwt_topic"
+                        android:text="@={vm.fieldLwtTopic}"
                         style="@style/et_edit_style_1" />
                 </LinearLayout>
 
@@ -351,6 +352,7 @@
                         android:layout_toEndOf="@id/tv_lwt_qos"
                         android:background="@null"
                         android:text="retained"
+                        android:checked="@={vm.fieldLwtRetained}"
                         android:textColor="#636363"
                         android:textSize="18sp" />
 
@@ -372,6 +374,7 @@
                         style="@style/et_edit_style_1"
                         android:layout_width="match_parent"
                         android:layout_height="200dp"
+                        android:text="@={vm.fieldLwtMessage}"
                         android:layout_toEndOf="@id/tv_lwt_message"
                         android:gravity="left|top" />
                 </RelativeLayout>
