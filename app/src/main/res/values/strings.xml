@@ -13,6 +13,13 @@
     <string name="lwt_message_cannot_be_null">LWT message cannot be null</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
+    <string name="txt_retained">Retained</string>
+    <string name="txt_qos_0">QoS 0</string>
+    <string name="txt_qos_1">QoS 1</string>
+    <string name="txt_qos_2">QoS 2</string>
+    <string name="txt_publish">Publish</string>
+    <string name="txt_please_input_topic">Please input topic</string>
+    <string name="txt_subscribe">Subscribe</string>
 
     <string-array name="qos_arr">
         <item>QoS 0</item>

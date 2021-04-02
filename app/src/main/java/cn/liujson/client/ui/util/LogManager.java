@@ -58,6 +58,8 @@ public class LogManager implements LogAdapter {
                 .enableDiskRecord()
                 //实时日志中转Adapter
                 .addAdapter(this)
+                //本地日志保存七天
+                .maxSaveDays(7)
                 //启用配置
                 .configure();
     }

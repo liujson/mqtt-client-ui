@@ -113,6 +113,10 @@ public class RxPahoClient implements IRxMqttClient {
         return mqttClient.isConnecting();
     }
 
+    public boolean isResting(){
+        return mqttClient.isResting();
+    }
+
 
     public String getCurrentServerURI() {
         return mqttClient.getCurrentServerURI();

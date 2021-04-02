@@ -32,13 +32,13 @@
                 android:enabled="@{vm.fieldAllEnable}"
                 android:layout_centerVertical="true"
                 android:gravity="center_vertical"
-                android:hint="Please input topic"
+                android:hint="@string/txt_please_input_topic"
                 android:text="@={vm.fieldInputTopic}" />
 
             <Button
                 android:id="@+id/btn_submit"
-                android:layout_width="100dp"
-                android:layout_height="32dp"
+                android:layout_width="120dp"
+                android:layout_height="38dp"
                 android:layout_toEndOf="@id/et_topic_input"
                 android:background="@drawable/selector_btn_blue_style"
                 android:enabled="@{vm.fieldAllEnable}"
@@ -46,7 +46,7 @@
                 android:onClick="@{v->vm.subscribe(v)}"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="15dp"
-                android:text="Subscribe"
+                android:text="@string/txt_subscribe"
                 android:textAllCaps="false"
                 android:textColor="@color/selector_btn_text_blue_btn" />
             <com.google.android.material.chip.ChipGroup
@@ -61,19 +61,19 @@
                     android:id="@+id/chip_qos0"
                     style="@style/chip_qos_selection_style"
                     android:enabled="@{vm.fieldAllEnable}"
-                    android:text="QoS 0" />
+                    android:text="@string/txt_qos_0" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_qos1"
                     style="@style/chip_qos_selection_style"
                     android:enabled="@{vm.fieldAllEnable}"
-                    android:text="QoS 1" />
+                    android:text="@string/txt_qos_1" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_qos2"
                     style="@style/chip_qos_selection_style"
                     android:enabled="@{vm.fieldAllEnable}"
-                    android:text="QoS 2" />
+                    android:text="@string/txt_qos_2" />
             </com.google.android.material.chip.ChipGroup>
         </RelativeLayout>
 

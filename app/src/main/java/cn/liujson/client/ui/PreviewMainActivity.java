@@ -15,7 +15,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
@@ -52,7 +51,7 @@ import cn.liujson.client.ui.fragments.WorkingStatusFragment;
 
 
 import cn.liujson.client.ui.service.MqttMgr;
-import cn.liujson.client.ui.util.InputMethodUtils;
+import cn.liujson.client.ui.util.DoubleClickUtils;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 
@@ -61,7 +60,7 @@ import cn.liujson.lib.mqtt.api.ConnectionParams;
 
 import cn.ubains.android.ublogger.LogUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
+
 import io.reactivex.disposables.Disposable;
 
 
@@ -77,9 +76,9 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
     private final List<ConnectionProfile> oriDataList = new ArrayList<>();
 
 
-    PreviewMainViewModel viewModel;
+    private PreviewMainViewModel viewModel;
 
-    private CompositeDisposable mCompositeDisposable;
+    private Disposable connectingDisposable, disconnectingDisposable, disconnectForciblyDisposable;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -127,8 +126,6 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         initSpinner();
         initViewPager();
 
-        mCompositeDisposable = new CompositeDisposable();
-
         viewDataBinding.mViewPager.setUserInputEnabled(false);
 
 
@@ -156,9 +153,13 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mCompositeDisposable != null) {
-            mCompositeDisposable.clear();
-            mCompositeDisposable = null;
+        if (connectingDisposable != null) {
+            connectingDisposable.dispose();
+            connectingDisposable = null;
+        }
+        if (disconnectingDisposable != null) {
+            disconnectingDisposable.dispose();
+            disconnectingDisposable = null;
         }
         //解除服务绑定
         MqttMgr.instance().unbindService(this, serviceConnection);
@@ -208,7 +209,9 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             viewModel.fieldDisconnectEnable.set(false);
         } else if (viewModel.getRepository().isBind() &&
                 viewModel.getRepository().isInstalled() &&
-                (viewModel.getRepository().isConnected() || viewModel.getRepository().isConnecting())) {
+                (viewModel.getRepository().isConnected()
+                        || viewModel.getRepository().isConnecting()
+                        || viewModel.getRepository().isResting())) {
             viewModel.fieldConnectEnable.set(false);
             viewModel.fieldDisconnectEnable.set(true);
         } else {
@@ -308,6 +311,9 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
      * @param view
      */
     public void settingClick(View view) {
+        if (DoubleClickUtils.isFastDoubleClick(view.getId())) {
+            return;
+        }
         Intent intent = new Intent(this, ConnectionProfilesActivity.class);
         startActivity(intent);
     }
@@ -318,11 +324,21 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
      * @param view
      */
     public void connectClick(View view) {
+        if (DoubleClickUtils.isFastDoubleClick(view.getId())) {
+            return;
+        }
         if (!dataList.isEmpty()) {
+            if (connectingDisposable != null) {
+                ToastHelper.showToast(this, "正在连接中,请稍后...");
+                return;
+            }
             final ConnectionProfile profile = oriDataList.get(viewDataBinding.spinner.getSelectedIndex());
             final ConnectionParams params = viewModel.profile2Params(profile);
             //执行连接逻辑
-            Disposable subscribe = viewModel.setupAndConnect(params)
+            connectingDisposable = viewModel.setupAndConnect(params)
+                    .doFinally(() -> {
+                        connectingDisposable = null;
+                    })
                     .subscribe(() -> {
                         ToastHelper.showToast(this, "连接成功");
                         viewModel.fieldConnectEnable.set(false);
@@ -334,8 +350,6 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
                         viewModel.fieldDisconnectEnable.set(false);
                         LogUtils.e("MQTT 第一次连接失败：" + throwable.toString());
                     });
-
-            mCompositeDisposable.add(subscribe);
         } else {
             ToastHelper.showToast(this, "请先配置连接参数");
         }
@@ -347,12 +361,16 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
      * @param view
      */
     public void disconnectClick(View view) {
-        final Disposable subscribe =
+        if (disconnectingDisposable != null || disconnectForciblyDisposable != null) {
+            ToastHelper.showToast(this, "正在断开连接,请稍后...");
+            return;
+        }
+        disconnectingDisposable =
                 viewModel.getRepository()
                         .closeSafety()
-                        //如果安全断开失败则强制断开连接
-                        .onErrorResumeNext(throwable -> viewModel.getRepository().closeForcibly())
-                        .observeOn(AndroidSchedulers.mainThread())
+                        .doFinally(() -> {
+                            disconnectingDisposable = null;
+                        })
                         .subscribe(() -> {
                             viewModel.fieldConnectEnable.set(true);
                             viewModel.fieldDisconnectEnable.set(false);
@@ -361,11 +379,31 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
                             EventBus.getDefault().post(new ConnectChangeEvent(false));
                             LogUtils.d("MQTT 断开连接成功");
                         }, throwable -> {
-                            ToastHelper.showToast(this, "断开失败");
-                            LogUtils.e("MQTT 断开连接失败：" + throwable.toString());
+                            ToastHelper.showToast(this, "MQTT 安全断开失败");
+                            LogUtils.e("MQTT 安全连接失败，尝试强制断开连接：" + throwable.toString());
+                            //强制断开连接
+                            disconnectForcibly();
                         });
-        mCompositeDisposable.add(subscribe);
     }
 
 
+    private void disconnectForcibly() {
+        //如果安全断开失败则强制断开连接
+        disconnectForciblyDisposable = viewModel.getRepository()
+                .closeForcibly()
+                .doFinally(() -> {
+                    disconnectForciblyDisposable = null;
+                })
+                .subscribe(() -> {
+                    viewModel.fieldConnectEnable.set(true);
+                    viewModel.fieldDisconnectEnable.set(false);
+                    viewModel.getRepository().uninstall();
+                    ToastHelper.showToast(this, "强制断开连接成功");
+                    EventBus.getDefault().post(new ConnectChangeEvent(false));
+                    LogUtils.d("MQTT 强制断开连接成功");
+                }, throwable -> {
+                    ToastHelper.showToast(this, "MQTT 强制断开连接失败");
+                    LogUtils.d("MQTT 强制断开连接失败：" + throwable.toString());
+                });
+    }
 }

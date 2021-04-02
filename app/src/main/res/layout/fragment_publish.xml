@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="vm"
             type="cn.liujson.client.ui.viewmodel.PublishViewModel" />
@@ -16,81 +15,99 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:background="#ececec"
             android:padding="10dp"
             tools:context=".ui.fragments.PublishFragment">
 
-            <EditText
-                android:id="@+id/et_topic_input"
-                style="@style/et_input_style"
-                android:enabled="@{vm.fieldAllEnable}"
-                android:hint="Please input topic"
-                android:text="@={vm.fieldInputTopic}" />
+            <RelativeLayout
+                android:id="@+id/rl_pub_action"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/et_topic_input"
+                    style="@style/et_input_style"
+                    android:layout_width="350dp"
+                    android:layout_height="38dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="10dp"
+                    android:enabled="@{vm.fieldAllEnable}"
+                    android:gravity="center_vertical"
+                    android:hint="@string/txt_please_input_topic"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:text="@={vm.fieldInputTopic}" />
+
+                <Button
+                    android:id="@+id/btn_publish"
+                    android:layout_width="120dp"
+                    android:layout_height="38dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_toEndOf="@id/et_topic_input"
+                    android:background="@drawable/selector_btn_blue_style"
+                    android:enabled="@{vm.fieldAllEnable}"
+                    android:letterSpacing="0.08"
+                    android:onClick="@{v->vm.publish(v)}"
+                    android:text="@string/txt_publish"
+                    android:textAllCaps="false"
+                    android:textColor="@color/selector_btn_text_blue_btn" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_topic_qos"
+                    style="@style/chip_group_qos_selection_style"
+                    android:layout_centerVertical="true"
+                    android:layout_toStartOf="@id/chip_group_topic_retained"
+                    app:checkedChip="@id/chip_qos0"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_qos0"
+                        style="@style/chip_qos_selection_style"
+                        android:enabled="@{vm.fieldAllEnable}"
+                        android:text="@string/txt_qos_0" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_qos1"
+                        style="@style/chip_qos_selection_style"
+                        android:enabled="@{vm.fieldAllEnable}"
+                        android:text="@string/txt_qos_1" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_qos2"
+                        style="@style/chip_qos_selection_style"
+                        android:enabled="@{vm.fieldAllEnable}"
+                        android:text="@string/txt_qos_2" />
+                </com.google.android.material.chip.ChipGroup>
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_topic_retained"
+                    style="@style/chip_group_qos_selection_style"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="30dp"
+                    app:singleSelection="false">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/cb_retained"
+                        style="@style/chip_qos_selection_style"
+                        android:enabled="@{vm.fieldAllEnable}"
+                        android:text="@string/txt_retained" />
+                </com.google.android.material.chip.ChipGroup>
+            </RelativeLayout>
+
 
             <EditText
                 android:id="@+id/et_publish_input"
                 style="@style/et_input_style"
                 android:layout_height="300dp"
-                android:layout_below="@id/et_topic_input"
+                android:layout_below="@id/rl_pub_action"
                 android:enabled="@{vm.fieldAllEnable}"
                 android:text="@={vm.fieldInputContent}" />
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chip_group_topic_qos"
-                style="@style/chip_group_qos_selection_style"
-                android:layout_below="@id/et_publish_input"
-                app:checkedChip="@id/chip_qos0"
-                app:singleSelection="true">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_qos0"
-                    style="@style/chip_qos_selection_style"
-                    android:enabled="@{vm.fieldAllEnable}"
-                    android:text="QoS 0" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_qos1"
-                    style="@style/chip_qos_selection_style"
-                    android:enabled="@{vm.fieldAllEnable}"
-                    android:text="QoS 1" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_qos2"
-                    style="@style/chip_qos_selection_style"
-                    android:enabled="@{vm.fieldAllEnable}"
-                    android:text="QoS 2" />
-            </com.google.android.material.chip.ChipGroup>
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chip_group_topic_retained"
-                style="@style/chip_group_qos_selection_style"
-                android:layout_below="@id/et_publish_input"
-                android:layout_toEndOf="@id/chip_group_topic_qos"
-                app:singleSelection="false">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/cb_retained"
-                    style="@style/chip_qos_selection_style"
-                    android:enabled="@{vm.fieldAllEnable}"
-                    android:text="Retained" />
-            </com.google.android.material.chip.ChipGroup>
-
-            <Button
-                android:id="@+id/btn_publish"
-                android:layout_width="100dp"
-                android:layout_height="32dp"
-                android:layout_below="@id/chip_group_topic_retained"
-                android:layout_marginTop="15dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginStart="5dp"
-                android:background="@drawable/selector_btn_blue_style"
-                android:enabled="@{vm.fieldAllEnable}"
-                android:letterSpacing="0.08"
-                android:onClick="@{v->vm.publish(v)}"
-                android:text="Publish"
-                android:textAllCaps="false"
-                android:textColor="@color/selector_btn_text_blue_btn" />
         </RelativeLayout>
     </ScrollView>
 </layout>

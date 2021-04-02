@@ -109,4 +109,7 @@ dependencies {
 
     //https://github.com/arcadefire/nice-spinner
     implementation 'com.github.arcadefire:nice-spinner:1.4.5'
+
+    //https://github.com/iqiyi/xCrash/blob/master/README.zh-CN.md
+    implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.0.0'
 }

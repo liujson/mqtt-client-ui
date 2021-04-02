@@ -464,4 +464,11 @@ public class PahoMqttClient implements IMqttClient {
     public boolean isConnecting() {
         return aClient.isConnecting();
     }
+
+    /**
+     * 是否进入自动重连休息状态
+     */
+    public boolean isResting() {
+        return aClient.isResting();
+    }
 }

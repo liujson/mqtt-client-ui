@@ -55,4 +55,11 @@ public class PahoMqttAsyncClient extends MqttAsyncClient {
     public boolean isConnecting() {
         return comms.isConnecting();
     }
+
+    /**
+     * 自动重连开始执行时进入休息状态
+     */
+    public boolean isResting() {
+        return comms.isResting();
+    }
 }

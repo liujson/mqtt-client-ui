@@ -9,6 +9,7 @@ import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.LogManager;
 import cn.liujson.lib.mqtt.service.paho.PahoLoggerImpl;
 import cn.ubains.android.ublogger.LogUtils;
+import xcrash.XCrash;
 
 
 /**
@@ -24,6 +25,8 @@ public class CustomApplication extends Application {
     public void onCreate() {
         super.onCreate();
         instance = this;
+        //Xcrash 初始化
+        XCrash.init(this);
         //初始化数据库
         DatabaseHelper.init(this);
         //日志打印库
