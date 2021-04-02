@@ -38,7 +38,7 @@ dependencies {
 
 
     //https://github.com/fusesource/mqtt-client
-    implementation 'org.fusesource.mqtt-client:mqtt-client:1.16'
+//    implementation 'org.fusesource.mqtt-client:mqtt-client:1.16'
     //https://github.com/eclipse/paho.mqtt.java
 //    implementation 'org.eclipse.paho:org.eclipse.paho.mqttv5.client:1.2.5'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'

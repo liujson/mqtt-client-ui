@@ -1,4 +1,4 @@
-include ':liblogger'
+include ':librepository'
 include ':libmqtt'
 include ':app'
-rootProject.name = "Refactor"
+rootProject.name = "MQTT.Cli"

@@ -1,4 +1,4 @@
-package cn.liujson.logger;
+package cn.liujson.doc.librepository;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("cn.liujson.libloger.test", appContext.getPackageName());
+        assertEquals("cn.liujson.doc.librepository.test", appContext.getPackageName());
     }
 }

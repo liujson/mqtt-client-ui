@@ -33,7 +33,8 @@ import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.divider.DividerLinearItemDecoration;
 import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.logger.LogUtils;
+
+import cn.ubains.android.ublogger.LogUtils;
 import io.reactivex.disposables.Disposable;
 
 /**

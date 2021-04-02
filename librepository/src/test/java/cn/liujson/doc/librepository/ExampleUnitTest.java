@@ -1,4 +1,4 @@
-package cn.liujson.logger;
+package cn.liujson.doc.librepository;
 
 import org.junit.Test;
 

@@ -8,7 +8,7 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 
 
-import cn.liujson.logger.LogUtils;
+import cn.ubains.android.ublogger.LogUtils;
 import io.reactivex.disposables.Disposable;
 
 /**

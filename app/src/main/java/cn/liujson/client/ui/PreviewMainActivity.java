@@ -57,9 +57,9 @@ import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 
 import cn.liujson.lib.mqtt.api.ConnectionParams;
-import cn.liujson.logger.LogUtils;
 
 
+import cn.ubains.android.ublogger.LogUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;

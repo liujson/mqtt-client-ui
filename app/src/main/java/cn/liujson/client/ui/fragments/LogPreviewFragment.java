@@ -7,30 +7,26 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 
-import com.orhanobut.logger.FormatStrategy;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import cn.liujson.client.databinding.FragmentLogPreviewBinding;
-import cn.liujson.client.ui.app.CustomApplication;
+import cn.liujson.client.ui.base.BaseFragment;
+import cn.liujson.client.ui.bean.event.PrintOneLogEvent;
 import cn.liujson.client.ui.util.LogManager;
 import cn.liujson.client.ui.viewmodel.LogPreviewViewModel;
 import cn.liujson.client.ui.widget.LogsPreviewView;
-import cn.liujson.logger.LogRecord;
-import cn.liujson.logger.LogUtils;
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
+
+import cn.ubains.android.ublogger.LogRecord;
+import cn.ubains.android.ublogger.LogUtils;
 
 /**
  * 日志查看 Fragment
@@ -38,7 +34,7 @@ import io.reactivex.disposables.Disposable;
  * Use the {@link LogPreviewFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class LogPreviewFragment extends Fragment {
+public class LogPreviewFragment extends BaseFragment {
 
     FragmentLogPreviewBinding binding;
     LogPreviewViewModel viewModel;
@@ -79,16 +75,10 @@ public class LogPreviewFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         binding.setVm(viewModel = new LogPreviewViewModel(getLifecycle()));
         logsPreview = binding.logsPreview;
-        loadMemoryLogs();
-        LogManager.getInstance().subscribeMemoryLog((priority, tag, message) -> {
-            //这里千万不要再使用LogUtils打印日志，否则会无限循环
-            handler.post(() -> {
-                logsPreview.log(priority2Level(priority), tag, message);
-            });
-        });
+        loadCacheLogs();
     }
 
-    private void loadMemoryLogs() {
+    private void loadCacheLogs() {
         final List<LogRecord> logRecords = LogManager.getInstance().memoryCacheLogList();
         final int logQueueSize = logsPreview.getLogQueueSize();
         List<LogsPreviewView.LogRecord> logRecordList = new ArrayList<>();
@@ -99,19 +89,31 @@ public class LogPreviewFragment extends Fragment {
             LogsPreviewView.LogRecord record = new LogsPreviewView.LogRecord(level, logRecord.getFormatMessage());
             logRecordList.add(record);
         }
-
         logsPreview.addLogs(logRecordList);
+    }
+
+    @Override
+    public boolean useEventBus() {
+        return true;
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onPrintOneLogEvent(PrintOneLogEvent event) {
+        logsPreview.log(priority2Level(event.priority), event.tag, event.message);
     }
 
     private LogsPreviewView.Level priority2Level(int priority) {
         switch (LogUtils.Level.value2Level(priority)) {
-            case INFO:
+            case VERBOSE:
+                return LogsPreviewView.Level.V;
             case DEBUG:
-            case WARN:
                 return LogsPreviewView.Level.D;
+            case WARN:
+                return LogsPreviewView.Level.W;
             case ERROR:
             case ASSERT:
                 return LogsPreviewView.Level.E;
+            case INFO:
             default:
                 return LogsPreviewView.Level.I;
         }

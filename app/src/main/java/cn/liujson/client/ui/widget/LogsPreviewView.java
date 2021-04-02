@@ -3,25 +3,25 @@ package cn.liujson.client.ui.widget;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 
-import org.jetbrains.annotations.NotNull;
+
+
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import cn.liujson.client.R;
-import cn.liujson.logger.LogUtils;
+
 
 /**
  * @author liujson
@@ -46,10 +46,6 @@ public class LogsPreviewView extends RelativeLayout {
      * 默认的日志格式化
      */
     private final DefaultLogFormatStrategy defaultLogFormatStrategy = new DefaultLogFormatStrategy();
-    /**
-     * no tag
-     */
-    private static final String DEFAULT_NO_TAG = "NO_TAG";
 
 
     //-------------------------------------------------------------------------------------------
@@ -71,6 +67,11 @@ public class LogsPreviewView extends RelativeLayout {
      * 日志缓存队列大小
      */
     private int logQueueSize;
+
+    /**
+     * 是否滑动到底部
+     */
+    private boolean isAutoScroll = true;
 
     public LogsPreviewView(Context context) {
         super(context);
@@ -114,16 +115,16 @@ public class LogsPreviewView extends RelativeLayout {
 
         final HorizontalScrollView horizontalScrollView = new HorizontalScrollView(getContext());
         horizontalScrollView.setId(R.id.logs_horizontal_scroll);
-        RelativeLayout.LayoutParams horizontalParams =
-                new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        LayoutParams horizontalParams =
+                new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         final int dp5 = getResources().getDimensionPixelSize(R.dimen.logs_dp5);
         horizontalParams.setMargins(0, dp5, 0, dp5);
         horizontalScrollView.setBackgroundResource(R.drawable.selector_log_card_bg);
 
         final RelativeLayout relativeLayout = new RelativeLayout(getContext());
         relativeLayout.setId(R.id.logs_wrapper_relative);
-        RelativeLayout.LayoutParams relativeParams =
-                new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        LayoutParams relativeParams =
+                new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
         horizontalScrollView.addView(relativeLayout, relativeParams);
 
         mLogRecyclerView = new RecyclerView(getContext());
@@ -132,9 +133,20 @@ public class LogsPreviewView extends RelativeLayout {
         mLogRecyclerView.addItemDecoration(new DividerItemDecoration());
         mLogRecyclerView.setAdapter(adapter = new LogsPreviewAdapter(logRecords));
         final int rvWidth = getResources().getDimensionPixelSize(R.dimen.logs_dp_rv_width);
-        RelativeLayout.LayoutParams rvParams =
-                new RelativeLayout.LayoutParams(rvWidth, ViewGroup.LayoutParams.MATCH_PARENT);
+        LayoutParams rvParams =
+                new LayoutParams(rvWidth, ViewGroup.LayoutParams.MATCH_PARENT);
         relativeLayout.addView(mLogRecyclerView, rvParams);
+        mLogRecyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy < 0) {
+                    isAutoScroll = false;
+                } else {
+                    isAutoScroll = isSlideToBottom(recyclerView);
+                }
+            }
+        });
 
         addView(horizontalScrollView, horizontalParams);
     }
@@ -182,15 +194,13 @@ public class LogsPreviewView extends RelativeLayout {
         logRecord.message = logFormat == null ? "" : logFormat.toString();
         logRecords.add(logRecord);
         adapter.notifyDataSetChanged();
-        if (!logRecords.isEmpty()) {
+        if (!logRecords.isEmpty() && isAutoScroll) {
             mLogRecyclerView.smoothScrollToPosition(logRecords.size() - 1);
         }
     }
 
     /**
      * 设置格式化策略
-     *
-     * @param logFormatStrategy
      */
     public void setLogFormatStrategy(IFormatStrategy logFormatStrategy) {
         this.logFormatStrategy = logFormatStrategy;
@@ -207,21 +217,46 @@ public class LogsPreviewView extends RelativeLayout {
         return logQueueSize == 0 ? DEF_LOG_QUEUE_SIZE : logQueueSize;
     }
 
+
     //region 内部类----------------------------------------------------------------------------------
 
     /**
      * 日志预览 Adapter
      */
-    private static class LogsPreviewAdapter extends BaseQuickAdapter<LogRecord, BaseViewHolder> {
+    private static class LogsPreviewAdapter extends RecyclerView.Adapter<LogsPreviewAdapter.ViewHolder> {
+        private final List<LogRecord> data;
 
         public LogsPreviewAdapter(@Nullable List<LogRecord> data) {
-            super(R.layout.item_rv_logs_preview, data);
+            Objects.requireNonNull(data);
+            this.data = data;
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_logs_preview, parent, false));
         }
 
         @Override
-        protected void convert(@NotNull BaseViewHolder holder, LogRecord logItem) {
-            holder.setText(R.id.tv_log_line, logItem.message);
-            holder.setTextColor(R.id.tv_log_line, logItem.level.color);
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            LogRecord logItem = data.get(position);
+            holder.tvLog.setText(logItem.message);
+            holder.tvLog.setTextColor(logItem.level.color);
+        }
+
+        @Override
+        public int getItemCount() {
+            return data.size();
+        }
+
+        static class ViewHolder extends RecyclerView.ViewHolder {
+
+            public ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                tvLog = itemView.findViewById(R.id.tv_log_line);
+            }
+
+            TextView tvLog;
         }
     }
 
@@ -275,6 +310,24 @@ public class LogsPreviewView extends RelativeLayout {
         public int color() {
             return color;
         }
+
+        public String levelName() {
+            switch (this) {
+                case V:
+                    return "VERBOSE";
+                case D:
+                    return "DEBUG";
+                case I:
+                    return "INFO";
+                case W:
+                    return "WARN";
+                case E:
+                    return "ERROR";
+                default:
+                    return "UNKNOWN";
+            }
+        }
+
     }
 
 
@@ -302,7 +355,7 @@ public class LogsPreviewView extends RelativeLayout {
                 builder.append(mSimpleDateFormat.format(new Date()));
                 builder.append("    ");
 
-                builder.append(String.format("%-16s", LogUtils.Level.logLevelName(level.level)));
+                builder.append(String.format("%-16s", level.levelName()));
                 builder.append(" --- ");
                 builder.append(String.format("%-32s", tag == null ? "NO_TAG" : tag));
             }
@@ -339,4 +392,46 @@ public class LogsPreviewView extends RelativeLayout {
 
 
     //endregion 内部类------------------------------------------------------------------------------
+
+    /**
+     * 最后一个可见
+     *
+     * @param recyclerView
+     * @return
+     */
+    public static boolean isVisBottom(RecyclerView recyclerView) {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+        //屏幕中最后一个可见子项的position
+        int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
+        //当前屏幕所看到的子项个数
+        int visibleItemCount = layoutManager.getChildCount();
+//         当前RecyclerView的所有子项个数
+        int totalItemCount = layoutManager.getItemCount();
+//         RecyclerView的滑动状态
+        int state = recyclerView.getScrollState();
+        if (visibleItemCount > 0
+                && lastVisibleItemPosition > totalItemCount - 1
+                && state == RecyclerView.SCROLL_STATE_IDLE) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 判断是否滚动到底部
+     * computeVerticalScrollExtent()是当前屏幕显示的区域高度，computeVerticalScrollOffset() 是当前屏幕之前滑过的距离，而computeVerticalScrollRange()是整个View控件的高度。
+     * RecyclerView.canScrollVertically(1)的值表示是否能向上滚动，false表示已经滚动到底部
+     * RecyclerView.canScrollVertically(-1)的值表示是否能向下滚动，false表示已经滚动到顶部
+     *
+     * @param recyclerView
+     * @return
+     */
+    public static boolean isSlideToBottom(RecyclerView recyclerView) {
+        if (recyclerView == null) {
+            return false;
+        }
+        return recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange();
+    }
+
 }

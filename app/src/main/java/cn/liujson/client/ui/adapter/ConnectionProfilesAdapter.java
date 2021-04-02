@@ -37,8 +37,9 @@ import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.db.entities.ConnectionProfileStar;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.widget.popup.MarkStarPopupView;
-import cn.liujson.logger.LogUtils;
 
+
+import cn.ubains.android.ublogger.LogUtils;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.CompletableSource;

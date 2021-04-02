@@ -17,7 +17,7 @@ import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.api.backruning.AbstractPahoConnServiceBinder;
 import cn.liujson.lib.mqtt.util.MqttUtils;
-import cn.liujson.logger.LogUtils;
+import cn.ubains.android.ublogger.LogUtils;
 
 
 /**

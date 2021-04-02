@@ -39,7 +39,8 @@ import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
 import cn.liujson.lib.mqtt.util.MqttUtils;
-import cn.liujson.logger.LogUtils;
+
+import cn.ubains.android.ublogger.LogUtils;
 import io.reactivex.Completable;
 
 

@@ -24,6 +24,12 @@ allprojects {
         maven {
             url "https://jitpack.io"
         }
+
+        //使用libs存放aar
+        flatDir {
+            dirs 'libs'
+            dirs project(':librepository').file('libs')
+        }
     }
 }
 

@@ -38,24 +38,24 @@ public class MqttUtils {
         return MD5.encode(uuid + ":" + Build.DEVICE + ":" + randomStr);
     }
 
-    /**
-     * QoS convert to org.fusesource.mqtt.client.QoS
-     *
-     * @param qoS
-     * @return
-     */
-    public static org.fusesource.mqtt.client.QoS convertQoS(QoS qoS) {
-        switch (qoS) {
-            case AT_MOST_ONCE:
-                return org.fusesource.mqtt.client.QoS.AT_MOST_ONCE;
-            case EXACTLY_ONCE:
-                return org.fusesource.mqtt.client.QoS.EXACTLY_ONCE;
-            case AT_LEAST_ONCE:
-                return org.fusesource.mqtt.client.QoS.AT_LEAST_ONCE;
-            default:
-                return org.fusesource.mqtt.client.QoS.AT_MOST_ONCE;
-        }
-    }
+//    /**
+//     * QoS convert to org.fusesource.mqtt.client.QoS
+//     *
+//     * @param qoS
+//     * @return
+//     */
+//    public static org.fusesource.mqtt.client.QoS convertQoS(QoS qoS) {
+//        switch (qoS) {
+//            case AT_MOST_ONCE:
+//                return org.fusesource.mqtt.client.QoS.AT_MOST_ONCE;
+//            case EXACTLY_ONCE:
+//                return org.fusesource.mqtt.client.QoS.EXACTLY_ONCE;
+//            case AT_LEAST_ONCE:
+//                return org.fusesource.mqtt.client.QoS.AT_LEAST_ONCE;
+//            default:
+//                return org.fusesource.mqtt.client.QoS.AT_MOST_ONCE;
+//        }
+//    }
 
     public static int qoS2Int(QoS qoS) {
         return qoS == null ? 0 : qoS.ordinal();
