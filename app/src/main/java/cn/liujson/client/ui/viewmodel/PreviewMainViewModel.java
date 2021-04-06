@@ -35,6 +35,7 @@ import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 
 
 import cn.liujson.client.ui.widget.popup.MarkStarPopupView;
+import cn.liujson.client.ui.widget.retry.NeedRetryException;
 import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
@@ -73,6 +74,9 @@ public class PreviewMainViewModel extends BaseViewModel implements
 
     private final ConnectionServiceRepository repository;
 
+    /**
+     * 初始化时加载的标星主题
+     */
     private List<MarkStarPopupView.TopicWrapper> initStarTopics = new CopyOnWriteArrayList<>();
 
     public void setNavigator(Navigator navigator) {
@@ -197,7 +201,7 @@ public class PreviewMainViewModel extends BaseViewModel implements
                 getRepository().addOnConnectedListener(this);
             }
         }
-        return actionCompletable;
+        return actionCompletable.onErrorResumeNext(throwable -> Completable.error(new NeedRetryException(throwable)));
     }
 
     /**
@@ -260,6 +264,21 @@ public class PreviewMainViewModel extends BaseViewModel implements
     @Override
     public void onConnectComplete(boolean reconnect, String serverURI) {
         EventBus.getDefault().post(new ConnectChangeEvent(true));
+        if (reconnect) {
+            //需要重新订阅主题
+            final String[] topics = new String[initStarTopics.size()];
+            final QoS[] qoSArr = new QoS[initStarTopics.size()];
+            for (int i = 0; i < initStarTopics.size(); i++) {
+                topics[i] = initStarTopics.get(i).topic;
+                qoSArr[i] = MqttUtils.int2QoS(initStarTopics.get(i).qos);
+            }
+            if (topics.length > 0) {
+                final Disposable subscribeDis = getRepository()
+                        .subscribe(topics, qoSArr)
+                        .subscribe(() -> LogUtils.d("MQTT 重连订阅成功"),
+                                throwable -> LogUtils.e("MQTT 重连订阅失败：" + throwable));
+            }
+        }
     }
 
 

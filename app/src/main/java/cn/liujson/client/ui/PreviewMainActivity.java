@@ -14,10 +14,15 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
+
+import com.lxj.xpopup.XPopup;
+import com.lxj.xpopup.core.BasePopupView;
 
 import net.lucode.hackware.magicindicator.FragmentContainerHelper;
 import net.lucode.hackware.magicindicator.MagicIndicator;
@@ -55,6 +60,9 @@ import cn.liujson.client.ui.util.DoubleClickUtils;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 
+import cn.liujson.client.ui.widget.popup.LoadingTipPopupView;
+import cn.liujson.client.ui.widget.popup.interfaces.OnPopupClickListener;
+import cn.liujson.client.ui.widget.retry.RxReconnectDelayFlowable;
 import cn.liujson.lib.mqtt.api.ConnectionParams;
 
 
@@ -75,10 +83,11 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
     private final List<String> dataList = new ArrayList<>();
     private final List<ConnectionProfile> oriDataList = new ArrayList<>();
 
-
     private PreviewMainViewModel viewModel;
 
-    private Disposable connectingDisposable, disconnectingDisposable, disconnectForciblyDisposable;
+    private Disposable connectingDisposable, disconnectingDisposable, firstAutoReconnectDisposable;
+
+    LoadingTipPopupView loadingTipPopupView;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -88,14 +97,29 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             viewModel.fieldDisconnectEnable.set(false);
             //查询数据库，是否包含标记为星号的连接项，存在则尝试对其进行连接
             if (viewModel != null) {
-                final Disposable subscribe = viewModel.initStarProfileConnect()
+                final RxReconnectDelayFlowable rxRetry = new RxReconnectDelayFlowable();
+                rxRetry.setOnRetrying((retryCount, nextDelay) -> {
+                    LogUtils.d("MQTT 初始化连接失败，正在重试，第" + retryCount + "次,下次重试延时：" + nextDelay + "ms");
+                    runOnUi(() -> {
+                        showLoading("正在进行第" + retryCount + "次重连");
+                    });
+                });
+                firstAutoReconnectDisposable = viewModel.initStarProfileConnect()
+                        .doOnSubscribe(disposable -> {
+                            runOnUi(() -> {
+                                showLoading("正在连接中");
+                            });
+                        })
+                        .retryWhen(rxRetry)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(() -> {
+                            hideLoading();
                             ToastHelper.showToast(CustomApplication.getApp(), "初始化连接成功");
                             viewModel.fieldConnectEnable.set(false);
                             viewModel.fieldDisconnectEnable.set(true);
                             LogUtils.d("MQTT 初始化连接成功");
                         }, throwable -> {
+                            hideLoading();
                             if (throwable instanceof EmptyResultSetException) {
                                 //do anything
                                 return;
@@ -160,6 +184,10 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         if (disconnectingDisposable != null) {
             disconnectingDisposable.dispose();
             disconnectingDisposable = null;
+        }
+        if (firstAutoReconnectDisposable != null) {
+            firstAutoReconnectDisposable.dispose();
+            firstAutoReconnectDisposable = null;
         }
         //解除服务绑定
         MqttMgr.instance().unbindService(this, serviceConnection);
@@ -361,13 +389,18 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
      * @param view
      */
     public void disconnectClick(View view) {
-        if (disconnectingDisposable != null || disconnectForciblyDisposable != null) {
+        if (disconnectingDisposable != null) {
             ToastHelper.showToast(this, "正在断开连接,请稍后...");
             return;
         }
         disconnectingDisposable =
                 viewModel.getRepository()
                         .closeSafety()
+                        //如果安全断开失败则强制断开连接
+                        .onErrorResumeNext(throwable -> {
+                            LogUtils.d("MQTT，安全断开连接失败，执行强制断开连接");
+                            return viewModel.getRepository().closeForcibly();
+                        })
                         .doFinally(() -> {
                             disconnectingDisposable = null;
                         })
@@ -379,31 +412,43 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
                             EventBus.getDefault().post(new ConnectChangeEvent(false));
                             LogUtils.d("MQTT 断开连接成功");
                         }, throwable -> {
-                            ToastHelper.showToast(this, "MQTT 安全断开失败");
-                            LogUtils.e("MQTT 安全连接失败，尝试强制断开连接：" + throwable.toString());
-                            //强制断开连接
-                            disconnectForcibly();
+                            ToastHelper.showToast(this, "MQTT 断开连接失败");
+                            LogUtils.e("MQTT 断开连接失败：" + throwable.toString());
+
                         });
     }
 
+    /**
+     * 显示对话框
+     *
+     * @param message
+     */
+    protected void showLoading(String message) {
+        if (loadingTipPopupView == null) {
+            loadingTipPopupView = (LoadingTipPopupView) new XPopup.Builder(this)
+                    .dismissOnTouchOutside(false)
+                    .dismissOnBackPressed(false)
+                    .asCustom(new LoadingTipPopupView(this, message))
+                    .show();
+            loadingTipPopupView.setOnCloseBtnClickListener((popupView, v) -> {
+                if (firstAutoReconnectDisposable != null) {
+                    firstAutoReconnectDisposable.dispose();
+                    firstAutoReconnectDisposable = null;
+                }
+                LogUtils.d("MQTT首次重连，用户手动取消重连功能");
+            });
+        } else {
+            loadingTipPopupView.setTvContent(message);
+            loadingTipPopupView.show();
+        }
+    }
 
-    private void disconnectForcibly() {
-        //如果安全断开失败则强制断开连接
-        disconnectForciblyDisposable = viewModel.getRepository()
-                .closeForcibly()
-                .doFinally(() -> {
-                    disconnectForciblyDisposable = null;
-                })
-                .subscribe(() -> {
-                    viewModel.fieldConnectEnable.set(true);
-                    viewModel.fieldDisconnectEnable.set(false);
-                    viewModel.getRepository().uninstall();
-                    ToastHelper.showToast(this, "强制断开连接成功");
-                    EventBus.getDefault().post(new ConnectChangeEvent(false));
-                    LogUtils.d("MQTT 强制断开连接成功");
-                }, throwable -> {
-                    ToastHelper.showToast(this, "MQTT 强制断开连接失败");
-                    LogUtils.d("MQTT 强制断开连接失败：" + throwable.toString());
-                });
+    /**
+     * 隐藏对话框
+     */
+    protected void hideLoading() {
+        if (loadingTipPopupView != null) {
+            loadingTipPopupView.dismiss();
+        }
     }
 }

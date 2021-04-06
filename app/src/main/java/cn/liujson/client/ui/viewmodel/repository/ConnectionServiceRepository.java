@@ -1,15 +1,10 @@
 package cn.liujson.client.ui.viewmodel.repository;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.ServiceConnection;
-import android.os.IBinder;
+
 import android.util.Pair;
 
 import java.util.List;
-import java.util.Objects;
 
-import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.service.ConnectionBinder;
 
 import cn.liujson.client.ui.service.MqttMgr;
@@ -71,7 +66,7 @@ public class ConnectionServiceRepository {
         return binder().getClient().isConnecting();
     }
 
-    public boolean isResting(){
+    public boolean isResting() {
         return binder().getClient().isResting();
     }
 
@@ -148,16 +143,20 @@ public class ConnectionServiceRepository {
     }
 
     public Completable closeSafety() {
-        return rxIsInstalled().flatMapCompletable(isSetup ->
-                binder().getClient().closeSafety())
+        return rxIsInstalled()
+                .observeOn(Schedulers.io())
+                .flatMapCompletable(isSetup ->
+                        binder().getClient().closeSafety())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
     public Completable closeForcibly() {
-        return rxIsInstalled().flatMapCompletable(isSetup ->
-                binder().getClient()
-                        .closeForcibly(DEFAULT_TIME_OUT << 1, DEFAULT_TIME_OUT))
+        return rxIsInstalled()
+                .observeOn(Schedulers.io())
+                .flatMapCompletable(isSetup ->
+                        binder().getClient()
+                                .closeForcibly(DEFAULT_TIME_OUT << 1, DEFAULT_TIME_OUT))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }

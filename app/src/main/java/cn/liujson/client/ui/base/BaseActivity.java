@@ -9,6 +9,14 @@ import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.lxj.xpopup.XPopup;
+import com.rxjava.rxlife.RxLife;
+
+import cn.liujson.client.ui.widget.popup.LoadingTipPopupView;
+import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Action;
+
 /**
  * @author liujson
  * @date 2021/3/27.
@@ -54,5 +62,19 @@ public abstract class BaseActivity extends AppCompatActivity {
             manager.hideSoftInputFromWindow(token,
                     InputMethodManager.HIDE_NOT_ALWAYS);
         }
+    }
+
+
+
+    /**
+     * 在UI执行
+     *
+     * @param action
+     */
+    protected void runOnUi(Action action) {
+        Completable.complete()
+                .observeOn(AndroidSchedulers.mainThread())
+                .as(RxLife.as(this))
+                .subscribe(action);
     }
 }

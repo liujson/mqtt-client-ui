@@ -19,6 +19,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -111,6 +112,8 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
                     subTopicItems.add(new TopicListAdapter.SubTopicItem(sPair.first, sPair.second));
                 }
                 viewModel.updateDataList(subTopicItems);
+            } else {
+                viewModel.updateDataList(Collections.emptyList());
             }
         }
     }

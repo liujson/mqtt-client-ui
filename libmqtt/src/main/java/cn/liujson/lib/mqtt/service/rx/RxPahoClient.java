@@ -113,7 +113,7 @@ public class RxPahoClient implements IRxMqttClient {
         return mqttClient.isConnecting();
     }
 
-    public boolean isResting(){
+    public boolean isResting() {
         return mqttClient.isResting();
     }
 
@@ -236,7 +236,9 @@ public class RxPahoClient implements IRxMqttClient {
      */
     public void release() {
         setCallback(null);
-        activeSubs.clear();
+        synchronized (activeSubLock) {
+            activeSubs.clear();
+        }
     }
 
     /**
@@ -245,6 +247,9 @@ public class RxPahoClient implements IRxMqttClient {
     public Completable closeSafety() {
         return Completable.create(emitter -> {
             mqttClient.disconnect();
+            synchronized (activeSubLock) {
+                activeSubs.clear();
+            }
             mqttClient.close();
             release();
             emitter.onComplete();

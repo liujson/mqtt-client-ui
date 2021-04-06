@@ -20,6 +20,7 @@
     <string name="txt_publish">Publish</string>
     <string name="txt_please_input_topic">Please input topic</string>
     <string name="txt_subscribe">Subscribe</string>
+    <string name="html_close_pop"><u>close</u></string>
 
     <string-array name="qos_arr">
         <item>QoS 0</item>

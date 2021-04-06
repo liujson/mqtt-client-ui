@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="280dp"
+    android:layout_height="160dp"
+    android:background="@drawable/bg_popup_loading_tip"
+    app:cardCornerRadius="10dp">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center">
+
+        <com.wang.avi.AVLoadingIndicatorView
+            android:id="@+id/av_loading"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerHorizontal="true"
+            app:indicatorName="BallSpinFadeLoaderIndicator" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_content"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_below="@id/av_loading"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="10dp"
+            android:autoSizeMaxTextSize="18sp"
+            android:autoSizeMinTextSize="6sp"
+            android:autoSizeTextType="uniform"
+            android:fontFamily="sans-serif-condensed"
+            android:letterSpacing="0.08"
+            android:text="loading..."
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
+        <ImageButton
+            android:id="@+id/btn_close"
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF"
+            android:scaleType="centerInside"
+            android:background="#80777777"
+            android:src="@mipmap/ic_loading_close"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/tv_content"/>
+
+    </RelativeLayout>
+</RelativeLayout>
