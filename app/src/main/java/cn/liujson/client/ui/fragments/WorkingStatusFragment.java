@@ -76,10 +76,6 @@ public class WorkingStatusFragment extends BaseFragment implements SwipeRefreshL
             WorkingStatusViewModel.bindWorkingStatus(binding.ivServiceClientClosedStatus, status);
         };
         viewModel.getFieldClientClosedStatus().observe(this, closedObserver);
-        final Observer<WorkingStatusViewModel.WorkingStatus> checkPingObserver = status -> {
-            WorkingStatusViewModel.bindWorkingStatus(binding.ivServiceCheckPingStatus, status);
-        };
-        viewModel.getFieldCheckPingStatus().observe(this, checkPingObserver);
     }
 
     @Override

@@ -101,36 +101,6 @@
             </RelativeLayout>
 
             <View style="@style/line_view_horizontal_color_bbb" />
-
-
-            <View style="@style/line_view_horizontal_color_bbb" />
-
-            <RelativeLayout
-                android:id="@+id/rl_service_check_ping_status"
-                style="@style/status_rl_right_item">
-
-                <TextView
-                    android:id="@+id/tv_service_check_ping_status"
-                    style="@style/status_tv_title"
-                    android:text="Check ping" />
-
-                <ImageView
-                    android:id="@+id/iv_service_check_ping_status"
-                    style="@style/status_iv_state"
-                    android:src="@mipmap/ic_status_successful_gray" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="15dp"
-                    android:layout_toStartOf="@id/iv_service_check_ping_status"
-                    android:text="@{vm.fieldCheckPingTime}"
-                    android:textColor="#ff4500"
-                    android:textSize="12sp" />
-            </RelativeLayout>
-
-            <View style="@style/line_view_horizontal_color_bbb" />
         </LinearLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </layout>

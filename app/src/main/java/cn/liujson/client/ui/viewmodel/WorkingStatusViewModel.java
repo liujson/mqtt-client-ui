@@ -1,5 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
+import android.view.View;
 import android.widget.ImageView;
 
 import androidx.annotation.DrawableRes;
@@ -11,6 +12,8 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 
+import com.rxjava.rxlife.RxLife;
+
 import java.util.Objects;
 
 import cn.liujson.client.R;
@@ -19,18 +22,21 @@ import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.NetworkUtils;
+import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class WorkingStatusViewModel extends ViewModel {
+
+    private Disposable checkPingDisposable;
 
     private MutableLiveData<WorkingStatus> fieldNetworkConnectedStatus;
     private MutableLiveData<WorkingStatus> fieldServiceBindStatus;
     private MutableLiveData<WorkingStatus> fieldClientInstalledStatus;
     private MutableLiveData<WorkingStatus> fieldClientConnectedStatus;
     private MutableLiveData<WorkingStatus> fieldClientClosedStatus;
-    private MutableLiveData<WorkingStatus> fieldCheckPingStatus;
-
-    private MutableLiveData<String> fieldCheckPingTime = new MutableLiveData<>("check time ");
 
     public MutableLiveData<WorkingStatus> getFieldNetworkConnectedStatus() {
         if (fieldNetworkConnectedStatus == null) {
@@ -67,17 +73,6 @@ public class WorkingStatusViewModel extends ViewModel {
         return fieldClientClosedStatus;
     }
 
-    public MutableLiveData<WorkingStatus> getFieldCheckPingStatus() {
-        if (fieldCheckPingStatus == null) {
-            fieldCheckPingStatus = new MutableLiveData<>();
-        }
-        return fieldCheckPingStatus;
-    }
-
-    public MutableLiveData<String> getFieldCheckPingTime() {
-        return fieldCheckPingTime;
-    }
-
     /**
      * 刷新状态
      */
@@ -88,7 +83,6 @@ public class WorkingStatusViewModel extends ViewModel {
             getFieldNetworkConnectedStatus().setValue(WorkingStatus.ERR);
         }
         final ConnectionBinder binder = MqttMgr.instance().binder();
-        getFieldCheckPingStatus().setValue(WorkingStatus.DISABLE);
         if (binder == null) {
             getFieldServiceBindStatus().setValue(WorkingStatus.ERR);
             getFieldClientInstalledStatus().setValue(WorkingStatus.DISABLE);
