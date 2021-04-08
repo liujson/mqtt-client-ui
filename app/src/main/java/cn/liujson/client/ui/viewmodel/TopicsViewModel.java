@@ -1,33 +1,42 @@
 package cn.liujson.client.ui.viewmodel;
 
 
+import android.graphics.Rect;
 import android.util.Pair;
 import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.databinding.ObservableArrayList;
 import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.databinding.ObservableList;
 import androidx.lifecycle.Lifecycle;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.listener.OnItemClickListener;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Predicate;
 
 import cn.liujson.client.R;
-import cn.liujson.client.ui.adapter.MessageCacheAdapter;
+import cn.liujson.client.ui.adapter.MessageListAdapter;
 import cn.liujson.client.ui.adapter.TopicListAdapter;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
+import cn.liujson.client.ui.bean.event.SystemLowMemoryEvent;
 import cn.liujson.client.ui.service.ConnectionBinder;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
@@ -45,10 +54,6 @@ import io.reactivex.disposables.Disposable;
  */
 public class TopicsViewModel extends BaseViewModel implements
         ConnectionBinder.OnRecMsgListener {
-    /**
-     * 每个主题最大缓存消息数 50 条
-     */
-    public static final int TOPIC_CACHE_MESSAGE_SIZE = 50;
 
 
     public final ObservableList<TopicListAdapter.SubTopicItem> dataList = new ObservableArrayList<>();
@@ -57,18 +62,23 @@ public class TopicsViewModel extends BaseViewModel implements
     public final DividerLinearItemDecoration itemDecoration = new DividerLinearItemDecoration(CustomApplication.getApp(),
             DividerLinearItemDecoration.VERTICAL_LIST, 2, R.color.color_d6d6d6);
 
-    public final List<MessageCacheAdapter.MqttMsg> msgDataList = new CopyOnWriteArrayList<>();
-    public final MessageCacheAdapter msgAdapter = new MessageCacheAdapter(msgDataList);
-    public final LinearLayoutManager msgLayoutManager = new LinearLayoutManager(CustomApplication.getApp());
+    public final List<MessageListAdapter.MsgItem> msgDataList = new LinkedList<>();
+    public final MessageListAdapter msgListAdapter = new MessageListAdapter(msgDataList);
+    public final LinearLayoutManager msgListManager = new LinearLayoutManager(CustomApplication.getApp());
+    public final DividerItemDecoration msgDividerItemDecoration = new DividerItemDecoration();
 
     public final ObservableBoolean fieldAllEnable = new ObservableBoolean(false);
     public final ObservableField<CharSequence> fieldInputTopic = new ObservableField<>();
 
     public final ObservableField<CharSequence> fieldMessageTopic = new ObservableField<>();
-    public final ObservableField<CharSequence> fieldMessageContent = new ObservableField<>();
     public final ObservableBoolean fieldMessageEnable = new ObservableBoolean();
     public final ObservableField<CharSequence> fieldMessageTime = new ObservableField<>();
     public final ObservableField<CharSequence> fieldMessageQoS = new ObservableField<>();
+
+    /**
+     * 消息缓存Map
+     */
+    private final Map<String, LinkedList<MessageListAdapter.MsgItem>> cacheLinkedMap = new LinkedHashMap<>();
 
 
     private final ConnectionServiceRepository repository;
@@ -93,11 +103,17 @@ public class TopicsViewModel extends BaseViewModel implements
                 }
             }
         });
+        adapter.setOnItemClickListener((adapter, view, position) -> {
+            final TopicListAdapter.SubTopicItem subTopicItem = dataList.get(position);
+            notifyMsgListAdapter(subTopicItem.topic);
+        });
         adapter.addChildClickViewIds(R.id.btn_unsubscribe);
 
         if (getRepository().isBind()) {
             repository.addOnRecMsgListener(this);
         }
+
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -109,6 +125,14 @@ public class TopicsViewModel extends BaseViewModel implements
             unsubscribeDisposable.dispose();
         }
         repository.removeOnRecMsgListener(this);
+
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onSystemLowMemoryEvent(SystemLowMemoryEvent event) {
+        //低内存时清除缓存消息
+
     }
 
 
@@ -118,11 +142,7 @@ public class TopicsViewModel extends BaseViewModel implements
 
     public void updateDataList(List<TopicListAdapter.SubTopicItem> subList) {
         if (subList.isEmpty()) {
-            msgDataList.clear();
-            msgAdapter.notifyDataSetChanged();
-
             fieldMessageTopic.set("");
-            fieldMessageContent.set("");
             fieldMessageTime.set("");
             fieldMessageQoS.set("");
         }
@@ -203,25 +223,36 @@ public class TopicsViewModel extends BaseViewModel implements
         if (navigator != null) {
             navigator.onReceiveMessage(topic, new String(payload), qoS);
         }
-        //添加到消息缓存
-        if (msgDataList.size() > TOPIC_CACHE_MESSAGE_SIZE) {
-            msgDataList.remove(0);
+        //根据Topic区别，添加到消息缓存
+        LinkedList<MessageListAdapter.MsgItem> msgList = cacheLinkedMap.get(topic);
+        if (msgList == null) {
+            msgList = new LinkedList<>();
         }
-        MessageCacheAdapter.MqttMsg mqttMsg = new MessageCacheAdapter.MqttMsg();
-        mqttMsg.topic = topic;
-        mqttMsg.body = payload;
-        mqttMsg.qos = qoS;
-        mqttMsg.receiveTime = System.currentTimeMillis();
-        msgDataList.add(mqttMsg);
+        final MessageListAdapter.MsgItem msgItem = new MessageListAdapter.MsgItem();
+        msgItem.topic = topic;
+        msgItem.message = new String(payload);
+        msgItem.messageDate = System.currentTimeMillis();
+        msgItem.qoS = qoS;
+        msgList.add(msgItem);
+        cacheLinkedMap.put(topic,msgList);
+        //刷新左侧消息数量
 
-        final Optional<TopicListAdapter.SubTopicItem> first = dataList.stream().filter(item -> Objects.equals(item.topic, topic)).findFirst();
-        if (first.isPresent()) {
-            final long count = msgDataList.stream().filter(item -> Objects.equals(item.topic, topic)).count();
-            first.get().msgCount = (int) count;
-            adapter.notifyDataSetChanged();
+
+        notifyMsgListAdapter(topic);
+    }
+
+    private void notifyMsgListAdapter(String topic) {
+        //判断当前topic是否选中显示
+        if(dataList.size()==1){
+            msgDataList.clear();
+            LinkedList<MessageListAdapter.MsgItem> msgList = cacheLinkedMap.get(topic);
+            if (msgList == null) {
+                msgList = new LinkedList<>();
+            }
+            msgDataList.addAll(msgList);
+            msgListAdapter.notifyDataSetChanged();
+            msgListAdapter.getRecyclerView().smoothScrollToPosition(msgDataList.size());
         }
-
-        msgAdapter.notifyDataSetChanged();
     }
 
 
@@ -243,5 +274,17 @@ public class TopicsViewModel extends BaseViewModel implements
          * 接收到消息
          */
         void onReceiveMessage(String topic, String message, QoS qoS);
+    }
+
+
+    /**
+     * 分隔线
+     */
+    public static class DividerItemDecoration extends RecyclerView.ItemDecoration {
+
+        @Override
+        public void getItemOffsets(Rect outRect, int itemPosition, @NonNull RecyclerView parent) {
+            outRect.set(0, 0, 0, 8);
+        }
     }
 }

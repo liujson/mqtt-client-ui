@@ -117,38 +117,35 @@
                 android:background="#ececec"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp">
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rv_horizontal_msg_list"
-                    android:layout_width="match_parent"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_height="120dp"
-                    app:recyclerAdapter="@{vm.msgAdapter}"
-                    app:recyclerData="@{vm.msgDataList}"
-                    app:recyclerLayoutManager="@{vm.msgLayoutManager}"/>
-                <View
-                    android:id="@+id/line3"
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:layout_below="@id/rv_horizontal_msg_list"
-                    android:layout_marginTop="10dp"
-                    android:background="#335533" />
                 <RelativeLayout
-                    android:layout_below="@id/line3"
                     android:id="@+id/rl_message_title"
                     android:layout_width="match_parent"
                     android:layout_marginStart="10dp"
                     android:layout_marginEnd="10dp"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="5dp">
-
+                    <Button
+                        android:id="@+id/btn_clear"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:layout_alignParentEnd="true"
+                        android:background="@drawable/selector_flat_btn_blue_style"
+                        android:paddingStart="15dp"
+                        android:paddingEnd="15dp"
+                        android:text="clear"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp" />
                     <TextView
+                        android:layout_toStartOf="@id/btn_clear"
                         android:id="@+id/tv_message_topic"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-black"
                         android:gravity="center_vertical"
                         android:singleLine="true"
+                        android:layout_marginStart="5dp"
+                        android:layout_alignBaseline="@id/btn_clear"
                         android:text="@{vm.fieldMessageTopic}"
                         android:textColor="@color/color_333333"
                         android:textSize="12sp" />
@@ -157,8 +154,9 @@
                         android:id="@+id/tv_message_date"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/tv_message_topic"
-                        android:layout_marginTop="15dp"
+                        android:layout_below="@id/btn_clear"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
                         android:background="@drawable/selector_grey_tip_bg"
                         android:fontFamily="sans-serif-condensed-light"
                         android:minWidth="150dp"
@@ -175,9 +173,10 @@
                         android:id="@+id/tv_message_qos"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/tv_message_topic"
+                        android:layout_below="@id/btn_clear"
                         android:layout_alignParentEnd="true"
-                        android:layout_marginTop="15dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
                         android:layout_marginEnd="8dp"
                         android:background="@drawable/selector_grey_tip_bg"
                         android:fontFamily="sans-serif-condensed"
@@ -191,21 +190,19 @@
                         android:textSize="12sp" />
                 </RelativeLayout>
 
-                <TextView
-                    android:id="@+id/tv_log"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_message_log"
                     android:layout_width="match_parent"
                     android:layout_marginStart="10dp"
                     android:layout_marginEnd="10dp"
                     android:layout_height="match_parent"
                     android:layout_below="@id/rl_message_title"
                     android:background="@drawable/selector_log_card_bg"
-                    android:enabled="@{vm.fieldMessageEnable}"
-                    android:fontFamily="sans-serif-black"
-                    android:letterSpacing="0.08"
-                    android:lineSpacingExtra="3dp"
-                    android:scrollbars="vertical"
-                    android:text="@{vm.fieldMessageContent}"
-                    android:textColor="#bdd7d7" />
+                    app:recyclerAdapter="@{vm.msgListAdapter}"
+                    app:recyclerData="@{vm.msgDataList}"
+                    app:recyclerItemDecoration="@{vm.msgDividerItemDecoration}"
+                    app:recyclerLayoutManager="@{vm.msgListManager}"
+                    android:enabled="@{vm.fieldMessageEnable}" />
             </RelativeLayout>
         </LinearLayout>
 

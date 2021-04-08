@@ -3,10 +3,13 @@ package cn.liujson.client.ui.app;
 import android.app.Application;
 
 import org.eclipse.paho.client.mqttv3.logging.LoggerFactory;
+import org.greenrobot.eventbus.EventBus;
 
+import cn.liujson.client.ui.bean.event.SystemLowMemoryEvent;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.LogManager;
+import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.lib.mqtt.service.paho.PahoLoggerImpl;
 import cn.ubains.android.ublogger.LogUtils;
 import xcrash.XCrash;
@@ -50,5 +53,8 @@ public class CustomApplication extends Application {
         LogUtils.i("onLowMemory");
         super.onLowMemory();
         LogManager.getInstance().lowMemory();
+        ToastHelper.showToast(this,"系统内存不足...");
+        LogUtils.d("系统内存不足...");
+        EventBus.getDefault().post(new SystemLowMemoryEvent());
     }
 }

@@ -168,7 +168,7 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
             binding.tvMessageTopic.setText(topic);
             binding.tvMessageDate.setText(dateFormat.format(new Date()));
             binding.tvMessageQos.setText(qoS.qoSName());
-            binding.tvLog.setText(message);
+
         });
     }
 }
