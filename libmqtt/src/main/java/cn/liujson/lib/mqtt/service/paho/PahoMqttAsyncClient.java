@@ -62,4 +62,8 @@ public class PahoMqttAsyncClient extends MqttAsyncClient {
     public boolean isResting() {
         return comms.isResting();
     }
+
+    public boolean isDisconnected() {
+        return comms.isDisconnected();
+    }
 }

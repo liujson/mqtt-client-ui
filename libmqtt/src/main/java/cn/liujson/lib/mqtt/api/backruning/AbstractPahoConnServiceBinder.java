@@ -53,6 +53,9 @@ public abstract class AbstractPahoConnServiceBinder extends AbstractConnBuilder<
     @Override
     public final void uninstall() {
         synchronized (insLock) {
+            if (this.mClient != null) {
+                this.mClient.setCallback(null);
+            }
             this.mClient = null;
             insState = InstallState.UNINSTALLED;
         }

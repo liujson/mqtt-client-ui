@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -144,6 +145,21 @@ public class RxPahoClient implements IRxMqttClient {
         return subList;
     }
 
+    /**
+     * 带返回参数的连接
+     *
+     * @return
+     * @throws MqttException
+     */
+    public IMqttToken connectWithResult() throws MqttException {
+        final MqttConnectOptions options = MqttUtils.params2Options(this.params);
+        return mqttClient.connectWithResult(options);
+    }
+
+    public IMqttToken subscribeWithResponse(@NonNull final String[] topics, @NonNull final QoS[] qosArr) throws MqttException {
+        return mqttClient.subscribeWithResponse(topics, MqttUtils.qoS2IntArr(qosArr));
+    }
+
 
     @Override
     public Completable connect() {
@@ -254,6 +270,14 @@ public class RxPahoClient implements IRxMqttClient {
             release();
             emitter.onComplete();
         });
+    }
+
+    public void close(boolean force) throws MqttException {
+        mqttClient.close(force);
+    }
+
+    public void disconnectForcibly(final long quiesceTimeout, final long disconnectTimeout) throws MqttException {
+        mqttClient.disconnectForcibly(quiesceTimeout, disconnectTimeout);
     }
 
     /**

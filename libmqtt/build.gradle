@@ -3,6 +3,13 @@ plugins {
 }
 
 android {
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            def fileName = "libmqtt-0.4.1.aar"
+            outputFileName = fileName
+        }
+    }
+
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
 
