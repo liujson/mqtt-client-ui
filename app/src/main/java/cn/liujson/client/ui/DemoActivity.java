@@ -1,16 +1,22 @@
 package cn.liujson.client.ui;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import cn.liujson.client.R;
 import cn.liujson.client.ui.base.BaseActivity;
 import cn.liujson.client.ui.util.DoubleClickUtils;
+import cn.liujson.lib.mqtt.api.ConnectionParams;
+import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
 
 public class DemoActivity extends BaseActivity implements View.OnClickListener {
@@ -26,6 +32,16 @@ public class DemoActivity extends BaseActivity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
 
+        initView();
+        createRxPahoClient();
+    }
+
+    private void createRxPahoClient() {
+
+    }
+
+
+    private void initView() {
         edClient1 = findViewById(R.id.ed_address_client_1);
         edClient2 = findViewById(R.id.ed_address_client_2);
         btnClient1 = findViewById(R.id.btn_connect_client_1);
