@@ -65,7 +65,6 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
 
-
     /**
      * 在UI执行
      *

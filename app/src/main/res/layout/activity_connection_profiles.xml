@@ -60,18 +60,17 @@
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btn_add_profile"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentBottom="true"
             android:layout_marginEnd="50dp"
             android:layout_marginBottom="30dp"
-            android:background="@null"
+            android:background="#FF0000"
             android:onClick="@{clickListener}"
             android:src="@drawable/ic_action_add"
-            app:fabCustomSize="42dp"
+            app:fabCustomSize="60dp"
             app:backgroundTint="@android:color/white"
-            app:fabSize="normal"
             android:contentDescription="Add a connection profile" />
 
     </RelativeLayout>

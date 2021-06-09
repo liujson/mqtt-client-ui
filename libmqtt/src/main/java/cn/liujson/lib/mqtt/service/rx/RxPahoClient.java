@@ -157,7 +157,18 @@ public class RxPahoClient implements IRxMqttClient {
     }
 
     public IMqttToken subscribeWithResponse(@NonNull final String[] topics, @NonNull final QoS[] qosArr) throws MqttException {
-        return mqttClient.subscribeWithResponse(topics, MqttUtils.qoS2IntArr(qosArr));
+        Objects.requireNonNull(topics);
+        Objects.requireNonNull(qosArr);
+        if (topics.length != qosArr.length) {
+            throw new IllegalArgumentException("topics.length != qosArr.length");
+        }
+        final IMqttToken iMqttToken = mqttClient.subscribeWithResponse(topics, MqttUtils.qoS2IntArr(qosArr));
+        synchronized (activeSubLock) {
+            for (int i = 0; i < topics.length; i++) {
+                activeSubs.put(topics[i], qosArr[i]);
+            }
+        }
+        return iMqttToken;
     }
 
 
