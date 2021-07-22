@@ -55,6 +55,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
     implementation project(path: ':librepository')
+    implementation project(path: ':ui-libmqtt')
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
@@ -92,9 +93,6 @@ dependencies {
 
     //https://github.com/daimajia/AndroidViewAnimations
     implementation 'org.greenrobot:eventbus:3.2.0'
-
-    //https://github.com/li-xiaojun/XPopup
-    implementation 'com.lxj:xpopup:2.2.0'
 
     //https://github.com/JessYanCoding/AndroidAutoSize
     implementation 'me.jessyan:autosize:1.2.1'

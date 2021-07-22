@@ -2,3 +2,4 @@ include ':librepository'
 include ':libmqtt'
 include ':app'
 rootProject.name = "MQTT.Cli"
+include ':ui-libmqtt'

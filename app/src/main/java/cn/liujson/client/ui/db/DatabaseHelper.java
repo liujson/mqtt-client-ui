@@ -24,6 +24,7 @@ public class DatabaseHelper {
         if (instance == null) {
             instance = Room.databaseBuilder(context.getApplicationContext(),
                     AppDatabase.class, "app-database")
+                    .allowMainThreadQueries()
                     .build();
         }
     }

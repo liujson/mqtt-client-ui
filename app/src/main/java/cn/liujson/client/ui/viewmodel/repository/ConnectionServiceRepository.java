@@ -3,11 +3,11 @@ package cn.liujson.client.ui.viewmodel.repository;
 
 import android.util.Pair;
 
+import com.ubains.lib.mqtt.mod.service.ConnectionBinder;
+import com.ubains.lib.mqtt.mod.service.MqttMgr;
+
 import java.util.List;
 
-import cn.liujson.client.ui.service.ConnectionBinder;
-
-import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.lib.mqtt.api.QoS;
 
 
@@ -89,22 +89,6 @@ public class ConnectionServiceRepository {
 
     public List<Pair<String, QoS>> getSubList() {
         return binder().getClient().getActiveSubs();
-    }
-
-    public void addOnRecMsgListener(ConnectionBinder.OnRecMsgListener recMsgListener) {
-        binder().addOnRecMsgListener(recMsgListener);
-    }
-
-    public void removeOnRecMsgListener(ConnectionBinder.OnRecMsgListener recMsgListener) {
-        binder().removeOnRecMsgListener(recMsgListener);
-    }
-
-    public void addOnConnectedListener(ConnectionBinder.OnConnectedListener connectedListener) {
-        binder().addOnConnectedListener(connectedListener);
-    }
-
-    public void removeOnConnectedListener(ConnectionBinder.OnConnectedListener connectedListener) {
-        binder().removeOnConnectedListener(connectedListener);
     }
 
     public Completable connect() {

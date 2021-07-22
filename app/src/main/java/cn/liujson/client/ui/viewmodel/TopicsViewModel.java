@@ -11,12 +11,12 @@ import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.databinding.ObservableList;
 import androidx.lifecycle.Lifecycle;
-import androidx.recyclerview.widget.DividerItemDecoration;
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.chad.library.adapter.base.listener.OnItemClickListener;
+
+import com.ubains.lib.mqtt.mod.service.ConnectionBinder;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -27,9 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
+
 
 import cn.liujson.client.R;
 import cn.liujson.client.ui.adapter.MessageListAdapter;
@@ -37,7 +35,7 @@ import cn.liujson.client.ui.adapter.TopicListAdapter;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.bean.event.SystemLowMemoryEvent;
-import cn.liujson.client.ui.service.ConnectionBinder;
+
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.divider.DividerLinearItemDecoration;
@@ -52,8 +50,7 @@ import io.reactivex.disposables.Disposable;
  * @author liujson
  * @date 2021/3/10.
  */
-public class TopicsViewModel extends BaseViewModel implements
-        ConnectionBinder.OnRecMsgListener {
+public class TopicsViewModel extends BaseViewModel {
 
 
     public final ObservableList<TopicListAdapter.SubTopicItem> dataList = new ObservableArrayList<>();
@@ -109,9 +106,6 @@ public class TopicsViewModel extends BaseViewModel implements
         });
         adapter.addChildClickViewIds(R.id.btn_unsubscribe);
 
-        if (getRepository().isBind()) {
-            repository.addOnRecMsgListener(this);
-        }
 
         EventBus.getDefault().register(this);
     }
@@ -124,8 +118,6 @@ public class TopicsViewModel extends BaseViewModel implements
         if (unsubscribeDisposable != null) {
             unsubscribeDisposable.dispose();
         }
-        repository.removeOnRecMsgListener(this);
-
         EventBus.getDefault().unregister(this);
     }
 
@@ -218,7 +210,7 @@ public class TopicsViewModel extends BaseViewModel implements
         this.navigator = navigator;
     }
 
-    @Override
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onReceiveMessage(String topic, byte[] payload, QoS qoS) {
         if (navigator != null) {
             navigator.onReceiveMessage(topic, new String(payload), qoS);

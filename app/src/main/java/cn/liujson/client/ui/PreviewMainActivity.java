@@ -21,8 +21,11 @@ import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.BasePopupView;
+import com.ubains.lib.mqtt.mod.service.MqttMgr;
 
 import net.lucode.hackware.magicindicator.FragmentContainerHelper;
 import net.lucode.hackware.magicindicator.MagicIndicator;
@@ -55,8 +58,9 @@ import cn.liujson.client.ui.fragments.TopicsFragment;
 import cn.liujson.client.ui.fragments.WorkingStatusFragment;
 
 
-import cn.liujson.client.ui.service.MqttMgr;
+
 import cn.liujson.client.ui.util.DoubleClickUtils;
+import cn.liujson.client.ui.util.MqttProfileStoreImpl;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 
@@ -89,55 +93,6 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
 
     LoadingTipPopupView loadingTipPopupView;
 
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            ToastHelper.showToast(getApplicationContext(), "MQTT服务绑定成功");
-            viewModel.fieldConnectEnable.set(true);
-            viewModel.fieldDisconnectEnable.set(false);
-            //查询数据库，是否包含标记为星号的连接项，存在则尝试对其进行连接
-            if (viewModel != null) {
-                final RxReconnectDelayFlowable rxRetry = new RxReconnectDelayFlowable();
-                rxRetry.setOnRetrying((retryCount, nextDelay) -> {
-                    LogUtils.d("MQTT 初始化连接失败，正在重试，第" + retryCount + "次,下次重试延时：" + nextDelay + "ms");
-                    runOnUi(() -> {
-                        showLoading("正在进行第" + retryCount + "次重连");
-                    });
-                });
-                firstAutoReconnectDisposable = viewModel.initStarProfileConnect()
-                        .doOnSubscribe(disposable -> {
-                            runOnUi(() -> {
-                                showLoading("正在连接中");
-                            });
-                        })
-                        .retryWhen(rxRetry)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(() -> {
-                            hideLoading();
-                            ToastHelper.showToast(CustomApplication.getApp(), "初始化连接成功");
-                            viewModel.fieldConnectEnable.set(false);
-                            viewModel.fieldDisconnectEnable.set(true);
-                            LogUtils.d("MQTT 初始化连接成功");
-                        }, throwable -> {
-                            hideLoading();
-                            if (throwable instanceof EmptyResultSetException) {
-                                //do anything
-                                return;
-                            }
-                            ToastHelper.showToast(CustomApplication.getApp(), "初始化连接失败");
-                            viewModel.fieldConnectEnable.set(true);
-                            viewModel.fieldDisconnectEnable.set(false);
-                            LogUtils.e("MQTT 初始化连接失败：" + throwable.toString());
-                        });
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            ToastHelper.showToast(getApplicationContext(), "MQTT服务绑定失败");
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -151,10 +106,6 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         initViewPager();
 
         viewDataBinding.mViewPager.setUserInputEnabled(false);
-
-
-        //把MQTT绑定到这个服务
-        MqttMgr.instance().bindToActivity(this, serviceConnection);
     }
 
     @Override
@@ -190,7 +141,7 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             firstAutoReconnectDisposable = null;
         }
         //解除服务绑定
-        MqttMgr.instance().unbindService(this, serviceConnection);
+        MqttMgr.instance().unbindToApplication(this);
     }
 
     /**
@@ -356,27 +307,25 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             return;
         }
         if (!dataList.isEmpty()) {
-            if (connectingDisposable != null) {
-                ToastHelper.showToast(this, "正在连接中,请稍后...");
-                return;
-            }
             final ConnectionProfile profile = oriDataList.get(viewDataBinding.spinner.getSelectedIndex());
-            final ConnectionParams params = viewModel.profile2Params(profile);
-            //执行连接逻辑
-            connectingDisposable = viewModel.setupAndConnect(params)
+            final JSONObject jsonObject = (JSONObject)JSON.toJSON(profile);
+            connectingDisposable = MqttMgr.instance()
+                    .connectTo(jsonObject.toJavaObject( com.ubains.lib.mqtt.mod.provider.bean.ConnectionProfile.class),0)
                     .doFinally(() -> {
                         connectingDisposable = null;
                     })
-                    .subscribe(() -> {
-                        ToastHelper.showToast(this, "连接成功");
-                        viewModel.fieldConnectEnable.set(false);
-                        viewModel.fieldDisconnectEnable.set(true);
-                        LogUtils.d("MQTT 第一次连接成功");
+                    .subscribe(s -> {
+                        LogUtils.d(s);
                     }, throwable -> {
                         ToastHelper.showToast(this, "连接失败");
                         viewModel.fieldConnectEnable.set(true);
                         viewModel.fieldDisconnectEnable.set(false);
                         LogUtils.e("MQTT 第一次连接失败：" + throwable.toString());
+                    },()->{
+                        ToastHelper.showToast(this, "连接成功");
+                        viewModel.fieldConnectEnable.set(false);
+                        viewModel.fieldDisconnectEnable.set(true);
+                        LogUtils.d("MQTT 第一次连接成功");
                     });
         } else {
             ToastHelper.showToast(this, "请先配置连接参数");

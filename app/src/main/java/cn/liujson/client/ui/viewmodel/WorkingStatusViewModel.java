@@ -13,14 +13,14 @@ import androidx.lifecycle.ViewModel;
 
 
 import com.rxjava.rxlife.RxLife;
+import com.ubains.lib.mqtt.mod.service.ConnectionBinder;
+import com.ubains.lib.mqtt.mod.service.MqttMgr;
 
 import java.util.Objects;
 
 import cn.liujson.client.R;
 import cn.liujson.client.ui.app.CustomApplication;
-import cn.liujson.client.ui.base.BaseViewModel;
-import cn.liujson.client.ui.service.ConnectionBinder;
-import cn.liujson.client.ui.service.MqttMgr;
+
 import cn.liujson.client.ui.util.NetworkUtils;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;

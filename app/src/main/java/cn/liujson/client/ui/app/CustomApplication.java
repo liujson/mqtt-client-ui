@@ -2,13 +2,15 @@ package cn.liujson.client.ui.app;
 
 import android.app.Application;
 
+import com.ubains.lib.mqtt.mod.service.MqttMgr;
+
 import org.eclipse.paho.client.mqttv3.logging.LoggerFactory;
 import org.greenrobot.eventbus.EventBus;
 
 import cn.liujson.client.ui.bean.event.SystemLowMemoryEvent;
 import cn.liujson.client.ui.db.DatabaseHelper;
-import cn.liujson.client.ui.service.MqttMgr;
 import cn.liujson.client.ui.util.LogManager;
+import cn.liujson.client.ui.util.MqttProfileStoreImpl;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.lib.mqtt.service.paho.PahoLoggerImpl;
 import cn.ubains.android.ublogger.LogUtils;
@@ -40,6 +42,7 @@ public class CustomApplication extends Application {
         LoggerFactory.setLogger(PahoLoggerImpl.class.getName());
 
         //启动Mqtt服务
+        MqttMgr.instance().setProfileStore(new MqttProfileStoreImpl());
         MqttMgr.instance().init(this);
     }
 
