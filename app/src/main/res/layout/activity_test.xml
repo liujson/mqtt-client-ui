@@ -5,45 +5,30 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.DemoActivity">
+    tools:context=".ui.SSLDemoActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <EditText
-            android:id="@+id/ed_address_client_1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="tcp://192.168.1.193:1881" />
-
-        <Button
-            android:id="@+id/btn_connect_client_1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="connect"
-            android:textAllCaps="false" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/btn_1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp">
+        android:text="连接" />
 
-        <EditText
-            android:id="@+id/ed_address_client_2"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="tcp://192.168.5.200:1881" />
+    <Button
+        android:id="@+id/btn_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="订阅" />
 
-        <Button
-            android:id="@+id/btn_connect_client_2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="connect"
-            android:textAllCaps="false" />
-    </LinearLayout>
+    <Button
+        android:id="@+id/btn_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送" />
+
+    <Button
+        android:id="@+id/btn_4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="断开" />
 
 </LinearLayout>

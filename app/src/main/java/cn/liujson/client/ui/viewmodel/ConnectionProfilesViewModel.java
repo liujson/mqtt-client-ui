@@ -1,7 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
 
-
 import androidx.databinding.ObservableArrayList;
 import androidx.databinding.ObservableList;
 import androidx.lifecycle.Lifecycle;

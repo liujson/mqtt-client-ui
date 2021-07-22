@@ -70,6 +70,9 @@ public class ConnectionParams implements Serializable {
     private final int connectionTimeout;
     private final String[] serverURIs;
     private final int mqttVersion;
+    private final SocketFactory socketFactory;
+    private final Properties sslClientProps;
+    private final HostnameVerifier sslHostnameVerifier;
 
     public ConnectionParams(Builder builder) {
         this.clientId = builder.clientId;
@@ -84,6 +87,9 @@ public class ConnectionParams implements Serializable {
         this.serverURIs = builder.serverURIs;
         this.connectionTimeout = builder.connectionTimeout;
         this.mqttVersion = builder.mqttVersion;
+        this.socketFactory = builder.socketFactory;
+        this.sslClientProps = builder.sslClientProps;
+        this.sslHostnameVerifier = builder.sslHostnameVerifier;
     }
 
     public static Builder newBuilder() {
@@ -145,6 +151,18 @@ public class ConnectionParams implements Serializable {
         return mqttVersion;
     }
 
+    public SocketFactory getSocketFactory() {
+        return socketFactory;
+    }
+
+    public Properties getSslClientProps() {
+        return sslClientProps;
+    }
+
+    public HostnameVerifier getSslHostnameVerifier() {
+        return sslHostnameVerifier;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -161,12 +179,15 @@ public class ConnectionParams implements Serializable {
                 Objects.equals(password, that.password) &&
                 Objects.equals(willTopic, that.willTopic) &&
                 Objects.equals(willMessage, that.willMessage) &&
-                Arrays.equals(serverURIs, that.serverURIs);
+                Arrays.equals(serverURIs, that.serverURIs) &&
+                Objects.equals(socketFactory, that.socketFactory) &&
+                Objects.equals(sslClientProps, that.sslClientProps) &&
+                Objects.equals(sslHostnameVerifier, that.sslHostnameVerifier);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(clientId, cleanSession, keepAlive, username, password, automaticReconnect, maxReconnectDelay, willTopic, willMessage, connectionTimeout, mqttVersion);
+        int result = Objects.hash(clientId, cleanSession, keepAlive, username, password, automaticReconnect, maxReconnectDelay, willTopic, willMessage, connectionTimeout, mqttVersion, socketFactory, sslClientProps, sslHostnameVerifier);
         result = 31 * result + Arrays.hashCode(serverURIs);
         return result;
     }
@@ -209,6 +230,23 @@ public class ConnectionParams implements Serializable {
          * 自定义的 Web SocketHeader
          */
         Properties customWebSocketHeaders = null;
+
+
+        public Builder socketFactory(SocketFactory socketFactory) {
+            this.socketFactory = socketFactory;
+            return this;
+        }
+
+        public Builder sslClientProps(Properties sslClientProps) {
+            this.sslClientProps = sslClientProps;
+            return this;
+        }
+
+        public Builder sslHostnameVerifier(HostnameVerifier sslHostnameVerifier) {
+            this.sslHostnameVerifier = sslHostnameVerifier;
+            return this;
+        }
+
 
         /**
          * 服务端Uri

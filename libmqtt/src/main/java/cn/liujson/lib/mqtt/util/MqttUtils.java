@@ -142,6 +142,11 @@ public class MqttUtils {
         }
         options.setCleanSession(params.isCleanSession());
         options.setMqttVersion(params.getMqttVersion());
+
+        //ssl
+        options.setSocketFactory(params.getSocketFactory());
+        options.setSSLProperties(params.getSslClientProps());
+        options.setSSLHostnameVerifier(params.getSslHostnameVerifier());
         return options;
     }
 }
