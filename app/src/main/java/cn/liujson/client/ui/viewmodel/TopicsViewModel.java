@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import com.ubains.lib.mqtt.mod.provider.event.MqttMessageArrivedEvent;
 import com.ubains.lib.mqtt.mod.service.ConnectionBinder;
 
 import org.greenrobot.eventbus.EventBus;
@@ -41,6 +42,7 @@ import cn.liujson.client.ui.viewmodel.repository.ConnectionServiceRepository;
 import cn.liujson.client.ui.widget.divider.DividerLinearItemDecoration;
 import cn.liujson.lib.mqtt.api.QoS;
 
+import cn.liujson.lib.mqtt.util.MqttUtils;
 import cn.ubains.android.ublogger.LogUtils;
 import io.reactivex.disposables.Disposable;
 
@@ -170,7 +172,7 @@ public class TopicsViewModel extends BaseViewModel {
                 }, throwable -> {
                     view.setEnabled(true);
                     ToastHelper.showToast(CustomApplication.getApp(), "订阅失败");
-                    LogUtils.i("MQTT 订阅失败，topic:" + topic);
+                    LogUtils.i("MQTT 订阅失败，topic:" + topic + "," + throwable);
                 });
     }
 
@@ -211,26 +213,24 @@ public class TopicsViewModel extends BaseViewModel {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onReceiveMessage(String topic, byte[] payload, QoS qoS) {
+    public void onMqttMessageArrivedEvent(MqttMessageArrivedEvent event) {
         if (navigator != null) {
-            navigator.onReceiveMessage(topic, new String(payload), qoS);
+            navigator.onReceiveMessage(event.topic, event.message, MqttUtils.int2QoS(event.qos));
         }
         //根据Topic区别，添加到消息缓存
-        LinkedList<MessageListAdapter.MsgItem> msgList = cacheLinkedMap.get(topic);
+        LinkedList<MessageListAdapter.MsgItem> msgList = cacheLinkedMap.get(event.topic);
         if (msgList == null) {
             msgList = new LinkedList<>();
         }
         final MessageListAdapter.MsgItem msgItem = new MessageListAdapter.MsgItem();
-        msgItem.topic = topic;
-        msgItem.message = new String(payload);
+        msgItem.topic = event.topic;
+        msgItem.message = event.message;
         msgItem.messageDate = System.currentTimeMillis();
-        msgItem.qoS = qoS;
+        msgItem.qoS = MqttUtils.int2QoS(event.qos);
         msgList.add(msgItem);
-        cacheLinkedMap.put(topic, msgList);
+        cacheLinkedMap.put(event.topic, msgList);
         //刷新左侧消息数量
-
-
-        notifyMsgListAdapter(topic);
+        notifyMsgListAdapter(event.topic);
     }
 
     private void notifyMsgListAdapter(String topic) {

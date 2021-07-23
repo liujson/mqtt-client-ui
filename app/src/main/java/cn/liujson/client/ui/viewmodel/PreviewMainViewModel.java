@@ -11,6 +11,7 @@ import androidx.room.EmptyResultSetException;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.ubains.lib.mqtt.mod.provider.event.MqttConnectCompleteEvent;
+import com.ubains.lib.mqtt.mod.provider.event.MqttConnectionLostEvent;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -29,8 +30,6 @@ import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.dao.ConnectionProfileDao;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
-
-
 
 
 import cn.liujson.client.ui.util.ToastHelper;
@@ -170,9 +169,10 @@ public class PreviewMainViewModel extends BaseViewModel {
     }
 
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onMqttConnectCompleteEvent(MqttConnectCompleteEvent event) {
         EventBus.getDefault().post(new ConnectChangeEvent(true));
+        LogUtils.d("MQTT 连接成功,连接到：" + event.serverURI);
         if (event.reconnect) {
             //需要重新订阅主题
             final String[] topics = new String[initStarTopics.size()];
@@ -188,6 +188,12 @@ public class PreviewMainViewModel extends BaseViewModel {
                                 throwable -> LogUtils.e("MQTT 重连订阅失败：" + throwable));
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    public void onMqttConnectionLostEvent(MqttConnectionLostEvent event) {
+        LogUtils.e("MQTT 断开连接：" + event.cause);
+        EventBus.getDefault().post(new ConnectChangeEvent(false));
     }
 
 

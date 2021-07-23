@@ -7,7 +7,6 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 
-
 import android.content.Context;
 import android.content.Intent;
 
@@ -23,6 +22,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.lxj.xpopup.XPopup;
 
+import com.lxj.xpopup.core.BasePopupView;
+import com.lxj.xpopup.interfaces.SimpleCallback;
 import com.ubains.lib.mqtt.mod.service.MqttMgr;
 import com.ubains.lib.mqtt.mod.ui.MqttWorkingStatusFragment;
 
@@ -39,6 +40,8 @@ import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.Simple
 
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +64,6 @@ import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 
 import cn.liujson.client.ui.widget.popup.LoadingTipPopupView;
-
 
 
 import cn.ubains.android.ublogger.LogUtils;
@@ -100,6 +102,8 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         initViewPager();
 
         viewDataBinding.mViewPager.setUserInputEnabled(false);
+
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -134,6 +138,7 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             firstAutoReconnectDisposable.dispose();
             firstAutoReconnectDisposable = null;
         }
+        EventBus.getDefault().unregister(this);
         //解除服务绑定
         MqttMgr.instance().unbindToApplication(this);
     }
@@ -302,20 +307,22 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         }
         if (!dataList.isEmpty()) {
             final ConnectionProfile profile = oriDataList.get(viewDataBinding.spinner.getSelectedIndex());
-            final JSONObject jsonObject = (JSONObject)JSON.toJSON(profile);
+            final JSONObject jsonObject = (JSONObject) JSON.toJSON(profile);
             connectingDisposable = MqttMgr.instance()
-                    .connectTo(jsonObject.toJavaObject( com.ubains.lib.mqtt.mod.provider.bean.ConnectionProfile.class),0)
+                    .connectTo(jsonObject.toJavaObject(com.ubains.lib.mqtt.mod.provider.bean.ConnectionProfile.class), 0)
                     .doFinally(() -> {
                         connectingDisposable = null;
+                        hideLoading();
                     })
                     .subscribe(s -> {
+                        showLoading(s);
                         LogUtils.d(s);
                     }, throwable -> {
                         ToastHelper.showToast(this, "连接失败");
                         viewModel.fieldConnectEnable.set(true);
                         viewModel.fieldDisconnectEnable.set(false);
                         LogUtils.e("MQTT 第一次连接失败：" + throwable.toString());
-                    },()->{
+                    }, () -> {
                         ToastHelper.showToast(this, "连接成功");
                         viewModel.fieldConnectEnable.set(false);
                         viewModel.fieldDisconnectEnable.set(true);
@@ -371,6 +378,13 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             loadingTipPopupView = (LoadingTipPopupView) new XPopup.Builder(this)
                     .dismissOnTouchOutside(false)
                     .dismissOnBackPressed(false)
+                    .hasShadowBg(false)
+                    .setPopupCallback(new SimpleCallback() {
+                        @Override
+                        public void onDismiss(BasePopupView popupView) {
+                            loadingTipPopupView = null;
+                        }
+                    })
                     .asCustom(new LoadingTipPopupView(this, message))
                     .show();
             loadingTipPopupView.setOnCloseBtnClickListener((popupView, v) -> {
@@ -392,6 +406,17 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
     protected void hideLoading() {
         if (loadingTipPopupView != null) {
             loadingTipPopupView.dismiss();
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onConnectChangeEvent(ConnectChangeEvent event) {
+        if (event.isConnected) {
+            viewModel.fieldConnectEnable.set(false);
+            viewModel.fieldDisconnectEnable.set(true);
+        } else {
+            viewModel.fieldConnectEnable.set(true);
+            viewModel.fieldDisconnectEnable.set(false);
         }
     }
 }

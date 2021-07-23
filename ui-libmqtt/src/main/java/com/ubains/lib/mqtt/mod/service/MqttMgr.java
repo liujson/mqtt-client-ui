@@ -71,6 +71,9 @@ public class MqttMgr {
 
     private IConnectionProfileStore mProfileStore;
 
+    private boolean mInitConnect = true;
+    private boolean mInitConnectRetry = true;
+
     private MqttMgr() {
         rxRetry = new RxReconnectDelayObservable(MIN_RECONNECT_DELAY_DEFAULT, MAX_RECONNECT_DELAY_DEFAULT);
         rxRetry.setOnRetrying(mOnRetrying);
@@ -83,12 +86,28 @@ public class MqttMgr {
     }
 
 
+    public boolean ismInitConnectRetry() {
+        return mInitConnectRetry;
+    }
+
+    public void setmInitConnectRetry(boolean mInitConnectRetry) {
+        this.mInitConnectRetry = mInitConnectRetry;
+    }
+
     public IConnectionProfileStore getProfileStore() {
         return mProfileStore;
     }
 
     public void setProfileStore(IConnectionProfileStore mProfileStore) {
         this.mProfileStore = mProfileStore;
+    }
+
+    private boolean isInitConnect() {
+        return mInitConnect;
+    }
+
+    private void setInitConnect(boolean mInitConnect) {
+        this.mInitConnect = mInitConnect;
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -112,6 +131,47 @@ public class MqttMgr {
         }
     }
 
+    public static class Builder {
+        /**
+         * 如果能拿到连接参数，是初始化时候进行连接
+         */
+        boolean initConnect = true;
+        /**
+         * 是否初始化连接失败重试
+         */
+        boolean initConnectRetry = true;
+        /**
+         * 连接属性序列化对象
+         */
+        IConnectionProfileStore profileStore;
+
+        public Builder initConnect(boolean initConnect) {
+            this.initConnect = initConnect;
+            return this;
+        }
+
+        public Builder initConnectRetry(boolean initConnectRetry) {
+            this.initConnectRetry = initConnectRetry;
+            return this;
+        }
+
+        public Builder profileStore(IConnectionProfileStore profileStore) {
+            this.profileStore = profileStore;
+            return this;
+        }
+
+        public void init(@NonNull Context context) {
+            Objects.requireNonNull(context);
+            instance().setInitConnect(this.initConnect);
+            instance().setmInitConnectRetry(this.initConnectRetry);
+            instance().setProfileStore(profileStore);
+            instance().bindToApplication(context.getApplicationContext());
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     /**
      * 初始化 MQTT 服务
@@ -119,8 +179,9 @@ public class MqttMgr {
      * @param context
      */
     public void init(@NonNull Context context) {
-        Objects.requireNonNull(context);
-        bindToApplication(context.getApplicationContext());
+        builder().initConnect(true)
+                .initConnectRetry(true)
+                .init(context);
     }
 
     /**
@@ -138,7 +199,7 @@ public class MqttMgr {
     }
 
     public void unbindToApplication(@NonNull Context context) {
-        unbindService(context, mServiceConnection);
+        unbindService(context.getApplicationContext(), mServiceConnection);
     }
 
     /**
@@ -243,8 +304,8 @@ public class MqttMgr {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mBinder = (ConnectionBinder) service;
-            EventBus.getDefault().post(new MqttBindChangeEvent(true));
-            if (getProfileStore() != null) {
+            EventBus.getDefault().postSticky(new MqttBindChangeEvent(true));
+            if (mInitConnect && getProfileStore() != null) {
                 final ConnectionProfile connectionProfile = getProfileStore().load();
                 if (connectionProfile != null) {
                     //第一次连接可能会失败，创建一个任务用来重连
@@ -350,8 +411,11 @@ public class MqttMgr {
         if (firstConnectTask != null) {
             firstConnectTask.dispose();
         }
-        firstConnectTask = connectTo(connectionProfile, 0)
-                .retryWhen(rxRetry)
+        Observable<String> startConnectObservable = connectTo(connectionProfile, 0);
+        if (mInitConnectRetry) {
+            startConnectObservable = startConnectObservable.retryWhen(rxRetry);
+        }
+        firstConnectTask = startConnectObservable
                 .doFinally(() -> {
                     firstConnectTask = null;
                 })

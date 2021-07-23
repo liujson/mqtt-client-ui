@@ -43,7 +43,7 @@ public interface ConnectionProfileDao {
     @Query("SELECT * FROM connection_profile WHERE id = :id")
     Single<ConnectionProfile> queryProfileById(int id);
 
-    @Query("SELECT * FROM connection_profile WHERE id = (SELECT id FROM connection_profile_star  ORDER BY connection_profile_id DESC LIMIT 1)")
+    @Query("SELECT * FROM connection_profile WHERE id = (SELECT connection_profile_id FROM connection_profile_star ORDER BY connection_profile_id DESC LIMIT 1)")
     ConnectionProfile getMarkedStarProfile();
 
     @Update

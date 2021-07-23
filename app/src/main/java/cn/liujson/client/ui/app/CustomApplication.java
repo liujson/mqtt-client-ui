@@ -41,9 +41,12 @@ public class CustomApplication extends Application {
         //Paho
         LoggerFactory.setLogger(PahoLoggerImpl.class.getName());
 
-        //启动Mqtt服务
-        MqttMgr.instance().setProfileStore(new MqttProfileStoreImpl());
-        MqttMgr.instance().init(this);
+        //初始化Mqtt
+        MqttMgr.builder()
+                .profileStore(new MqttProfileStoreImpl())
+                .initConnect(true)
+                .initConnectRetry(true)
+                .init(this);
     }
 
     public static CustomApplication getApp() {
@@ -56,7 +59,7 @@ public class CustomApplication extends Application {
         LogUtils.i("onLowMemory");
         super.onLowMemory();
         LogManager.getInstance().lowMemory();
-        ToastHelper.showToast(this,"系统内存不足...");
+        ToastHelper.showToast(this, "系统内存不足...");
         LogUtils.d("系统内存不足...");
         EventBus.getDefault().post(new SystemLowMemoryEvent());
     }

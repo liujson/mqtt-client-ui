@@ -16,7 +16,7 @@ public class MqttProfileStoreImpl implements IConnectionProfileStore {
 
     @Override
     public boolean store(ConnectionProfile connectionProfile) {
-
+        // 不实现
         return false;
     }
 
