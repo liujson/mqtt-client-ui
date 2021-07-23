@@ -226,7 +226,7 @@ public class TopicsViewModel extends BaseViewModel {
         msgItem.messageDate = System.currentTimeMillis();
         msgItem.qoS = qoS;
         msgList.add(msgItem);
-        cacheLinkedMap.put(topic,msgList);
+        cacheLinkedMap.put(topic, msgList);
         //刷新左侧消息数量
 
 
@@ -235,7 +235,7 @@ public class TopicsViewModel extends BaseViewModel {
 
     private void notifyMsgListAdapter(String topic) {
         //判断当前topic是否选中显示
-        if(dataList.size()==1){
+        if (dataList.size() == 1) {
             msgDataList.clear();
             LinkedList<MessageListAdapter.MsgItem> msgList = cacheLinkedMap.get(topic);
             if (msgList == null) {

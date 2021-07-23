@@ -16,12 +16,14 @@ import cn.liujson.client.ui.widget.popup.LoadingTipPopupView;
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Action;
+import me.yokeyword.fragmentation.ISupportActivity;
+import me.yokeyword.fragmentation.SupportActivity;
 
 /**
  * @author liujson
  * @date 2021/3/27.
  */
-public abstract class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends SupportActivity {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {

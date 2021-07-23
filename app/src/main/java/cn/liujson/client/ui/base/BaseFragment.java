@@ -1,14 +1,14 @@
 package cn.liujson.client.ui.base;
 
-import androidx.fragment.app.Fragment;
-
 import org.greenrobot.eventbus.EventBus;
+
+import me.yokeyword.fragmentation.SupportFragment;
 
 /**
  * @author liujson
  * @date 2021/3/10.
  */
-public abstract class BaseFragment extends Fragment {
+public abstract class BaseFragment extends SupportFragment {
 
     @Override
     public void onStart() {

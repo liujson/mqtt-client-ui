@@ -1,8 +1,5 @@
 package cn.liujson.client.ui.fragments;
 
-
-import android.content.Context;
-
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;

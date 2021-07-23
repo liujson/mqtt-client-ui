@@ -17,6 +17,7 @@ import cn.liujson.client.R;
 
 import cn.liujson.client.databinding.ActivityConnectionProfilesBinding;
 import cn.liujson.client.ui.base.BaseActivity;
+import cn.liujson.client.ui.fragments.ProfileEditorFragment;
 import cn.liujson.client.ui.viewmodel.ConnectionProfilesViewModel;
 import cn.liujson.client.ui.widget.popup.AffirmPopupView;
 import cn.liujson.client.ui.widget.popup.interfaces.OnPopupClickListener;
@@ -53,7 +54,7 @@ public class ConnectionProfilesActivity extends BaseActivity implements OnClickL
      */
     public void addProfile(View view) {
         Intent intent = new Intent(this, ProfileEditorActivity.class);
-        intent.putExtra(ProfileEditorActivity.KEY_MODE, ProfileEditorActivity.Mode.NEW);
+        intent.putExtra(ProfileEditorFragment.KEY_MODE, ProfileEditorFragment.Mode.NEW);
         startActivityForResult(intent, NEW_REQUEST_CODE);
     }
 
@@ -75,8 +76,8 @@ public class ConnectionProfilesActivity extends BaseActivity implements OnClickL
     @Override
     public void editProfile(long id) {
         Intent intent = new Intent(this, ProfileEditorActivity.class);
-        intent.putExtra(ProfileEditorActivity.KEY_MODE, ProfileEditorActivity.Mode.EDIT);
-        intent.putExtra(ProfileEditorActivity.KEY_PROFILE_ID, id);
+        intent.putExtra(ProfileEditorFragment.KEY_MODE, ProfileEditorFragment.Mode.EDIT);
+        intent.putExtra(ProfileEditorFragment.KEY_PROFILE_ID, id);
         startActivityForResult(intent, EDIT_REQUEST_CODE);
     }
 

@@ -3,6 +3,8 @@ package cn.liujson.client.ui.viewmodel.repository;
 
 import android.util.Pair;
 
+import com.ubains.lib.mqtt.mod.provider.MqttConnection;
+import com.ubains.lib.mqtt.mod.provider.MqttConnectionImpl;
 import com.ubains.lib.mqtt.mod.service.ConnectionBinder;
 import com.ubains.lib.mqtt.mod.service.MqttMgr;
 
@@ -32,7 +34,6 @@ public class ConnectionServiceRepository {
      */
     public static final int DEFAULT_TIME_OUT = 10000;
 
-
     public ConnectionServiceRepository() {
 
     }
@@ -47,27 +48,27 @@ public class ConnectionServiceRepository {
     }
 
     public boolean isInstalled() {
-        return binder().isInstalled();
+        return MqttMgr.instance().isInstalled();
     }
 
     public boolean isSame(Object object) {
-        return binder().isSame(object);
+        return MqttMgr.instance().isSame(object);
     }
 
     public boolean isConnected() {
-        return binder().getClient().isConnected();
+        return MqttMgr.instance().isConnected();
     }
 
     public boolean isClosed() {
-        return binder().getClient().isClosed();
+        return MqttMgr.instance().isClosed();
     }
 
     public boolean isConnecting() {
-        return binder().getClient().isConnecting();
+        return MqttMgr.instance().getClient().isConnecting();
     }
 
     public boolean isResting() {
-        return binder().getClient().isResting();
+        return MqttMgr.instance().getClient().isResting();
     }
 
     public Single<Boolean> rxIsInstalled() {

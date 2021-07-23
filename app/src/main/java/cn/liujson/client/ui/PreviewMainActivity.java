@@ -3,20 +3,18 @@ package cn.liujson.client.ui;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
-import androidx.room.EmptyResultSetException;
+
 import androidx.viewpager2.widget.ViewPager2;
 
 
-import android.content.ComponentName;
+
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
+
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
@@ -24,8 +22,9 @@ import android.widget.LinearLayout;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.lxj.xpopup.XPopup;
-import com.lxj.xpopup.core.BasePopupView;
+
 import com.ubains.lib.mqtt.mod.service.MqttMgr;
+import com.ubains.lib.mqtt.mod.ui.MqttWorkingStatusFragment;
 
 import net.lucode.hackware.magicindicator.FragmentContainerHelper;
 import net.lucode.hackware.magicindicator.MagicIndicator;
@@ -48,30 +47,25 @@ import cn.liujson.client.R;
 
 import cn.liujson.client.databinding.ActivityPreviewMainBinding;
 import cn.liujson.client.ui.adapter.PageFragmentStateAdapter;
-import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseActivity;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.fragments.LogPreviewFragment;
 import cn.liujson.client.ui.fragments.PublishFragment;
 import cn.liujson.client.ui.fragments.TopicsFragment;
-import cn.liujson.client.ui.fragments.WorkingStatusFragment;
-
 
 
 import cn.liujson.client.ui.util.DoubleClickUtils;
-import cn.liujson.client.ui.util.MqttProfileStoreImpl;
+
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.client.ui.viewmodel.PreviewMainViewModel;
 
 import cn.liujson.client.ui.widget.popup.LoadingTipPopupView;
-import cn.liujson.client.ui.widget.popup.interfaces.OnPopupClickListener;
-import cn.liujson.client.ui.widget.retry.RxReconnectDelayFlowable;
-import cn.liujson.lib.mqtt.api.ConnectionParams;
+
 
 
 import cn.ubains.android.ublogger.LogUtils;
-import io.reactivex.android.schedulers.AndroidSchedulers;
+
 
 import io.reactivex.disposables.Disposable;
 
@@ -205,7 +199,7 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
     private void initViewPager() {
         PublishFragment publishFragment = PublishFragment.newInstance();
         TopicsFragment topicsFragment = TopicsFragment.newInstance();
-        WorkingStatusFragment workingStatusFragment = WorkingStatusFragment.newInstance();
+        MqttWorkingStatusFragment workingStatusFragment = MqttWorkingStatusFragment.newInstance();
         LogPreviewFragment logPreviewFragment = LogPreviewFragment.newInstance();
 
         ArrayList<Fragment> fragmentList = new ArrayList<>();

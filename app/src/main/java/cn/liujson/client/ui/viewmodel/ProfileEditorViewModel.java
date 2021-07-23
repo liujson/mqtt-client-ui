@@ -6,6 +6,8 @@ import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
 
+import com.ubains.lib.mqtt.mod.ui.vm.MqttSettingObservableEntity;
+
 import java.util.Calendar;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +17,7 @@ import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
+import cn.liujson.client.ui.fragments.ProfileEditorFragment;
 import cn.liujson.client.ui.util.ToastHelper;
 import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.QoS;
@@ -30,32 +33,19 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class ProfileEditorViewModel extends BaseViewModel {
 
-    public final ObservableField<String> fieldProfileName = new ObservableField<>();
-    public final ObservableField<String> fieldBrokerAddress = new ObservableField<>();
-    public final ObservableField<String> fieldBrokerPort = new ObservableField<>();
-    public final ObservableField<String> fieldClientID = new ObservableField<>();
-    public final ObservableField<String> fieldUsername = new ObservableField<>();
-    public final ObservableField<String> fieldPassword = new ObservableField<>();
-    public final ObservableField<String> fieldKeepAliveInterval = new ObservableField<>("60");
-    public final ObservableField<String> fieldConnectionTimeout = new ObservableField<>("30");
-    public final ObservableField<String> fieldMaxReconnectDelay
-            = new ObservableField<>(String.valueOf(ConnectionParams.MAX_RECONNECT_DELAY_DEFAULT));
-    public final ObservableBoolean fieldCleanSession = new ObservableBoolean(true);
-    public final ObservableBoolean fieldAutoReconnect = new ObservableBoolean(true);
-
-    public final ObservableField<String> fieldLwtTopic = new ObservableField<>();
-    public final ObservableField<String> fieldLwtMessage = new ObservableField<>();
-    public final ObservableBoolean fieldLwtRetained = new ObservableBoolean();
 
     private Navigator navigator;
 
     private Disposable insertProfileDisposable, queryProfileByIdDisposable, updateProfileDisposable;
 
-    private final ProfileEditorActivity.Mode openMode;
+    private final ProfileEditorFragment.Mode openMode;
     private final long profileID;
 
-    public ProfileEditorViewModel(Lifecycle mLifecycle, ProfileEditorActivity.Mode openMode, long profileID) {
+    MqttSettingObservableEntity entity;
+
+    public ProfileEditorViewModel(Lifecycle mLifecycle, MqttSettingObservableEntity entity, ProfileEditorFragment.Mode openMode, long profileID) {
         super(mLifecycle);
+        this.entity = entity;
         this.openMode = openMode;
         this.profileID = profileID;
         initNewProfile();
@@ -67,9 +57,9 @@ public class ProfileEditorViewModel extends BaseViewModel {
 
 
     public final void initNewProfile() {
-        fieldCleanSession.set(true);
-        fieldBrokerPort.set(String.valueOf(1883));
-        fieldProfileName.set("New Profile");
+        entity.fieldCleanSession.set(true);
+        entity.fieldBrokerPort.set(String.valueOf(1883));
+        entity.fieldProfileName.set("New Profile");
         generate();
     }
 
@@ -77,7 +67,7 @@ public class ProfileEditorViewModel extends BaseViewModel {
      * 生成随机 ClientID
      */
     public final void generate() {
-        fieldClientID.set(MqttUtils.generateClientId());
+        entity.fieldClientID.set(MqttUtils.generateClientId());
     }
 
     /**
@@ -89,32 +79,33 @@ public class ProfileEditorViewModel extends BaseViewModel {
         }
         final ConnectionProfile connectionProfile = new ConnectionProfile();
         connectionProfile.id = (int) profileID;
-        connectionProfile.profileName = fieldProfileName.get();
-        connectionProfile.brokerAddress = fieldBrokerAddress.get();
-        connectionProfile.brokerPort = Integer.parseInt(Objects.requireNonNull(fieldBrokerPort.get()));
-        connectionProfile.clientID = fieldClientID.get();
-        connectionProfile.username = fieldUsername.get();
-        connectionProfile.password = fieldPassword.get();
-        connectionProfile.cleanSession = fieldCleanSession.get();
-        connectionProfile.connectionTimeout = Integer.parseInt(Objects.requireNonNull(fieldConnectionTimeout.get()));
-        connectionProfile.keepAliveInterval = Integer.parseInt(Objects.requireNonNull(fieldKeepAliveInterval.get()));
-        connectionProfile.autoReconnect = fieldAutoReconnect.get();
-        if (fieldAutoReconnect.get()) {
-            connectionProfile.maxReconnectDelay = Integer.parseInt(Objects.requireNonNull(fieldMaxReconnectDelay.get()));
+        connectionProfile.profileName = entity.fieldProfileName.get();
+        final String schema = navigator.readSchema();
+        connectionProfile.brokerAddress = schema + entity.fieldBrokerAddress.get();
+        connectionProfile.brokerPort = Integer.parseInt(Objects.requireNonNull(entity.fieldBrokerPort.get()));
+        connectionProfile.clientID = entity.fieldClientID.get();
+        connectionProfile.username = entity.fieldUsername.get();
+        connectionProfile.password = entity.fieldPassword.get();
+        connectionProfile.cleanSession = entity.fieldCleanSession.get();
+        connectionProfile.connectionTimeout = Integer.parseInt(Objects.requireNonNull(entity.fieldConnectionTimeout.get()));
+        connectionProfile.keepAliveInterval = Integer.parseInt(Objects.requireNonNull(entity.fieldKeepAliveInterval.get()));
+        connectionProfile.autoReconnect = entity.fieldAutoReconnect.get();
+        if (entity.fieldAutoReconnect.get()) {
+            connectionProfile.maxReconnectDelay = Integer.parseInt(Objects.requireNonNull(entity.fieldMaxReconnectDelay.get()));
         }
 
-        if (!TextUtils.isEmpty(fieldLwtTopic.get()) && !TextUtils.isEmpty(fieldLwtMessage.get())) {
-            connectionProfile.willTopic = fieldLwtTopic.get();
-            connectionProfile.willMessage = fieldLwtMessage.get();
+        if (!TextUtils.isEmpty(entity.fieldLwtTopic.get()) && !TextUtils.isEmpty(entity.fieldLwtMessage.get())) {
+            connectionProfile.willTopic = entity.fieldLwtTopic.get();
+            connectionProfile.willMessage = entity.fieldLwtMessage.get();
             connectionProfile.willQoS = navigator.readWillQos();
             connectionProfile.willRetained = navigator.isWillRetained();
         }
 
-        if (openMode == ProfileEditorActivity.Mode.NEW) {
+        if (openMode == ProfileEditorFragment.Mode.NEW) {
             connectionProfile.createDate = Calendar.getInstance().getTime();
             connectionProfile.updateDate = connectionProfile.createDate;
             save(connectionProfile);
-        } else if (openMode == ProfileEditorActivity.Mode.EDIT) {
+        } else if (openMode == ProfileEditorFragment.Mode.EDIT) {
             connectionProfile.updateDate = Calendar.getInstance().getTime();
             update(connectionProfile);
         } else {
@@ -222,6 +213,11 @@ public class ProfileEditorViewModel extends BaseViewModel {
          * 读取 qos
          */
         QoS readWillQos();
+
+        /**
+         * 获取协议
+         */
+        String readSchema();
 
         /**
          * 是否勾选 retained

@@ -112,5 +112,7 @@ dependencies {
     //https://github.com/iqiyi/xCrash/blob/master/README.zh-CN.md
     implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.0.0'
 
+    //https://github.com/YoKeyword/Fragmentation
+    implementation 'me.yokeyword:fragmentationx:1.0.2'
 
 }

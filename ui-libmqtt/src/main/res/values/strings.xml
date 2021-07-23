@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="qos_arr">
+        <item>QoS 0</item>
+        <item>QoS 1</item>
+        <item>QoS 2</item>
+    </string-array>
+
+    <string-array name="schema">
+        <item>tcp://</item>
+        <item>ssl://</item>
+    </string-array>
+
+
+    <string name="profile_name_cannot_be_null">Profile name cannot be null</string>
+    <string name="broker_address_cannot_be_null">Broker address cannot be null</string>
+    <string name="broker_port_cannot_be_null">Broker port cannot be null</string>
+    <string name="client_id_cannot_be_null">Client ID cannot be null</string>
+    <string name="connection_timeout_cannot_be_null">Connection timeout cannot be null</string>
+    <string name="keep_alive_interval_cannot_be_null">Keep alive interval cannot be null</string>
+    <string name="lwt_topic_cannot_be_null">LWT topic cannot be null</string>
+    <string name="lwt_message_cannot_be_null">LWT message cannot be null</string>
+</resources>

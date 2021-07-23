@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="setting_divider_color">#DFDFDF</color>
+    <color name="setting_item_text_color_normal">#1a1a1a</color>
+    <color name="setting_item_text_color_selected">#1a9fdb</color>
+</resources>
