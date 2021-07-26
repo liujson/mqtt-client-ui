@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.ubains.lib.mqtt.mod.provider.event.MqttConnectCompleteEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttConnectionLostEvent;
+import com.ubains.lib.mqtt.mod.provider.event.MqttFirstConnectRetryEvent;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -194,6 +195,12 @@ public class PreviewMainViewModel extends BaseViewModel {
     public void onMqttConnectionLostEvent(MqttConnectionLostEvent event) {
         LogUtils.e("MQTT 断开连接：" + event.cause);
         EventBus.getDefault().post(new ConnectChangeEvent(false));
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMqttFirstConnectRetryEvent(MqttFirstConnectRetryEvent event) {
+        LogUtils.e("MQTT 第一次连接失败,正在重试：" + event.getMessage());
     }
 
 

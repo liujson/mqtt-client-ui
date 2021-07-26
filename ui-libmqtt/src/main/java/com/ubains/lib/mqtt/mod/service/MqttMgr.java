@@ -25,6 +25,7 @@ import com.ubains.lib.mqtt.mod.provider.event.MqttConnectCompleteEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttFirstConnectErrorEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttFirstConnectRetryEvent;
 import com.ubains.lib.mqtt.mod.util.LibMqttUtils;
+import com.ubains.lib.mqtt.mod.util.retry.NeedRetryException;
 import com.ubains.lib.mqtt.mod.util.retry.OnRetrying;
 import com.ubains.lib.mqtt.mod.util.retry.RxReconnectDelayObservable;
 
@@ -39,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -86,11 +88,11 @@ public class MqttMgr {
     }
 
 
-    public boolean ismInitConnectRetry() {
+    public boolean isInitConnectRetry() {
         return mInitConnectRetry;
     }
 
-    public void setmInitConnectRetry(boolean mInitConnectRetry) {
+    public void setInitConnectRetry(boolean mInitConnectRetry) {
         this.mInitConnectRetry = mInitConnectRetry;
     }
 
@@ -163,7 +165,7 @@ public class MqttMgr {
         public void init(@NonNull Context context) {
             Objects.requireNonNull(context);
             instance().setInitConnect(this.initConnect);
-            instance().setmInitConnectRetry(this.initConnectRetry);
+            instance().setInitConnectRetry(this.initConnectRetry);
             instance().setProfileStore(profileStore);
             instance().bindToApplication(context.getApplicationContext());
         }
@@ -411,7 +413,15 @@ public class MqttMgr {
         if (firstConnectTask != null) {
             firstConnectTask.dispose();
         }
-        Observable<String> startConnectObservable = connectTo(connectionProfile, 0);
+        Observable<String> startConnectObservable = connectTo(connectionProfile, 0)
+                //拦截所有错误,转换为需要重试异常
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof Exception) {
+                        return Observable.error(new NeedRetryException(throwable.getMessage()));
+                    } else {
+                        return Observable.error(new NeedRetryException(throwable));
+                    }
+                });
         if (mInitConnectRetry) {
             startConnectObservable = startConnectObservable.retryWhen(rxRetry);
         }
