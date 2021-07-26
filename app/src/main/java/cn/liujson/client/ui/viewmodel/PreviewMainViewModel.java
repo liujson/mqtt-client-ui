@@ -1,15 +1,11 @@
 package cn.liujson.client.ui.viewmodel;
 
 
-import android.text.TextUtils;
-
 import androidx.databinding.ObservableBoolean;
 import androidx.lifecycle.Lifecycle;
 import androidx.room.EmptyResultSetException;
 
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.ubains.lib.mqtt.mod.provider.event.MqttConnectCompleteEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttConnectionLostEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttFirstConnectRetryEvent;
@@ -65,6 +61,8 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class PreviewMainViewModel extends BaseViewModel {
 
+    public final ObservableBoolean fieldConnected = new ObservableBoolean(false);
+
     public final ObservableBoolean fieldConnectEnable = new ObservableBoolean(false);
     public final ObservableBoolean fieldDisconnectEnable = new ObservableBoolean(false);
 
@@ -86,9 +84,8 @@ public class PreviewMainViewModel extends BaseViewModel {
 
     public PreviewMainViewModel(Lifecycle mLifecycle) {
         super(mLifecycle);
-
+        updateToDisabledState();
         repository = new ConnectionServiceRepository();
-
         EventBus.getDefault().register(this);
     }
 
@@ -106,6 +103,24 @@ public class PreviewMainViewModel extends BaseViewModel {
         EventBus.getDefault().unregister(this);
     }
 
+    /**
+     * 更新为不可用状态
+     */
+    public void updateToDisabledState() {
+        fieldConnected.set(false);
+        fieldConnectEnable.set(false);
+        fieldDisconnectEnable.set(false);
+    }
+
+    /**
+     * 更新连接状态
+     *
+     * @param isConnected
+     */
+    public void updateConnectionState(boolean isConnected) {
+        fieldConnected.set(isConnected);
+        EventBus.getDefault().post(new ConnectChangeEvent(isConnected));
+    }
 
     /**
      * 加载连接属性列表
@@ -119,8 +134,7 @@ public class PreviewMainViewModel extends BaseViewModel {
                 .connectionProfileDao();
         loadProfilesDisposable = dao.count().flatMap(size -> {
             if (size > 0) {
-                return dao
-                        .loadProfiles();
+                return dao.loadProfiles();
             }
             return Single.error(new EmptyResultSetException("Connection profile is empty"));
         })
@@ -172,8 +186,8 @@ public class PreviewMainViewModel extends BaseViewModel {
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onMqttConnectCompleteEvent(MqttConnectCompleteEvent event) {
-        EventBus.getDefault().post(new ConnectChangeEvent(true));
         LogUtils.d("MQTT 连接成功,连接到：" + event.serverURI);
+        updateConnectionState(true);
         if (event.reconnect) {
             //需要重新订阅主题
             final String[] topics = new String[initStarTopics.size()];
@@ -194,7 +208,7 @@ public class PreviewMainViewModel extends BaseViewModel {
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onMqttConnectionLostEvent(MqttConnectionLostEvent event) {
         LogUtils.e("MQTT 断开连接：" + event.cause);
-        EventBus.getDefault().post(new ConnectChangeEvent(false));
+        updateConnectionState(false);
     }
 
 

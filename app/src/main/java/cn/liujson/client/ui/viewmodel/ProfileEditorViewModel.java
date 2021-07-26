@@ -1,5 +1,6 @@
 package cn.liujson.client.ui.viewmodel;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.databinding.ObservableBoolean;
@@ -81,7 +82,8 @@ public class ProfileEditorViewModel extends BaseViewModel {
         connectionProfile.id = (int) profileID;
         connectionProfile.profileName = entity.fieldProfileName.get();
         final String schema = navigator.readSchema();
-        connectionProfile.brokerAddress = schema + entity.fieldBrokerAddress.get();
+        final Uri uri = Uri.parse(schema + entity.fieldBrokerAddress.get());
+        connectionProfile.brokerAddress = uri.toString();
         connectionProfile.brokerPort = Integer.parseInt(Objects.requireNonNull(entity.fieldBrokerPort.get()));
         connectionProfile.clientID = entity.fieldClientID.get();
         connectionProfile.username = entity.fieldUsername.get();

@@ -49,6 +49,8 @@ import io.reactivex.schedulers.Schedulers;
 
 public class SSLDemoActivity extends BaseActivity implements View.OnClickListener, MqttCallbackExtended {
 
+    private static final String TAG = "SSLDemo";
+
     RxPahoClient client;
 
     @Override
@@ -56,10 +58,10 @@ public class SSLDemoActivity extends BaseActivity implements View.OnClickListene
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
 
-        findViewById(R.id.btn_1).setOnClickListener(this::onClick);
-        findViewById(R.id.btn_2).setOnClickListener(this::onClick);
-        findViewById(R.id.btn_3).setOnClickListener(this::onClick);
-        findViewById(R.id.btn_4).setOnClickListener(this::onClick);
+        findViewById(R.id.btn_1).setOnClickListener(this);
+        findViewById(R.id.btn_2).setOnClickListener(this);
+        findViewById(R.id.btn_3).setOnClickListener(this);
+        findViewById(R.id.btn_4).setOnClickListener(this);
     }
 
 
@@ -96,6 +98,7 @@ public class SSLDemoActivity extends BaseActivity implements View.OnClickListene
             }
         } catch (Exception e) {
             e.printStackTrace();
+            Log.e(TAG, e.toString());
         }
     }
 
@@ -112,7 +115,7 @@ public class SSLDemoActivity extends BaseActivity implements View.OnClickListene
         }
         client.setCallback(this);
         client.connect().blockingAwait();
-        Log.d("AAAA", "连接成功");
+        Log.d(TAG, "连接成功");
         ToastHelper.showToast(this, "连接成功");
     }
 
@@ -202,22 +205,22 @@ public class SSLDemoActivity extends BaseActivity implements View.OnClickListene
 
     @Override
     public void connectComplete(boolean reconnect, String serverURI) {
-        Log.d("AAAA", "connectComplete");
+        Log.d(TAG, "connectComplete");
     }
 
     @Override
     public void connectionLost(Throwable cause) {
-        Log.d("AAAA", "connectionLost:" + cause);
+        Log.d(TAG, "connectionLost:" + cause);
     }
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         final String msg = new String(message.getPayload());
-        Log.d("AAAA", "messageArrived:" + msg);
+        Log.d(TAG, "messageArrived:" + msg);
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-        Log.d("AAAA", "deliveryComplete");
+        Log.d(TAG, "deliveryComplete");
     }
 }

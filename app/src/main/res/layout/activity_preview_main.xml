@@ -107,6 +107,19 @@
                     android:textSize="16sp" />
             </LinearLayout>
 
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true">
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="20dp"
+                    android:src="@{(vm.fieldConnected?@drawable/ic_connection_connected:@drawable/ic_connection_disconnected)}" />
+
+            </RelativeLayout>
         </RelativeLayout>
 
         <View

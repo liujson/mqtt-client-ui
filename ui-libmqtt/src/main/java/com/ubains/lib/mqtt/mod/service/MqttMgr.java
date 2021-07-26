@@ -353,9 +353,13 @@ public class MqttMgr {
             }
             //2. 检查是否此时存在相同参数的client正在运行
             if (isInstalled()) {
+
                 if (isSame(connectionParams)) {
-                    emitter.onError(new RuntimeException("相同的参数配置不需要重复连接"));
-                    return;
+                    //如果参数相同，且已经连接了
+                    if (isConnected()) {
+                        emitter.onError(new RuntimeException("相同的参数配置不需要重复建立连接"));
+                        return;
+                    }
                 }
                 final RxPahoClient client = getClient();
                 emitter.onNext("请不要关闭，正在强制断开MQTT连接...");

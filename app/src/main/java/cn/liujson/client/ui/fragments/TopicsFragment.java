@@ -95,10 +95,14 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
         super.onResume();
         notifyTopicsChanged();
         if (viewModel != null) {
-            if (viewModel.getRepository().isBind() && viewModel.getRepository().isInstalled()) {
-                EventBus.getDefault().post(new ConnectChangeEvent(true));
+            if (viewModel.getRepository().isBind()
+                    && viewModel.getRepository().isInstalled()
+                    && viewModel.getRepository().isConnected()) {
+                viewModel.fieldAllEnable.set(true);
+                viewModel.fieldMessageEnable.set(true);
             } else {
-                EventBus.getDefault().post(new ConnectChangeEvent(false));
+                viewModel.fieldAllEnable.set(false);
+                viewModel.fieldMessageEnable.set(false);
             }
         }
     }

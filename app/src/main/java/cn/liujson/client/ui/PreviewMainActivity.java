@@ -24,6 +24,7 @@ import com.lxj.xpopup.XPopup;
 
 import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.interfaces.SimpleCallback;
+import com.ubains.lib.mqtt.mod.provider.event.MqttBindChangeEvent;
 import com.ubains.lib.mqtt.mod.service.MqttMgr;
 import com.ubains.lib.mqtt.mod.ui.MqttWorkingStatusFragment;
 
@@ -69,7 +70,9 @@ import cn.liujson.client.ui.widget.popup.LoadingTipPopupView;
 import cn.ubains.android.ublogger.LogUtils;
 
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 
 public class PreviewMainActivity extends BaseActivity implements PreviewMainViewModel.Navigator {
@@ -119,6 +122,7 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
                     viewModel.fieldConnectEnable.set(true);
                     viewModel.fieldDisconnectEnable.set(false);
                 }
+                viewModel.updateConnectionState(viewModel.getRepository().isConnected());
             }
         }
     }
@@ -310,6 +314,8 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             final JSONObject jsonObject = (JSONObject) JSON.toJSON(profile);
             connectingDisposable = MqttMgr.instance()
                     .connectTo(jsonObject.toJavaObject(com.ubains.lib.mqtt.mod.provider.bean.ConnectionProfile.class), 0)
+                    .subscribeOn(Schedulers.newThread())
+                    .observeOn(AndroidSchedulers.mainThread())
                     .doFinally(() -> {
                         connectingDisposable = null;
                         hideLoading();
@@ -359,7 +365,7 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
                             viewModel.fieldDisconnectEnable.set(false);
                             viewModel.getRepository().uninstall();
                             ToastHelper.showToast(this, "断开成功");
-                            EventBus.getDefault().post(new ConnectChangeEvent(false));
+                            viewModel.updateConnectionState(false);
                             LogUtils.d("MQTT 断开连接成功");
                         }, throwable -> {
                             ToastHelper.showToast(this, "MQTT 断开连接失败");
@@ -418,5 +424,10 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             viewModel.fieldConnectEnable.set(true);
             viewModel.fieldDisconnectEnable.set(false);
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    public void onMqttBindChangeEvent(MqttBindChangeEvent event) {
+        viewModel.loadProfiles();
     }
 }

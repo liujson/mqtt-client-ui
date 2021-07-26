@@ -54,7 +54,7 @@ public class ConnectionService extends Service {
         if (binder.isInstalled()) {
             //尝试关闭并释放资源
             final Disposable rxCloseSafety = binder.getClient()
-                    .closeForcibly(15000, 10000)
+                    .closeForcibly(1000, 500)
                     .subscribe(() -> {
                         LogUtil.d(TAG, "==disconnectForcibly success==");
                     }, throwable -> {

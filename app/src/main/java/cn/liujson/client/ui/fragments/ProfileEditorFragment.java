@@ -2,6 +2,7 @@ package cn.liujson.client.ui.fragments;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import com.ubains.lib.mqtt.mod.databinding.FragmentMqttSettingBinding;
 import com.ubains.lib.mqtt.mod.ui.vm.MqttSettingObservableEntity;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import cn.liujson.client.R;
 import cn.liujson.client.ui.base.BaseFragment;
@@ -169,7 +171,18 @@ public class ProfileEditorFragment extends BaseFragment implements ProfileEditor
         //回显到控件上
         if (viewModel != null) {
             entity.fieldProfileName.set(connectionProfile.profileName);
-            entity.fieldBrokerAddress.set(connectionProfile.brokerAddress);
+            final Uri parse = Uri.parse(connectionProfile.brokerAddress);
+            final String scheme = parse.getScheme() + "://";
+            final String[] stringArray = getContext().getResources().getStringArray(R.array.schema);
+            int objIndex = 0;
+            for (int i = 0; i < stringArray.length; i++) {
+                if (Objects.equals(scheme, stringArray[i])) {
+                    objIndex = i;
+                }
+            }
+            binding.spinnerSchema.setSelectedIndex(objIndex);
+            final String host = parse.getHost();
+            entity.fieldBrokerAddress.set(host);
             entity.fieldBrokerPort.set(String.valueOf(connectionProfile.brokerPort));
             entity.fieldClientID.set(connectionProfile.clientID);
             entity.fieldCleanSession.set(connectionProfile.cleanSession);

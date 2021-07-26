@@ -14,4 +14,7 @@ public class MqttBindChangeEvent {
         this.bind = bind;
     }
 
+    public boolean isBind() {
+        return bind;
+    }
 }

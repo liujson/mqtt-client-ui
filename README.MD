@@ -416,16 +416,26 @@ ConnectionParams.newBuilder(String serverURI)
                .automaticReconnect(boolean automaticReconnect)
    				// 设置MQTT版本。默认操作是与版本 3.1.1 连接,如果失败，则返回到 3.1。版本 3.1.1 或 3.1 可以分别使用MQTT_VERSION_3_1_1或MQTT_VERSION_3_1选项来具体选择，无需回退。
                .mqttVersion(int mqttVersion)
+    			//设置SocketFactory
+    		   .socketFactory(SocketFactory socketFactory)
+    			//设置 Hostname 验证
+    			.sslHostnameVerifier(HostnameVerifier sslHostnameVerifier)
                .build();
 ```
 
 
 
+#### SSL支持
+
+> 参考 SSLDemoActivity.java
+
 #### 可能出现的疑难杂症和解决方案
 
 > TODO // 
 
+#### 重连和首次启动连接异常处理方案
 
+> TODO // 
 
 ### 其他控件使用
 
@@ -450,10 +460,8 @@ ConnectionParams.newBuilder(String serverURI)
 > - https://www.eclipse.org/paho
 > - http://www.eclipse.org/paho/files/javadoc/index.html
 >
-> 
->
 > - https://github.com/eclipse/paho.mqtt.java
-> - https://github.com/fusesource/mqtt-client
+>- https://github.com/fusesource/mqtt-client
 > - https://github.com/hackware1993/MagicIndicator
 > - https://github.com/CymChad/BaseRecyclerViewAdapterHelper
 > - https://github.com/daimajia/AndroidSwipeLayout
