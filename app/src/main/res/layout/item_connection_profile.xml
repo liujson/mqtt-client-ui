@@ -2,14 +2,14 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:swipe="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="65dp"
-    android:background="@drawable/bg_item_profile"
+    android:layout_height="wrap_content"
     android:padding="5dp">
 
     <com.daimajia.swipe.SwipeLayout
         android:id="@+id/swipe"
+        android:background="@drawable/bg_item_profile"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="75dp"
         swipe:leftEdgeSwipeOffset="0dp"
         swipe:rightEdgeSwipeOffset="0dp">
 
@@ -52,8 +52,11 @@
 
             <TextView
                 android:id="@+id/tv_profile_name"
+                android:layout_marginStart="20dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
                 android:fontFamily="sans-serif-condensed"
                 android:textColor="@color/color_333333"
                 android:textSize="22sp" />
@@ -62,8 +65,10 @@
                 android:id="@+id/tv_broker"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
                 android:layout_below="@id/tv_profile_name"
                 android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
                 android:fontFamily="sans-serif-condensed"
                 android:textColor="#a2a2a2"
                 android:textSize="14sp" />
@@ -79,4 +84,10 @@
                 android:button="@null" />
         </RelativeLayout>
     </com.daimajia.swipe.SwipeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_below="@id/swipe"
+        android:background="#00BBBBBB" />
 </RelativeLayout>

@@ -157,33 +157,6 @@ public class PreviewMainViewModel extends BaseViewModel {
     }
 
 
-    /**
-     * 初始化自动订阅
-     *
-     * @return
-     */
-    private Completable autoSubscribe() {
-        return Observable.just(0)
-                .flatMapCompletable(new Function<Integer, CompletableSource>() {
-                    @Override
-                    public CompletableSource apply(@NonNull Integer o) throws Exception {
-                        //订阅初始化需要的主题
-                        final String[] topics = new String[initStarTopics.size()];
-                        final QoS[] qoSArr = new QoS[initStarTopics.size()];
-                        for (int i = 0; i < initStarTopics.size(); i++) {
-                            topics[i] = initStarTopics.get(i).topic;
-                            qoSArr[i] = MqttUtils.int2QoS(initStarTopics.get(i).qos);
-                        }
-                        if (topics.length > 0) {
-                            return getRepository().subscribe(topics, qoSArr);
-                        } else {
-                            return Completable.complete();
-                        }
-                    }
-                });
-    }
-
-
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onMqttConnectCompleteEvent(MqttConnectCompleteEvent event) {
         LogUtils.d("MQTT 连接成功,连接到：" + event.serverURI);

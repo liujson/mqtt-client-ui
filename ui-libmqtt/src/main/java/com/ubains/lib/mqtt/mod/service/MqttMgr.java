@@ -386,7 +386,8 @@ public class MqttMgr {
                 } catch (Exception ee) {
                     rxPahoClient.closeForcibly(500, 500);
                 }
-                emitter.onError(e);
+                //如果下游没有错误处理则不会抛出异常
+                emitter.tryOnError(e);
                 return;
             }
             emitter.onComplete();
@@ -410,13 +411,22 @@ public class MqttMgr {
     }
 
 
+    public boolean isFirstConnectTaskRunning() {
+        return firstConnectTask != null && !firstConnectTask.isDisposed();
+    }
+
+    public void cancelFirstConnectTask() {
+        if (firstConnectTask != null) {
+            firstConnectTask.dispose();
+            firstConnectTask = null;
+        }
+    }
+
     /**
      * 开始进行首次连接及连接失败后重试
      */
-    private void startFirstConnectTask(@NonNull ConnectionProfile connectionProfile) {
-        if (firstConnectTask != null) {
-            firstConnectTask.dispose();
-        }
+    public void startFirstConnectTask(@NonNull ConnectionProfile connectionProfile) {
+        cancelFirstConnectTask();
         Observable<String> startConnectObservable = connectTo(connectionProfile, 0)
                 //拦截所有错误,转换为需要重试异常
                 .onErrorResumeNext(throwable -> {
@@ -435,6 +445,9 @@ public class MqttMgr {
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doFinally(() -> {
+                    LogUtil.d(TAG, "MQTT 初始连接 doFinally...");
+                })
                 .subscribe(info -> {
                     LogUtil.d(TAG, info);
                 }, throwable -> {
@@ -451,5 +464,23 @@ public class MqttMgr {
     public interface OnSubScribeTopic {
 
         void onSubScribeTopic();
+    }
+
+    public static class NoNeedRetryException extends RuntimeException {
+
+        public NoNeedRetryException() {
+        }
+
+        public NoNeedRetryException(String message) {
+            super(message);
+        }
+
+        public NoNeedRetryException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public NoNeedRetryException(Throwable cause) {
+            super(cause);
+        }
     }
 }

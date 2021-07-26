@@ -186,6 +186,9 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         if (data.isEmpty()) {
             viewModel.fieldConnectEnable.set(false);
             viewModel.fieldDisconnectEnable.set(false);
+        } else if (MqttMgr.instance().isFirstConnectTaskRunning()) {
+            viewModel.fieldConnectEnable.set(false);
+            viewModel.fieldDisconnectEnable.set(true);
         } else if (!viewModel.getRepository().isBind()) {
             viewModel.fieldConnectEnable.set(false);
             viewModel.fieldDisconnectEnable.set(false);
@@ -345,6 +348,12 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
      * @param view
      */
     public void disconnectClick(View view) {
+        if (MqttMgr.instance().isFirstConnectTaskRunning()) {
+            MqttMgr.instance().cancelFirstConnectTask();
+            ToastHelper.showToast(this, "初始化重连任务已经取消");
+            viewModel.loadProfiles();
+            return;
+        }
         if (disconnectingDisposable != null) {
             ToastHelper.showToast(this, "正在断开连接,请稍后...");
             return;
