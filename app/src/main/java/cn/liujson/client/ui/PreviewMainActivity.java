@@ -143,8 +143,6 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
             firstAutoReconnectDisposable = null;
         }
         EventBus.getDefault().unregister(this);
-        //解除服务绑定
-        MqttMgr.instance().unbindToApplication(this);
     }
 
     /**
