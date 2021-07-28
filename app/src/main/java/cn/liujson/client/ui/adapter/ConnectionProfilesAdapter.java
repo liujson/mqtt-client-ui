@@ -164,6 +164,10 @@ public class ConnectionProfilesAdapter extends BaseQuickAdapter<ConnectionProfil
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(() -> {
                     ToastHelper.showToast(CustomApplication.getApp(), "Saved!");
+                    for (ItemProfile itemProfile : dataList) {
+                        itemProfile.isStar = false;
+                    }
+                    curProfile.isStar = true;
                     notifyDataSetChanged();
                 }, throwable -> {
                     if (throwable instanceof EmptyResultSetException) {

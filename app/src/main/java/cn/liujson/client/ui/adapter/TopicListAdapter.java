@@ -10,13 +10,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 import cn.liujson.client.R;
+import cn.liujson.client.ui.bean.entity.SubTopicItem;
 import cn.liujson.lib.mqtt.api.QoS;
 
 /**
  * @author liujson
  * @date 2021/3/16.
  */
-public class TopicListAdapter extends BaseQuickAdapter<TopicListAdapter.SubTopicItem, BaseViewHolder> {
+public class TopicListAdapter extends BaseQuickAdapter<SubTopicItem, BaseViewHolder> {
 
     public TopicListAdapter(@Nullable List<SubTopicItem> data) {
         super(R.layout.item_sub_topic_list, data);
@@ -27,17 +28,8 @@ public class TopicListAdapter extends BaseQuickAdapter<TopicListAdapter.SubTopic
         holder.setText(R.id.tv_topic, s.topic);
         holder.setText(R.id.tv_qos, s.qos.qoSName());
         holder.setText(R.id.tv_message_num, String.valueOf(s.msgCount));
+        holder.setVisible(R.id.view_mark, s.selected);
     }
 
 
-    public static class SubTopicItem {
-        public String topic;
-        public QoS qos;
-        public int msgCount;
-
-        public SubTopicItem(String topic, QoS qos) {
-            this.topic = topic;
-            this.qos = qos;
-        }
-    }
 }

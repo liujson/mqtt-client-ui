@@ -27,11 +27,15 @@ import cn.liujson.client.R;
 import cn.liujson.client.databinding.FragmentTopicsBinding;
 import cn.liujson.client.ui.adapter.TopicListAdapter;
 import cn.liujson.client.ui.base.BaseFragment;
+import cn.liujson.client.ui.bean.entity.SubTopicItem;
 import cn.liujson.client.ui.bean.event.ConnectChangeEvent;
 import cn.liujson.client.ui.util.InputMethodUtils;
 import cn.liujson.client.ui.viewmodel.TopicsViewModel;
 import cn.liujson.client.ui.widget.OnSingleCheckedListener;
 import cn.liujson.lib.mqtt.api.QoS;
+import me.everything.android.ui.overscroll.OverScrollDecoratorHelper;
+
+import static me.everything.android.ui.overscroll.OverScrollDecoratorHelper.ORIENTATION_VERTICAL;
 
 
 /**
@@ -80,9 +84,13 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
         binding.chipGroupTopicQos.setOnCheckedChangeListener(new OnSingleCheckedListener(binding.chipGroupTopicQos));
         binding.setVm(viewModel = new TopicsViewModel(getLifecycle()));
         viewModel.setNavigator(this);
-
     }
 
+    @Override
+    public void onLazyInitView(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+        super.onLazyInitView(savedInstanceState);
+        OverScrollDecoratorHelper.setUpOverScroll(binding.rvTopicsList,ORIENTATION_VERTICAL);
+    }
 
     @Override
     public void onDestroyView() {
@@ -111,9 +119,9 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
         if (viewModel != null) {
             if (viewModel.getRepository().isInstalled()) {
                 final List<Pair<String, QoS>> pairList = viewModel.getRepository().getSubList();
-                final List<TopicListAdapter.SubTopicItem> subTopicItems = new ArrayList<>();
+                final List<SubTopicItem> subTopicItems = new ArrayList<>();
                 for (Pair<String, QoS> sPair : pairList) {
-                    subTopicItems.add(new TopicListAdapter.SubTopicItem(sPair.first, sPair.second));
+                    subTopicItems.add(new SubTopicItem(sPair.first, sPair.second));
                 }
                 viewModel.updateDataList(subTopicItems);
             } else {
@@ -169,10 +177,9 @@ public class TopicsFragment extends BaseFragment implements TopicsViewModel.Navi
     public void onReceiveMessage(String topic, String message, QoS qoS) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         mHandler.post(() -> {
-            binding.tvMessageTopic.setText(topic);
-            binding.tvMessageDate.setText(dateFormat.format(new Date()));
-            binding.tvMessageQos.setText(qoS.qoSName());
-
+            viewModel.fieldMessageTopic.set(topic);
+            viewModel.fieldMessageQoS.set(qoS.qoSName());
+            viewModel.fieldMessageTime.set(dateFormat.format(new Date()));
         });
     }
 }

@@ -13,9 +13,8 @@
 
     <style name="et_edit_style_1">
         <item name="android:layout_marginStart">8dp</item>
-        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_width">400dp</item>
         <item name="android:layout_height">42dp</item>
-        <item name="android:layout_weight">2</item>
         <item name="android:paddingStart">8dp</item>
         <item name="android:paddingEnd">8dp</item>
         <item name="android:singleLine">true</item>
@@ -27,8 +26,9 @@
     </style>
 
     <style name="config_linear_item_style">
-        <item name="android:layout_width">600dp</item>
+        <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">65dp</item>
+        <item name="android:gravity">center_vertical</item>
         <item name="android:layout_centerHorizontal">true</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:layout_marginStart">10dp</item>

@@ -20,6 +20,7 @@ import com.ubains.android.ubutil.comm.LogUtil;
 import com.ubains.android.ubutil.comm.ToastUtils;
 import com.ubains.lib.mqtt.mod.provider.IConnectionProfileStore;
 import com.ubains.lib.mqtt.mod.provider.bean.ConnectionProfile;
+import com.ubains.lib.mqtt.mod.provider.bean.SimpleTopic;
 import com.ubains.lib.mqtt.mod.provider.event.MqttBindChangeEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttConnectCompleteEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttFirstConnectErrorEvent;
@@ -40,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
+import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableOnSubscribe;
@@ -339,9 +341,6 @@ public class MqttMgr {
      */
     public Observable<String> connectTo(@NonNull final ConnectionProfile connectionProfile,
                                         final int sleepTime) {
-//        if (isConnecting.get()) {
-//            return Observable.error(new RuntimeException("正在配置中,不用重复操作..."));
-//        }
         return Observable.create((ObservableOnSubscribe<String>) emitter -> {
             emitter.onNext("请不要关闭...");
             conditionSleep(sleepTime);
@@ -353,7 +352,6 @@ public class MqttMgr {
             }
             //2. 检查是否此时存在相同参数的client正在运行
             if (isInstalled()) {
-
                 if (isSame(connectionParams)) {
                     //如果参数相同，且已经连接了
                     if (isConnected()) {
@@ -375,6 +373,19 @@ public class MqttMgr {
                 conditionSleep(sleepTime);
                 rxPahoClient.setCallback(binder());
                 rxPahoClient.connectWithResult().waitForCompletion(10000);
+                final List<SimpleTopic> defineTopics = connectionProfile.defineTopics;
+                if (defineTopics != null && !defineTopics.isEmpty()) {
+                    emitter.onNext("请不要关闭，正在订阅预定义主题...");
+                    conditionSleep(sleepTime);
+                    final String[] topicArr = new String[defineTopics.size()];
+                    final QoS[] qoSArr = new QoS[defineTopics.size()];
+                    for (int i = 0; i < defineTopics.size(); i++) {
+                        final SimpleTopic simpleTopic = defineTopics.get(i);
+                        topicArr[i] = simpleTopic.topic;
+                        qoSArr[i] = MqttUtils.int2QoS(simpleTopic.qos);
+                    }
+                    rxPahoClient.subscribeWithResponse(topicArr, qoSArr);
+                }
                 emitter.onNext("请不要关闭，正在安装为MQTT服务...");
                 conditionSleep(sleepTime);
                 install(rxPahoClient);

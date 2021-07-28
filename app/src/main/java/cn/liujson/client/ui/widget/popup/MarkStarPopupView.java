@@ -11,6 +11,8 @@ import androidx.annotation.NonNull;
 
 import com.lxj.xpopup.core.CenterPopupView;
 
+import org.angmarch.views.NiceSpinner;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +30,7 @@ public class MarkStarPopupView extends CenterPopupView implements View.OnClickLi
 
     private Button btn_apply, btn_cancel;
     private EditText et_topic_1, et_topic_2, et_topic_3;
+    private NiceSpinner spinner_1, spinner_2, spinner_3;
 
     private OnPopupClickListener onMarkBtnClickListener, onCancelBtnClickListener;
 
@@ -58,6 +61,10 @@ public class MarkStarPopupView extends CenterPopupView implements View.OnClickLi
         et_topic_2 = findViewById(R.id.et_topic_2);
         et_topic_3 = findViewById(R.id.et_topic_3);
 
+        spinner_1 = findViewById(R.id.spinner_qos_1);
+        spinner_2 = findViewById(R.id.spinner_qos_2);
+        spinner_3 = findViewById(R.id.spinner_qos_3);
+
         btn_apply.setOnClickListener(this);
         btn_cancel.setOnClickListener(this);
     }
@@ -66,7 +73,13 @@ public class MarkStarPopupView extends CenterPopupView implements View.OnClickLi
         List<TopicWrapper> topics = new ArrayList<>();
 
         if (!TextUtils.isEmpty(et_topic_1.getText())) {
-            topics.add(new TopicWrapper(et_topic_1.getText().toString(), 0));
+            topics.add(new TopicWrapper(et_topic_1.getText().toString(), spinner_1.getSelectedIndex()));
+        }
+        if (!TextUtils.isEmpty(et_topic_2.getText())) {
+            topics.add(new TopicWrapper(et_topic_2.getText().toString(), spinner_2.getSelectedIndex()));
+        }
+        if (!TextUtils.isEmpty(et_topic_3.getText())) {
+            topics.add(new TopicWrapper(et_topic_3.getText().toString(), spinner_3.getSelectedIndex()));
         }
         return topics;
     }

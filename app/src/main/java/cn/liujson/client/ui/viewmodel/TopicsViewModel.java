@@ -24,10 +24,12 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 import cn.liujson.client.R;
@@ -35,6 +37,8 @@ import cn.liujson.client.ui.adapter.MessageListAdapter;
 import cn.liujson.client.ui.adapter.TopicListAdapter;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
+import cn.liujson.client.ui.bean.entity.MsgItem;
+import cn.liujson.client.ui.bean.entity.SubTopicItem;
 import cn.liujson.client.ui.bean.event.SystemLowMemoryEvent;
 
 import cn.liujson.client.ui.util.ToastHelper;
@@ -54,14 +58,13 @@ import io.reactivex.disposables.Disposable;
  */
 public class TopicsViewModel extends BaseViewModel {
 
-
-    public final ObservableList<TopicListAdapter.SubTopicItem> dataList = new ObservableArrayList<>();
+    public final ObservableList<SubTopicItem> dataList = new ObservableArrayList<>();
     public final TopicListAdapter adapter = new TopicListAdapter(dataList);
     public final LinearLayoutManager layoutManager = new LinearLayoutManager(CustomApplication.getApp());
     public final DividerLinearItemDecoration itemDecoration = new DividerLinearItemDecoration(CustomApplication.getApp(),
             DividerLinearItemDecoration.VERTICAL_LIST, 2, R.color.color_d6d6d6);
 
-    public final List<MessageListAdapter.MsgItem> msgDataList = new LinkedList<>();
+    public final List<MsgItem> msgDataList = new LinkedList<>();
     public final MessageListAdapter msgListAdapter = new MessageListAdapter(msgDataList);
     public final LinearLayoutManager msgListManager = new LinearLayoutManager(CustomApplication.getApp());
     public final DividerItemDecoration msgDividerItemDecoration = new DividerItemDecoration();
@@ -77,7 +80,7 @@ public class TopicsViewModel extends BaseViewModel {
     /**
      * 消息缓存Map
      */
-    private final Map<String, LinkedList<MessageListAdapter.MsgItem>> cacheLinkedMap = new LinkedHashMap<>();
+    private final Map<String, LinkedList<MsgItem>> cacheLinkedMap = new LinkedHashMap<>();
 
 
     private final ConnectionServiceRepository repository;
@@ -97,17 +100,20 @@ public class TopicsViewModel extends BaseViewModel {
         adapter.setOnItemChildClickListener((adapter, view, position) -> {
             if (adapter instanceof TopicListAdapter) {
                 if (view.getId() == R.id.btn_unsubscribe) {
-                    final List<TopicListAdapter.SubTopicItem> data = ((TopicListAdapter) adapter).getData();
+                    final List<SubTopicItem> data = ((TopicListAdapter) adapter).getData();
                     unsubscribe(data.get(position).topic);
                 }
             }
         });
         adapter.setOnItemClickListener((adapter, view, position) -> {
-            final TopicListAdapter.SubTopicItem subTopicItem = dataList.get(position);
+            fieldMessageTopic.set("");
+            fieldMessageQoS.set("");
+            fieldMessageTime.set("");
+            final SubTopicItem subTopicItem = dataList.get(position);
             notifyMsgListAdapter(subTopicItem.topic);
         });
-        adapter.addChildClickViewIds(R.id.btn_unsubscribe);
 
+        adapter.addChildClickViewIds(R.id.btn_unsubscribe);
 
         EventBus.getDefault().register(this);
     }
@@ -134,7 +140,7 @@ public class TopicsViewModel extends BaseViewModel {
         return repository;
     }
 
-    public void updateDataList(List<TopicListAdapter.SubTopicItem> subList) {
+    public void updateDataList(List<SubTopicItem> subList) {
         if (subList.isEmpty()) {
             fieldMessageTopic.set("");
             fieldMessageTime.set("");
@@ -162,9 +168,9 @@ public class TopicsViewModel extends BaseViewModel {
                 .subscribe(() -> {
                     view.setEnabled(true);
                     final List<Pair<String, QoS>> pairList = getRepository().getSubList();
-                    final List<TopicListAdapter.SubTopicItem> subTopicItems = new ArrayList<>();
+                    final List<SubTopicItem> subTopicItems = new ArrayList<>();
                     for (Pair<String, QoS> sPair : pairList) {
-                        subTopicItems.add(new TopicListAdapter.SubTopicItem(sPair.first, sPair.second));
+                        subTopicItems.add(new SubTopicItem(sPair.first, sPair.second));
                     }
                     updateDataList(subTopicItems);
                     ToastHelper.showToast(CustomApplication.getApp(), "订阅成功");
@@ -195,9 +201,9 @@ public class TopicsViewModel extends BaseViewModel {
                     ToastHelper.showToast(CustomApplication.getApp(), "取消订阅成功");
                     LogUtils.i("MQTT 取消订阅成功，topic:" + topic);
                     final List<Pair<String, QoS>> pairList = getRepository().getSubList();
-                    final List<TopicListAdapter.SubTopicItem> subTopicItems = new ArrayList<>();
+                    final List<SubTopicItem> subTopicItems = new ArrayList<>();
                     for (Pair<String, QoS> sPair : pairList) {
-                        subTopicItems.add(new TopicListAdapter.SubTopicItem(sPair.first, sPair.second));
+                        subTopicItems.add(new SubTopicItem(sPair.first, sPair.second));
                     }
                     updateDataList(subTopicItems);
                 }, throwable -> {
@@ -218,16 +224,17 @@ public class TopicsViewModel extends BaseViewModel {
             navigator.onReceiveMessage(event.topic, event.message, MqttUtils.int2QoS(event.qos));
         }
         //根据Topic区别，添加到消息缓存
-        LinkedList<MessageListAdapter.MsgItem> msgList = cacheLinkedMap.get(event.topic);
+        LinkedList<MsgItem> msgList = cacheLinkedMap.get(event.topic);
         if (msgList == null) {
             msgList = new LinkedList<>();
         }
-        final MessageListAdapter.MsgItem msgItem = new MessageListAdapter.MsgItem();
+        final MsgItem msgItem = new MsgItem();
         msgItem.topic = event.topic;
         msgItem.message = event.message;
         msgItem.messageDate = System.currentTimeMillis();
         msgItem.qoS = MqttUtils.int2QoS(event.qos);
         msgList.add(msgItem);
+        //放入Map
         cacheLinkedMap.put(event.topic, msgList);
         //刷新左侧消息数量
         notifyMsgListAdapter(event.topic);
@@ -235,16 +242,25 @@ public class TopicsViewModel extends BaseViewModel {
 
     private void notifyMsgListAdapter(String topic) {
         //判断当前topic是否选中显示
-        if (dataList.size() == 1) {
-            msgDataList.clear();
-            LinkedList<MessageListAdapter.MsgItem> msgList = cacheLinkedMap.get(topic);
-            if (msgList == null) {
-                msgList = new LinkedList<>();
+        //获取左侧实例
+        for (SubTopicItem topicItem : dataList) {
+            if (Objects.equals(topicItem.topic, topic)) {
+                msgDataList.clear();
+                LinkedList<MsgItem> msgList = cacheLinkedMap.get(topic);
+                if (msgList == null) {
+                    msgList = new LinkedList<>();
+                }
+                msgDataList.addAll(msgList);
+                msgListAdapter.notifyDataSetChanged();
+                msgListAdapter.getRecyclerView().smoothScrollToPosition(msgDataList.size());
+                topicItem.msgCount = msgList.size();
+                topicItem.selected = true;
+                adapter.notifyDataSetChanged();
+            } else {
+                topicItem.selected = false;
             }
-            msgDataList.addAll(msgList);
-            msgListAdapter.notifyDataSetChanged();
-            msgListAdapter.getRecyclerView().smoothScrollToPosition(msgDataList.size());
         }
+
     }
 
 

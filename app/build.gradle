@@ -99,7 +99,7 @@ dependencies {
 
     //过度滑动效果（弹性滑动）
     //https://github.com/EverythingMe/overscroll-decor
-    implementation 'me.everything:overscroll-decor-android:1.1.0'
+    implementation 'io.github.everythingme:overscroll-decor-android:1.1.1'
 
     //https://github.com/81813780/AVLoadingIndicatorView
     implementation 'com.wang.avi:library:2.1.3'

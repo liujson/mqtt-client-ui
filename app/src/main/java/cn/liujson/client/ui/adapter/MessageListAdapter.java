@@ -12,13 +12,14 @@ import java.util.List;
 import java.util.Locale;
 
 import cn.liujson.client.R;
+import cn.liujson.client.ui.bean.entity.MsgItem;
 import cn.liujson.lib.mqtt.api.QoS;
 
 /**
  * @author liujson
  * @date 2021/4/8.
  */
-public class MessageListAdapter extends BaseQuickAdapter<MessageListAdapter.MsgItem, BaseViewHolder> {
+public class MessageListAdapter extends BaseQuickAdapter<MsgItem, BaseViewHolder> {
 
     final SimpleDateFormat format;
     final Date date;
@@ -37,14 +38,9 @@ public class MessageListAdapter extends BaseQuickAdapter<MessageListAdapter.MsgI
         builder.append("> ");
         builder.append(format.format(date));
         builder.append(" -- ");
-        builder.append("QoS:").append(msgItem.qoS).append(",").append("message:").append(msgItem.message);
+        builder.append(msgItem.qoS.qoSName()).append(",").append("message:").append(msgItem.message);
         holder.setText(R.id.tv_log_line, builder.toString());
     }
 
-    public static class MsgItem {
-        public String topic;
-        public QoS qoS;
-        public String message;
-        public long messageDate;
-    }
+
 }
