@@ -74,4 +74,13 @@ public class ConnectionProfile implements Serializable {
      * 配置修改时间
      */
     public Date updateTime;
+
+    /**
+     * 1 server signed ; 2 client signed
+     */
+    public int certificateSigned;
+    public boolean sslSecure;
+    public String caFilePath;
+    public String clientCertificateFilePath;
+    public String clientKeyFilePath;
 }

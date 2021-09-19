@@ -5,7 +5,7 @@ plugins {
 android {
     libraryVariants.all { variant ->
         variant.outputs.all {
-            def fileName = "libmqtt-0.4.2.aar"
+            def fileName = "libmqtt-0.4.3.aar"
             outputFileName = fileName
         }
     }

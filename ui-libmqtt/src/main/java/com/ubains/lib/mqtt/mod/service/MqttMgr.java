@@ -44,9 +44,12 @@ import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
 import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.ubains.lib.mqtt.mod.util.retry.RxReconnectDelayObservable.MAX_RECONNECT_DELAY_DEFAULT;
@@ -438,9 +441,22 @@ public class MqttMgr {
      */
     public void startFirstConnectTask(@NonNull ConnectionProfile connectionProfile) {
         cancelFirstConnectTask();
-        Observable<String> startConnectObservable = connectTo(connectionProfile, 0)
+        Observable<String> startConnectObservable = Observable.create((ObservableOnSubscribe<String>) emitter -> {
+            //检查当前是否已经连接上了
+            if (isInstalled()&&isConnected()) {
+                emitter.onError(new NoNeedRetryException("已经连接上了"));
+            } else {
+                emitter.onNext("第一次连接任务即将开始");
+                emitter.onComplete();
+            }
+        })
+                .flatMap((Function<String, ObservableSource<String>>) s -> connectTo(connectionProfile, 0))
                 //拦截所有错误,转换为需要重试异常
                 .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof NoNeedRetryException) {
+                        //不需要再进行连接了
+                        return Observable.error(throwable);
+                    }
                     if (throwable instanceof Exception) {
                         return Observable.error(new NeedRetryException(throwable.getMessage()));
                     } else {

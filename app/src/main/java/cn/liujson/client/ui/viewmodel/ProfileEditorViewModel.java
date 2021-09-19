@@ -3,8 +3,6 @@ package cn.liujson.client.ui.viewmodel;
 import android.net.Uri;
 import android.text.TextUtils;
 
-import androidx.databinding.ObservableBoolean;
-import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
 
 import com.ubains.lib.mqtt.mod.ui.vm.MqttSettingObservableEntity;
@@ -13,14 +11,12 @@ import java.util.Calendar;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import cn.liujson.client.ui.ProfileEditorActivity;
 import cn.liujson.client.ui.app.CustomApplication;
 import cn.liujson.client.ui.base.BaseViewModel;
 import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.db.entities.ConnectionProfile;
 import cn.liujson.client.ui.fragments.ProfileEditorFragment;
 import cn.liujson.client.ui.util.ToastHelper;
-import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -102,6 +98,17 @@ public class ProfileEditorViewModel extends BaseViewModel {
             connectionProfile.willQoS = navigator.readWillQos();
             connectionProfile.willRetained = navigator.isWillRetained();
         }
+
+
+        if (entity.fieldCertificateSelf.get()) {
+            connectionProfile.certificateSigned = MqttSettingObservableEntity.SELF_SIGNED;
+            connectionProfile.caFilePath = entity.fieldCaFilePath.get();
+            connectionProfile.clientCertificateFilePath = entity.fieldClientCertFilePath.get();
+            connectionProfile.clientKeyFilePath = entity.fieldClientKeyFilePath.get();
+        } else {
+            connectionProfile.certificateSigned = MqttSettingObservableEntity.SERVER_SIGNED;
+        }
+        connectionProfile.sslSecure = entity.fieldSslSecure.get();
 
         if (openMode == ProfileEditorFragment.Mode.NEW) {
             connectionProfile.createDate = Calendar.getInstance().getTime();

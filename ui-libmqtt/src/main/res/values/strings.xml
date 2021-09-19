@@ -20,4 +20,5 @@
     <string name="keep_alive_interval_cannot_be_null">Keep alive interval cannot be null</string>
     <string name="lwt_topic_cannot_be_null">LWT topic cannot be null</string>
     <string name="lwt_message_cannot_be_null">LWT message cannot be null</string>
+    <string name="ca_file_cannot_be_null">CA File cannot be null</string>
 </resources>

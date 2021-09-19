@@ -3,6 +3,14 @@ plugins {
 }
 
 android {
+
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            def fileName = "ui-libmqtt-0.0.8.aar"
+            outputFileName = fileName
+        }
+    }
+
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
 
@@ -76,7 +84,7 @@ dependencies {
 
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
-    implementation (name: 'ubutil-0.9.5', ext: 'aar')
+    implementation(name: 'ubutil-0.9.5', ext: 'aar')
 
     implementation 'androidx.startup:startup-runtime:1.0.0'
 }

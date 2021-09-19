@@ -12,9 +12,11 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.ubains.android.ubutil.comm.UriUtils;
 import com.ubains.lib.mqtt.mod.databinding.FragmentMqttSettingBinding;
 import com.ubains.lib.mqtt.mod.ui.vm.MqttSettingObservableEntity;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -33,7 +35,7 @@ import cn.liujson.lib.mqtt.util.MqttUtils;
  * @author liujson
  * @date 2021/7/23.
  */
-public class ProfileEditorFragment extends BaseFragment implements ProfileEditorViewModel.Navigator {
+public class ProfileEditorFragment extends BaseFragment implements ProfileEditorViewModel.Navigator, View.OnClickListener {
 
     FragmentMqttSettingBinding binding;
 
@@ -82,6 +84,7 @@ public class ProfileEditorFragment extends BaseFragment implements ProfileEditor
         viewModel.setNavigator(this);
         entity.fieldProfileVisible.set(true);
         binding.setVm(entity);
+        binding.setFileSelectClick(this);
 
 
         if (mode == Mode.EDIT && profileID > 0) {
@@ -124,6 +127,13 @@ public class ProfileEditorFragment extends BaseFragment implements ProfileEditor
         if (entity.fieldAutoReconnect.get()) {
             if (TextUtils.isEmpty(entity.fieldKeepAliveInterval.get())) {
                 binding.etKeepAliveInterval.setError(getString(R.string.keep_alive_interval_cannot_be_null));
+                return false;
+            }
+        }
+        //如果使用了“Self signed”
+        if (entity.fieldCertificateSelf.get()) {
+            if (TextUtils.isEmpty(entity.fieldCaFilePath.get())) {
+                binding.etCaFile.setError(getString(R.string.ca_file_cannot_be_null));
                 return false;
             }
         }
@@ -198,6 +208,18 @@ public class ProfileEditorFragment extends BaseFragment implements ProfileEditor
             entity.fieldLwtRetained.set(connectionProfile.willRetained);
 
             binding.tvLwtQos.setSelectedIndex(MqttUtils.qoS2Int(connectionProfile.willQoS));
+
+            //ssl
+            if (connectionProfile.certificateSigned == MqttSettingObservableEntity.SELF_SIGNED) {
+                entity.fieldCertificateSelf.set(true);
+            } else {
+                entity.fieldCertificateSelf.set(false);
+            }
+            entity.fieldCaFilePath.set(connectionProfile.caFilePath);
+            entity.fieldClientCertFilePath.set(connectionProfile.clientCertificateFilePath);
+            entity.fieldClientKeyFilePath.set(connectionProfile.clientKeyFilePath);
+
+            entity.fieldSslSecure.set(connectionProfile.sslSecure);
         }
     }
 
@@ -214,4 +236,52 @@ public class ProfileEditorFragment extends BaseFragment implements ProfileEditor
         binding = null;
     }
 
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == com.ubains.lib.mqtt.mod.R.id.btn_ca_file) {
+            startActivityForResult(selectFileIntent(), 0x16);
+        } else if (v.getId() == com.ubains.lib.mqtt.mod.R.id.btn_client_cert_file) {
+            startActivityForResult(selectFileIntent(), 0x17);
+        } else if (v.getId() == com.ubains.lib.mqtt.mod.R.id.btn_client_key_file) {
+            startActivityForResult(selectFileIntent(), 0x18);
+        }
+    }
+
+
+    public Intent selectFileIntent() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        return Intent.createChooser(intent, "File");
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            final Uri fileUri = data.getData();
+            if (fileUri == null) {
+                return;
+            }
+            final File file = UriUtils.uri2File(getContext(), fileUri);
+            if (file == null) {
+                return;
+            }
+            switch (requestCode) {
+                case 0x16:
+                    entity.fieldCaFilePath.set(file.getAbsolutePath());
+                    break;
+                case 0x17:
+                    entity.fieldClientCertFilePath.set(file.getAbsolutePath());
+                    break;
+                case 0x18:
+                    entity.fieldClientKeyFilePath.set(file.getAbsolutePath());
+                    break;
+            }
+
+        }
+
+    }
 }

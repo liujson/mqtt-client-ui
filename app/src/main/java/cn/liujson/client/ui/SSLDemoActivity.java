@@ -106,10 +106,10 @@ public class SSLDemoActivity extends BaseActivity implements View.OnClickListene
         if (client == null) {
             client = new RxPahoClient(
                     ConnectionParams.newBuilder()
-                            .username("admin")
-                            .password("123456")
-                            .serverURI("ssl://192.168.1.144:8883")
-                            .socketFactory(getSocketFactory("ca.crt", "server.crt", "client.pem", "1424"))
+                            .username("mqtt@cmdb")
+                            .password("mqtt@passw0RD")
+                            .serverURI("ssl://192.168.1.143:8883")
+                            .socketFactory(getSocketFactory("ca.crt", "server.crt", "server.pem", "1424"))
                             .sslHostnameVerifier((hostname, session) -> true)
                             .build());
         }

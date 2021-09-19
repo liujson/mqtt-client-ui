@@ -57,4 +57,19 @@ public class ConnectionProfile {
     public QoS willQoS;
     @ColumnInfo(name = "will_retained")
     public boolean willRetained;
+    /**
+     * 1 server signed ; 2 client signed
+     */
+    @ColumnInfo(name = "certificate_signed")
+    public int certificateSigned;
+    @ColumnInfo(name = "ssl_secure")
+    public boolean sslSecure;
+    @ColumnInfo(name = "ca_file_path")
+    public String caFilePath;
+    @ColumnInfo(name = "client_certificate_file_path")
+    public String clientCertificateFilePath;
+    @ColumnInfo(name = "client_key_file_path")
+    public String clientKeyFilePath;
+
+
 }

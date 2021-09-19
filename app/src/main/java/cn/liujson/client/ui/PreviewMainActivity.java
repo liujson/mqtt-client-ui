@@ -7,11 +7,13 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 
 import android.view.View;
@@ -107,6 +109,11 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         viewDataBinding.mViewPager.setUserInputEnabled(false);
 
         EventBus.getDefault().register(this);
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0x11);
+        }
     }
 
     @Override

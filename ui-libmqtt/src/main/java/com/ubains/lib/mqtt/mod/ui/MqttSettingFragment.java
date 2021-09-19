@@ -1,10 +1,15 @@
 package com.ubains.lib.mqtt.mod.ui;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
+import android.widget.RadioGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,12 +20,17 @@ import com.lxj.xpopup.impl.LoadingPopupView;
 import com.thecode.aestheticdialogs.AestheticDialog;
 import com.thecode.aestheticdialogs.DialogStyle;
 import com.thecode.aestheticdialogs.DialogType;
+import com.ubains.android.ubutil.comm.UriUtils;
 import com.ubains.android.ubutil.comm4j.text.RegexUtils;
 import com.ubains.lib.mqtt.mod.R;
 import com.ubains.lib.mqtt.mod.databinding.FragmentMqttSettingBinding;
+import com.ubains.lib.mqtt.mod.provider.bean.ConnectionProfile;
 import com.ubains.lib.mqtt.mod.ui.popup.ConfirmPopView;
 import com.ubains.lib.mqtt.mod.ui.vm.MqttSettingObservableEntity;
 import com.ubains.lib.mqtt.mod.ui.vm.MqttSettingViewModel;
+
+import java.io.File;
+import java.util.Objects;
 
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.util.MqttUtils;
@@ -33,7 +43,7 @@ import me.yokeyword.fragmentation.SupportFragment;
  *
  * @author liujson
  */
-public class MqttSettingFragment extends SupportFragment implements MqttSettingViewModel.Navigator {
+public class MqttSettingFragment extends SupportFragment implements MqttSettingViewModel.Navigator, View.OnClickListener {
 
     MqttSettingViewModel viewModel;
     FragmentMqttSettingBinding binding;
@@ -67,9 +77,12 @@ public class MqttSettingFragment extends SupportFragment implements MqttSettingV
         entity = new MqttSettingObservableEntity();
         viewModel = new MqttSettingViewModel(entity);
         viewModel.setNavigator(this);
-        binding.setVm(entity);
 
+        binding.setVm(entity);
+        binding.setFileSelectClick(this);
         binding.btnApply.setOnClickListener(v -> viewModel.applyClick(v));
+
+        viewModel.loadProfile();
     }
 
     @Override
@@ -79,10 +92,10 @@ public class MqttSettingFragment extends SupportFragment implements MqttSettingV
             return false;
         }
 
-        if (TextUtils.isEmpty(entity.fieldProfileName.get())) {
-            viewDataBinding.etProfileName.setError(getString(R.string.profile_name_cannot_be_null));
-            return false;
-        }
+//        if (TextUtils.isEmpty(entity.fieldProfileName.get())) {
+//            viewDataBinding.etProfileName.setError(getString(R.string.profile_name_cannot_be_null));
+//            return false;
+//        }
         if (TextUtils.isEmpty(entity.fieldBrokerAddress.get())) {
             viewDataBinding.etBrokerAddress.setError(getString(R.string.broker_address_cannot_be_null));
             return false;
@@ -205,13 +218,51 @@ public class MqttSettingFragment extends SupportFragment implements MqttSettingV
         });
     }
 
+    @Override
+    public void onLoadProfileEcho(ConnectionProfile connectionProfile) {
+        entity.fieldProfileName.set(connectionProfile.profileName);
+        final Uri parse = Uri.parse(connectionProfile.brokerAddress);
+        final String scheme = parse.getScheme() + "://";
+        final String[] stringArray = getResources().getStringArray(R.array.schema);
+        int objIndex = 0;
+        for (int i = 0; i < stringArray.length; i++) {
+            if (Objects.equals(scheme, stringArray[i])) {
+                objIndex = i;
+            }
+        }
+        binding.spinnerSchema.setSelectedIndex(objIndex);
+        final String host = parse.getHost();
+        entity.fieldBrokerAddress.set(host);
+        entity.fieldBrokerPort.set(String.valueOf(connectionProfile.brokerPort));
+        entity.fieldClientID.set(connectionProfile.clientID);
+        entity.fieldUsername.set(connectionProfile.username);
+        entity.fieldPassword.set(connectionProfile.password);
+        entity.fieldKeepAliveInterval.set(String.valueOf(connectionProfile.keepAliveInterval));
+        entity.fieldConnectionTimeout.set(String.valueOf(connectionProfile.connectionTimeout));
+        entity.fieldMaxReconnectDelay.set(String.valueOf(connectionProfile.maxReconnectDelay));
+        entity.fieldCleanSession.set(connectionProfile.cleanSession);
+        entity.fieldAutoReconnect.set(connectionProfile.autoReconnect);
+        entity.fieldLwtTopic.set(connectionProfile.willTopic);
+        entity.fieldLwtMessage.set(connectionProfile.willMessage);
+        entity.fieldLwtRetained.set(connectionProfile.willRetained);
+
+        //ssl
+        if (connectionProfile.certificateSigned == 2) {
+            entity.fieldCertificateSelf.set(true);
+        } else {
+            entity.fieldCertificateSelf.set(false);
+        }
+        entity.fieldCaFilePath.set(connectionProfile.caFilePath);
+        entity.fieldClientCertFilePath.set(connectionProfile.clientCertificateFilePath);
+        entity.fieldClientKeyFilePath.set(connectionProfile.clientKeyFilePath);
+
+        entity.fieldSslSecure.set(connectionProfile.sslSecure);
+    }
+
 
     @Override
     public void onSupportVisible() {
         super.onSupportVisible();
-        if (viewModel != null) {
-            viewModel.loadProfile();
-        }
     }
 
     @Override
@@ -220,5 +271,53 @@ public class MqttSettingFragment extends SupportFragment implements MqttSettingV
         viewModel = null;
         binding = null;
         entity = null;
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.btn_ca_file) {
+            startActivityForResult(selectFileIntent(), 0x16);
+        } else if (v.getId() == R.id.btn_client_cert_file) {
+            startActivityForResult(selectFileIntent(), 0x17);
+        } else if (v.getId() == R.id.btn_client_key_file) {
+            startActivityForResult(selectFileIntent(), 0x18);
+        }
+    }
+
+
+    public Intent selectFileIntent() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        return Intent.createChooser(intent, "File");
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            final Uri fileUri = data.getData();
+            if (fileUri == null) {
+                return;
+            }
+            final File file = UriUtils.uri2File(getContext(), fileUri);
+            if (file == null) {
+                return;
+            }
+            switch (requestCode) {
+                case 0x16:
+                    entity.fieldCaFilePath.set(file.getAbsolutePath());
+                    break;
+                case 0x17:
+                    entity.fieldClientCertFilePath.set(file.getAbsolutePath());
+                    break;
+                case 0x18:
+                    entity.fieldClientKeyFilePath.set(file.getAbsolutePath());
+                    break;
+            }
+
+        }
+
     }
 }

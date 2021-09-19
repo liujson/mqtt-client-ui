@@ -1,13 +1,15 @@
 package com.ubains.lib.mqtt.mod.ui.vm;
 
+
+import android.net.Uri;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.view.View;
 
-import androidx.databinding.ObservableBoolean;
-import androidx.databinding.ObservableField;
+
 
 import com.ubains.android.ubutil.touch.DoubleClickUtils;
+
 import com.ubains.lib.mqtt.mod.provider.MqttConnection;
 import com.ubains.lib.mqtt.mod.provider.MqttConnectionImpl;
 import com.ubains.lib.mqtt.mod.provider.bean.ConnectionProfile;
@@ -18,7 +20,6 @@ import java.util.Objects;
 
 
 import cn.liujson.lib.mqtt.api.QoS;
-import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.Observable;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -42,7 +43,6 @@ public class MqttSettingViewModel {
     public MqttSettingViewModel(MqttSettingObservableEntity entity) {
         this.entity = entity;
         mqttConnection = new MqttConnectionImpl();
-        loadProfile();
     }
 
     public void setNavigator(Navigator navigator) {
@@ -52,20 +52,9 @@ public class MqttSettingViewModel {
 
     public void loadProfile() {
         final ConnectionProfile connectionProfile = mqttConnection.loadProfile();
-        if (connectionProfile != null) {
-            entity.fieldBrokerAddress.set(connectionProfile.brokerAddress);
-            entity.fieldBrokerPort.set(String.valueOf(connectionProfile.brokerPort));
-            entity.fieldClientID.set(connectionProfile.clientID);
-            entity.fieldUsername.set(connectionProfile.username);
-            entity.fieldPassword.set(connectionProfile.password);
-            entity.fieldKeepAliveInterval.set(String.valueOf(connectionProfile.keepAliveInterval));
-            entity.fieldConnectionTimeout.set(String.valueOf(connectionProfile.connectionTimeout));
-            entity.fieldMaxReconnectDelay.set(String.valueOf(connectionProfile.maxReconnectDelay));
-            entity.fieldCleanSession.set(connectionProfile.cleanSession);
-            entity.fieldAutoReconnect.set(connectionProfile.autoReconnect);
-            entity.fieldLwtTopic.set(connectionProfile.willTopic);
-            entity.fieldLwtMessage.set(connectionProfile.willMessage);
-            entity.fieldLwtRetained.set(connectionProfile.willRetained);
+        if (connectionProfile != null&& navigator!=null) {
+            navigator.onLoadProfileEcho(connectionProfile);
+
         }
     }
 
@@ -89,7 +78,8 @@ public class MqttSettingViewModel {
         final ConnectionProfile connectionProfile = new ConnectionProfile();
         connectionProfile.profileName = entity.fieldProfileName.get();
         final String schema = navigator.readSchema();
-        connectionProfile.brokerAddress = schema + entity.fieldBrokerAddress.get();
+        final Uri uri = Uri.parse(schema + entity.fieldBrokerAddress.get());
+        connectionProfile.brokerAddress = uri.toString();
         connectionProfile.brokerPort = Integer.parseInt(Objects.requireNonNull(entity.fieldBrokerPort.get()));
         connectionProfile.clientID = entity.fieldClientID.get();
         connectionProfile.username = entity.fieldUsername.get();
@@ -108,6 +98,16 @@ public class MqttSettingViewModel {
             connectionProfile.willQoS = navigator.readWillQos();
             connectionProfile.willRetained = navigator.isWillRetained();
         }
+
+        if (entity.fieldCertificateSelf.get()) {
+            connectionProfile.certificateSigned = MqttSettingObservableEntity.SELF_SIGNED;
+            connectionProfile.caFilePath = entity.fieldCaFilePath.get();
+            connectionProfile.clientCertificateFilePath = entity.fieldClientCertFilePath.get();
+            connectionProfile.clientKeyFilePath = entity.fieldClientKeyFilePath.get();
+        } else {
+            connectionProfile.certificateSigned = MqttSettingObservableEntity.SERVER_SIGNED;
+        }
+        connectionProfile.sslSecure = entity.fieldSslSecure.get();
 
         connectionProfile.updateTime = Calendar.getInstance().getTime();
         save(connectionProfile);
@@ -225,6 +225,11 @@ public class MqttSettingViewModel {
          * 显示保存配置确认弹框
          */
         void showApplyConfirm(View view);
+
+        /**
+         * 加载配置回显
+         */
+        void onLoadProfileEcho(ConnectionProfile connectionProfile);
     }
 
 

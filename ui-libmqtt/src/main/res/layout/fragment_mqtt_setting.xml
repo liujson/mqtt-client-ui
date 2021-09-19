@@ -6,6 +6,10 @@
     <data>
 
         <variable
+            name="fileSelectClick"
+            type="android.view.View.OnClickListener" />
+
+        <variable
             name="vm"
             type="com.ubains.lib.mqtt.mod.ui.vm.MqttSettingObservableEntity" />
 
@@ -91,14 +95,14 @@
                         android:id="@+id/spinner_schema"
                         android:layout_width="120dp"
                         android:layout_height="52dp"
-                        android:layout_margin="10dp"
                         android:layout_gravity="center_vertical"
+                        android:layout_margin="10dp"
+                        android:textSize="20sp"
                         app:arrowTint="#4e9be7"
-                        app:dropDownListPaddingBottom="5dp"
                         app:backgroundSelector="@drawable/setting_selector_config_input_bg"
+                        app:dropDownListPaddingBottom="5dp"
                         app:entries="@array/schema"
                         app:popupTextAlignment="start"
-                        android:textSize="20sp"
                         app:textTint="#333333" />
 
                     <androidx.appcompat.widget.AppCompatEditText
@@ -187,7 +191,7 @@
                 </LinearLayout>
 
                 <View
-                    android:id="@+id/line01"
+                    android:id="@+id/line_01"
                     android:layout_width="700dp"
                     android:layout_height="0.8dp"
                     android:layout_below="@id/linear_6"
@@ -195,6 +199,225 @@
                     android:layout_marginTop="15dp"
                     android:layout_marginBottom="15dp"
                     android:background="#c8c8c8" />
+
+                <LinearLayout
+                    android:id="@+id/linear_certificate"
+                    style="@style/setting_linear_item_style"
+                    android:layout_below="@id/line_01">
+
+                    <TextView
+                        style="@style/setting_text_style_1"
+                        android:text="*Certificate" />
+
+
+                    <RadioGroup
+                        android:id="@+id/rb_group"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="2"
+                        android:checkedButton="@{vm.fieldCertificateSelf?@id/rb_signed_self:@id/rb_signed_server}"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        app:onCheckedChangeListener="@{(group,id)->vm.onGroupCheckedChanged(group,id)}">
+
+                        <RadioButton
+                            android:id="@+id/rb_signed_server"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="CA signed server"
+                            android:textColor="#333333"
+                            android:textSize="22sp" />
+
+                        <RadioButton
+                            android:id="@+id/rb_signed_self"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="15dp"
+                            android:text="Self signed"
+                            android:textColor="#333333"
+                            android:textSize="22sp" />
+                    </RadioGroup>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linear_ssl_secure"
+                    style="@style/setting_linear_item_style"
+                    android:layout_below="@id/linear_certificate">
+
+                    <TextView
+                        style="@style/setting_text_style_1"
+                        android:text="SSL Secure" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/cb_ssl_secure"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="8dp"
+                        android:checked="@={vm.fieldSslSecure}"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp" />
+                </LinearLayout>
+
+                <RelativeLayout
+                    android:id="@+id/rl_cert"
+                    android:layout_width="660dp"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/linear_ssl_secure"
+                    android:layout_centerHorizontal="true"
+                    android:visibility="@{vm.fieldCertificateSelf?View.VISIBLE:View.GONE}">
+
+                    <LinearLayout
+                        android:id="@+id/linear_ca_file"
+                        style="@style/setting_linear_item_style"
+                        android:layout_width="match_parent">
+
+                        <TextView
+                            style="@style/setting_text_style_1"
+                            android:text="*CA File" />
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            style="@style/setting_et_edit_style_1"
+                            android:layout_weight="1">
+
+                            <androidx.appcompat.widget.AppCompatEditText
+                                android:id="@+id/et_ca_file"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@null"
+                                android:clickable="false"
+                                android:focusable="false"
+                                android:focusableInTouchMode="false"
+                                android:inputType="number"
+                                android:text="@{vm.fieldCaFilePath}" />
+
+                            <ImageView
+                                android:id="@+id/btn_clear_ca_file"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center_vertical"
+                                android:onClick="@{vm.onSelectFileClearClick}"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/selector_btn_select_clear" />
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+
+                        <ImageView
+                            android:id="@+id/btn_ca_file"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="10dp"
+                            android:onClick="@{fileSelectClick}"
+                            android:src="@drawable/selector_btn_select_cert_file" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/linear_client_cert_file"
+                        style="@style/setting_linear_item_style"
+                        android:layout_width="match_parent"
+                        android:layout_below="@id/linear_ca_file">
+
+                        <TextView
+                            style="@style/setting_text_style_1"
+                            android:text="Client Certificate File" />
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            style="@style/setting_et_edit_style_1"
+                            android:layout_weight="1">
+
+                            <androidx.appcompat.widget.AppCompatEditText
+                                android:id="@+id/setting_et_edit_style_1"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@null"
+                                android:clickable="false"
+                                android:focusable="false"
+                                android:focusableInTouchMode="false"
+                                android:inputType="number"
+                                android:text="@{vm.fieldClientCertFilePath}" />
+
+                            <ImageView
+                                android:id="@+id/btn_clear_client_cert_file"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center_vertical"
+                                android:onClick="@{vm.onSelectFileClearClick}"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/selector_btn_select_clear" />
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+
+                        <ImageView
+                            android:id="@+id/btn_client_cert_file"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="10dp"
+                            android:onClick="@{fileSelectClick}"
+                            android:src="@drawable/selector_btn_select_cert_file" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/linear_client_key_file"
+                        style="@style/setting_linear_item_style"
+                        android:layout_width="match_parent"
+                        android:layout_below="@id/linear_client_cert_file">
+
+                        <TextView
+                            style="@style/setting_text_style_1"
+                            android:text="Client Key File" />
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            style="@style/setting_et_edit_style_1"
+                            android:layout_weight="1">
+
+                            <androidx.appcompat.widget.AppCompatEditText
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@null"
+                                android:clickable="false"
+                                android:focusable="false"
+                                android:focusableInTouchMode="false"
+                                android:inputType="number"
+                                android:text="@{vm.fieldClientKeyFilePath}" />
+
+                            <ImageView
+                                android:id="@+id/btn_clear_client_key_file"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center_vertical"
+                                android:onClick="@{vm.onSelectFileClearClick}"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/selector_btn_select_clear" />
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+
+
+                        <ImageView
+                            android:id="@+id/btn_client_key_file"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="10dp"
+                            android:onClick="@{fileSelectClick}"
+                            android:src="@drawable/selector_btn_select_cert_file" />
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <View
+                    android:id="@+id/line01"
+                    android:layout_width="700dp"
+                    android:layout_height="0.8dp"
+                    android:layout_below="@id/rl_cert"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:background="#c8c8c8" />
+
 
                 <LinearLayout
                     android:id="@+id/linear_clean_session"

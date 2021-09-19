@@ -115,4 +115,6 @@ dependencies {
     //https://github.com/YoKeyword/Fragmentation
     implementation 'me.yokeyword:fragmentationx:1.0.2'
 
+    implementation (name: 'ubutil-0.9.5', ext: 'aar')
+
 }
