@@ -12,6 +12,7 @@ import cn.liujson.client.ui.db.DatabaseHelper;
 import cn.liujson.client.ui.util.LogManager;
 import cn.liujson.client.ui.util.MqttProfileStoreImpl;
 import cn.liujson.client.ui.util.ToastHelper;
+import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.service.paho.PahoLoggerImpl;
 import cn.ubains.android.ublogger.LogUtils;
 import xcrash.XCrash;
@@ -46,6 +47,7 @@ public class CustomApplication extends Application {
                 .profileStore(new MqttProfileStoreImpl())
                 .initConnect(true)
                 .initConnectRetry(true)
+                .subSelfClientId(QoS.AT_LEAST_ONCE)
                 .init(this);
     }
 

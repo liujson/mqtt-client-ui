@@ -80,6 +80,8 @@ public class MqttMgr {
 
     private boolean mInitConnect = true;
     private boolean mInitConnectRetry = true;
+    private boolean mSubSelfClientId = false;
+    private QoS mSubSelfClientIdTopic = null;
 
     private MqttMgr() {
         rxRetry = new RxReconnectDelayObservable(MIN_RECONNECT_DELAY_DEFAULT, MAX_RECONNECT_DELAY_DEFAULT);
@@ -117,6 +119,12 @@ public class MqttMgr {
         this.mInitConnect = mInitConnect;
     }
 
+    private void setSubSelfClientId(@NonNull QoS subSelfClientIdTopic) {
+        this.mSubSelfClientId = true;
+        this.mSubSelfClientIdTopic = subSelfClientIdTopic;
+    }
+
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMqttConnectCompleteEvent(MqttConnectCompleteEvent event) {
         if (mSubScribeTopic != null) {
@@ -148,15 +156,35 @@ public class MqttMgr {
          */
         boolean initConnectRetry = true;
         /**
+         * 是否订阅自身ClientID
+         */
+        boolean subSelfClientId = true;
+        QoS subSelfClientIdTopic;
+        /**
          * 连接属性序列化对象
          */
         IConnectionProfileStore profileStore;
 
+        /**
+         * 初始化的时候进行连接
+         */
         public Builder initConnect(boolean initConnect) {
             this.initConnect = initConnect;
             return this;
         }
 
+        /**
+         * 初始化的时候进行连接
+         */
+        public Builder subSelfClientId(@NonNull QoS subSelfClientIdTopic) {
+            this.subSelfClientIdTopic = subSelfClientIdTopic;
+            this.subSelfClientId = true;
+            return this;
+        }
+
+        /**
+         * 初始化连接失败重试
+         */
         public Builder initConnectRetry(boolean initConnectRetry) {
             this.initConnectRetry = initConnectRetry;
             return this;
@@ -171,6 +199,9 @@ public class MqttMgr {
             Objects.requireNonNull(context);
             instance().setInitConnect(this.initConnect);
             instance().setInitConnectRetry(this.initConnectRetry);
+            if (this.subSelfClientId) {
+                instance().setSubSelfClientId(Objects.requireNonNull(this.subSelfClientIdTopic));
+            }
             instance().setProfileStore(profileStore);
             instance().bindToApplication(context.getApplicationContext());
         }
@@ -312,6 +343,7 @@ public class MqttMgr {
         public void onServiceConnected(ComponentName name, IBinder service) {
             mBinder = (ConnectionBinder) service;
             EventBus.getDefault().postSticky(new MqttBindChangeEvent(true));
+            //启用了初始化时候连接
             if (mInitConnect && getProfileStore() != null) {
                 final ConnectionProfile connectionProfile = getProfileStore().load();
                 if (connectionProfile != null) {
@@ -377,6 +409,10 @@ public class MqttMgr {
                 rxPahoClient.setCallback(binder());
                 rxPahoClient.connectWithResult().waitForCompletion(10000);
                 final List<SimpleTopic> defineTopics = connectionProfile.defineTopics;
+                //需要订阅自身ID
+                if (mSubSelfClientId) {
+                    defineTopics.add(new SimpleTopic(connectionProfile.clientID, mSubSelfClientIdTopic.ordinal()));
+                }
                 if (defineTopics != null && !defineTopics.isEmpty()) {
                     emitter.onNext("请不要关闭，正在订阅预定义主题...");
                     conditionSleep(sleepTime);
@@ -443,7 +479,7 @@ public class MqttMgr {
         cancelFirstConnectTask();
         Observable<String> startConnectObservable = Observable.create((ObservableOnSubscribe<String>) emitter -> {
             //检查当前是否已经连接上了
-            if (isInstalled()&&isConnected()) {
+            if (isInstalled() && isConnected()) {
                 emitter.onError(new NoNeedRetryException("已经连接上了"));
             } else {
                 emitter.onNext("第一次连接任务即将开始");
