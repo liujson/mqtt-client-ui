@@ -158,7 +158,7 @@ public class MqttMgr {
         /**
          * 是否订阅自身ClientID
          */
-        boolean subSelfClientId = true;
+        boolean subSelfClientId = false;
         QoS subSelfClientIdTopic;
         /**
          * 连接属性序列化对象
