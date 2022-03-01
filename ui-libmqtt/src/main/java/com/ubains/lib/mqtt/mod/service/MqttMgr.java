@@ -34,6 +34,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -408,12 +409,15 @@ public class MqttMgr {
                 conditionSleep(sleepTime);
                 rxPahoClient.setCallback(binder());
                 rxPahoClient.connectWithResult().waitForCompletion(10000);
-                final List<SimpleTopic> defineTopics = connectionProfile.defineTopics;
+                final List<SimpleTopic> defineTopics = new ArrayList<>();
+                if (connectionProfile.defineTopics != null) {
+                    defineTopics.addAll(connectionProfile.defineTopics);
+                }
                 //需要订阅自身ID
                 if (mSubSelfClientId) {
                     defineTopics.add(new SimpleTopic(connectionProfile.clientID, mSubSelfClientIdTopic.ordinal()));
                 }
-                if (defineTopics != null && !defineTopics.isEmpty()) {
+                if (!defineTopics.isEmpty()) {
                     emitter.onNext("请不要关闭，正在订阅预定义主题...");
                     conditionSleep(sleepTime);
                     final String[] topicArr = new String[defineTopics.size()];
@@ -486,7 +490,9 @@ public class MqttMgr {
                 emitter.onComplete();
             }
         })
-                .flatMap((Function<String, ObservableSource<String>>) s -> connectTo(connectionProfile, 0))
+                .flatMap((Function<String, ObservableSource<String>>) s -> {
+                    return connectTo(connectionProfile, 0);
+                })
                 //拦截所有错误,转换为需要重试异常
                 .onErrorResumeNext(throwable -> {
                     if (throwable instanceof NoNeedRetryException) {
