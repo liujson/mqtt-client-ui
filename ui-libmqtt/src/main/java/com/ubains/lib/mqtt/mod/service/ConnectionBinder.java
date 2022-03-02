@@ -53,8 +53,9 @@ public class ConnectionBinder extends AbstractPahoConnServiceBinder {
     public void deliveryComplete(IMqttDeliveryToken token) {
         super.deliveryComplete(token);
         try {
+            final MqttMessage message = token.getMessage();
             LogUtil.d(TAG, "MQTT 发布成功,topic:" + Arrays.toString(token.getTopics()) +
-                    ",message:" + new String(token.getMessage().getPayload()));
+                    ",message:" + new String(message != null ? message.getPayload() : new byte[0]));
         } catch (Exception e) {
             LogUtil.d(TAG, "MQTT 消息发布成功");
         }
