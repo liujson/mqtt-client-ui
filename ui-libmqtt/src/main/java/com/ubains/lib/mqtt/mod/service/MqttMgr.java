@@ -126,10 +126,47 @@ public class MqttMgr {
     }
 
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.ASYNC)
     public void onMqttConnectCompleteEvent(MqttConnectCompleteEvent event) {
         if (mSubScribeTopic != null) {
             mSubScribeTopic.onSubScribeTopic();
+        }
+        //默认订阅
+        final RxPahoClient client = getClient();
+        if (mProfileStore != null && client != null) {
+            try {
+                final ConnectionProfile load = mProfileStore.load();
+                if (load == null) {
+                    return;
+                }
+                subInnerTopics(client, load);
+            } catch (Exception e) {
+                Log.e(TAG, "连接成功订阅主题错误：" + e.getMessage());
+            }
+        }
+    }
+
+    private void subInnerTopics(RxPahoClient client, ConnectionProfile connectionProfile) throws Exception {
+        if (connectionProfile != null) {
+            final List<SimpleTopic> needSubTopics = new ArrayList<>();
+            //订阅预定义主题
+            if (connectionProfile.defineTopics != null) {
+                needSubTopics.addAll(connectionProfile.defineTopics);
+            }
+            //需要订阅自身ID
+            if (mSubSelfClientId) {
+                needSubTopics.add(new SimpleTopic(connectionProfile.clientID, mSubSelfClientIdTopic.ordinal()));
+            }
+            if (!needSubTopics.isEmpty()) {
+                final String[] topicArr = new String[needSubTopics.size()];
+                final QoS[] qoSArr = new QoS[needSubTopics.size()];
+                for (int i = 0; i < needSubTopics.size(); i++) {
+                    final SimpleTopic simpleTopic = needSubTopics.get(i);
+                    topicArr[i] = simpleTopic.topic;
+                    qoSArr[i] = MqttUtils.int2QoS(simpleTopic.qos);
+                }
+                client.subscribeWithResponse(topicArr, qoSArr);
+            }
         }
     }
 
@@ -196,7 +233,7 @@ public class MqttMgr {
             return this;
         }
 
-        public void init(@NonNull Context context) {
+        public synchronized void init(@NonNull Context context) {
             Objects.requireNonNull(context);
             instance().setInitConnect(this.initConnect);
             instance().setInitConnectRetry(this.initConnectRetry);
@@ -409,26 +446,9 @@ public class MqttMgr {
                 conditionSleep(sleepTime);
                 rxPahoClient.setCallback(binder());
                 rxPahoClient.connectWithResult().waitForCompletion(10000);
-                final List<SimpleTopic> defineTopics = new ArrayList<>();
-                if (connectionProfile.defineTopics != null) {
-                    defineTopics.addAll(connectionProfile.defineTopics);
-                }
-                //需要订阅自身ID
-                if (mSubSelfClientId) {
-                    defineTopics.add(new SimpleTopic(connectionProfile.clientID, mSubSelfClientIdTopic.ordinal()));
-                }
-                if (!defineTopics.isEmpty()) {
-                    emitter.onNext("请不要关闭，正在订阅预定义主题...");
-                    conditionSleep(sleepTime);
-                    final String[] topicArr = new String[defineTopics.size()];
-                    final QoS[] qoSArr = new QoS[defineTopics.size()];
-                    for (int i = 0; i < defineTopics.size(); i++) {
-                        final SimpleTopic simpleTopic = defineTopics.get(i);
-                        topicArr[i] = simpleTopic.topic;
-                        qoSArr[i] = MqttUtils.int2QoS(simpleTopic.qos);
-                    }
-                    rxPahoClient.subscribeWithResponse(topicArr, qoSArr);
-                }
+                emitter.onNext("请不要关闭，正在订阅预定义主题...");
+                conditionSleep(sleepTime);
+                subInnerTopics(rxPahoClient, connectionProfile);
                 emitter.onNext("请不要关闭，正在安装为MQTT服务...");
                 conditionSleep(sleepTime);
                 install(rxPahoClient);
