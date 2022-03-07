@@ -4,9 +4,11 @@ package com.ubains.lib.mqtt.mod.ui.vm;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 
+import androidx.annotation.NonNull;
 
 import com.ubains.android.ubutil.touch.DoubleClickUtils;
 
@@ -17,10 +19,12 @@ import com.ubains.lib.mqtt.mod.service.MqttMgr;
 
 import java.util.Calendar;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 import cn.liujson.lib.mqtt.api.QoS;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -31,6 +35,7 @@ import io.reactivex.schedulers.Schedulers;
  * @date 2021/4/12.
  */
 public class MqttSettingViewModel {
+    private static final String TAG = "MqttSettingViewModel";
 
     private Navigator navigator;
 
@@ -51,11 +56,27 @@ public class MqttSettingViewModel {
 
 
     public void loadProfile() {
-        final ConnectionProfile connectionProfile = mqttConnection.loadProfile();
-        if (connectionProfile != null&& navigator!=null) {
-            navigator.onLoadProfileEcho(connectionProfile);
-
-        }
+        //在子线程上加载
+        final Disposable d = Observable
+                .create((ObservableOnSubscribe<ConnectionProfile>) emitter -> {
+                    final ConnectionProfile connectionProfile = mqttConnection.loadProfile();
+                    if (connectionProfile != null) {
+                        emitter.onNext(connectionProfile);
+                    } else {
+                        emitter.onError(new RuntimeException("没有加载到MQTT配置"));
+                    }
+                    emitter.onComplete();
+                })
+                .timeout(10, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(it -> {
+                    if(navigator != null){
+                        navigator.onLoadProfileEcho(it);
+                    }
+                }, throwable -> {
+                    Log.w(TAG, "loadProfile: " + throwable.getMessage());
+                });
     }
 
 

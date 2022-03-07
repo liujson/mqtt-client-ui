@@ -117,4 +117,7 @@ dependencies {
 
     implementation (name: 'ubutil-0.9.5', ext: 'aar')
 
+    //https://square.github.io/leakcanary/ debugImplementation because LeakCanary should only run in debug builds.
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8.1'
+
 }

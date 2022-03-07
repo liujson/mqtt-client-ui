@@ -44,6 +44,8 @@ import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
 import cn.liujson.lib.mqtt.util.MqttUtils;
 import io.reactivex.Completable;
+import io.reactivex.CompletableEmitter;
+import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -374,14 +376,26 @@ public class MqttMgr {
             mBinder = (ConnectionBinder) service;
             EventBus.getDefault().postSticky(new MqttBindChangeEvent(true));
             //启用了初始化时候连接
-            if (mInitConnect && getProfileStore() != null) {
-                final ConnectionProfile connectionProfile = getProfileStore().load();
-                if (connectionProfile != null) {
-                    //第一次连接可能会失败，创建一个任务用来重连
-                    startFirstConnectTask(connectionProfile);
-                }
+            if (mInitConnect) {
+                Disposable d = Completable
+                        .create(emitter -> {
+                            if (getProfileStore() != null) {
+                                final ConnectionProfile connectionProfile = getProfileStore().load();
+                                if (connectionProfile != null) {
+                                    //第一次连接可能会失败，创建一个任务用来重连
+                                    startFirstConnectTask(connectionProfile);
+                                }
+                            }
+                            emitter.onComplete();
+                        })
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(() -> {
+                            Log.d(TAG, "MQTT Init First Connection.");
+                        }, e -> {
+                            throw new RuntimeException();
+                        });
             }
-
         }
 
         @Override
@@ -504,7 +518,7 @@ public class MqttMgr {
     /**
      * 开始进行首次连接及连接失败后重试
      */
-    public void startFirstConnectTask(@NonNull ConnectionProfile connectionProfile) {
+    public synchronized void startFirstConnectTask(@NonNull ConnectionProfile connectionProfile) {
         cancelFirstConnectTask();
         Observable<String> startConnectObservable = Observable.create((ObservableOnSubscribe<String>) emitter -> {
             //检查当前是否已经连接上了
