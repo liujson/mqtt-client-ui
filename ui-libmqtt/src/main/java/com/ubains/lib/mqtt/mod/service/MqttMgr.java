@@ -23,6 +23,7 @@ import com.ubains.lib.mqtt.mod.provider.bean.ConnectionProfile;
 import com.ubains.lib.mqtt.mod.provider.bean.SimpleTopic;
 import com.ubains.lib.mqtt.mod.provider.event.MqttBindChangeEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttConnectCompleteEvent;
+import com.ubains.lib.mqtt.mod.provider.event.MqttFirstConnectCompleteEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttFirstConnectErrorEvent;
 import com.ubains.lib.mqtt.mod.provider.event.MqttFirstConnectRetryEvent;
 import com.ubains.lib.mqtt.mod.util.LibMqttUtils;
@@ -560,9 +561,10 @@ public class MqttMgr {
                     LogUtil.d(TAG, info);
                 }, throwable -> {
                     LogUtil.e(TAG, "MQTT 初始连接失败:" + throwable.toString());
-                    EventBus.getDefault().post(new MqttFirstConnectErrorEvent(throwable));
+                    EventBus.getDefault().postSticky(new MqttFirstConnectErrorEvent(throwable));
                 }, () -> {
                     LogUtil.d(TAG, "MQTT 初始连接完成");
+                    EventBus.getDefault().postSticky(new MqttFirstConnectCompleteEvent());
                 });
     }
 
