@@ -6,7 +6,7 @@ android {
 
     libraryVariants.all { variant ->
         variant.outputs.all {
-            def fileName = "ui-libmqtt-0.0.13.aar"
+            def fileName = "ui-libmqtt-0.0.14.aar"
             outputFileName = fileName
         }
     }
@@ -79,8 +79,8 @@ dependencies {
     //https://github.com/li-xiaojun/XPopup
     api 'com.github.li-xiaojun:XPopup:2.4.3'
 
-    //https://github.com/YoKeyword/Fragmentation
-    implementation 'me.yokeyword:fragmentationx:1.0.2'
+//    //https://github.com/YoKeyword/Fragmentation
+//    implementation 'me.yokeyword:fragmentationx:1.0.2'
 
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 

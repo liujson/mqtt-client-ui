@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -21,14 +22,14 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import me.yokeyword.fragmentation.SupportFragment;
+
 
 /**
  * 工作状态 Fragment
  *
  * @author liujson
  */
-public class MqttWorkingStatusFragment extends SupportFragment implements SwipeRefreshLayout.OnRefreshListener {
+public class MqttWorkingStatusFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private MqttWorkingStatusViewModel viewModel;
 

@@ -8,8 +8,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
-import android.widget.RadioGroup;
+
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -34,7 +33,7 @@ import java.util.Objects;
 
 import cn.liujson.lib.mqtt.api.QoS;
 import cn.liujson.lib.mqtt.util.MqttUtils;
-import me.yokeyword.fragmentation.SupportFragment;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -43,7 +42,7 @@ import me.yokeyword.fragmentation.SupportFragment;
  *
  * @author liujson
  */
-public class MqttSettingFragment extends SupportFragment implements MqttSettingViewModel.Navigator, View.OnClickListener {
+public class MqttSettingFragment extends Fragment implements MqttSettingViewModel.Navigator, View.OnClickListener {
 
     MqttSettingViewModel viewModel;
     FragmentMqttSettingBinding binding;
@@ -257,12 +256,6 @@ public class MqttSettingFragment extends SupportFragment implements MqttSettingV
         entity.fieldClientKeyFilePath.set(connectionProfile.clientKeyFilePath);
 
         entity.fieldSslSecure.set(connectionProfile.sslSecure);
-    }
-
-
-    @Override
-    public void onSupportVisible() {
-        super.onSupportVisible();
     }
 
     @Override
