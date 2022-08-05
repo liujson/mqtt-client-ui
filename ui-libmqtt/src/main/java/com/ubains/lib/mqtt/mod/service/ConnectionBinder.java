@@ -11,10 +11,12 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.greenrobot.eventbus.EventBus;
 
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 
 
 import cn.liujson.lib.mqtt.api.backruning.AbstractPahoConnServiceBinder;
+import cn.liujson.lib.mqtt.service.rx.RxPahoClient;
 
 
 /**
@@ -24,6 +26,8 @@ import cn.liujson.lib.mqtt.api.backruning.AbstractPahoConnServiceBinder;
 public class ConnectionBinder extends AbstractPahoConnServiceBinder {
 
     private static final String TAG = "ConnectionBinder";
+
+    WeakReference<RxPahoClient> weakRxPahoClient = new WeakReference<>(null);
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
@@ -59,5 +63,13 @@ public class ConnectionBinder extends AbstractPahoConnServiceBinder {
         } catch (Exception e) {
             LogUtil.d(TAG, "MQTT 消息发布成功");
         }
+    }
+
+    public void setWeakRxPahoClient(RxPahoClient rxPahoClient) {
+        this.weakRxPahoClient = new WeakReference<>(rxPahoClient);
+    }
+
+    public WeakReference<RxPahoClient> getWeakRxPahoClient() {
+        return weakRxPahoClient;
     }
 }

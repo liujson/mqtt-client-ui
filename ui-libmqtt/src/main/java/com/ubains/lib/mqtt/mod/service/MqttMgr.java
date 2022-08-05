@@ -35,6 +35,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -119,6 +120,10 @@ public class MqttMgr {
         this.mProfileStore = mProfileStore;
     }
 
+    public void setSubScribeTopic(OnSubScribeTopic subScribeTopic) {
+        this.mSubScribeTopic = subScribeTopic;
+    }
+
     private boolean isInitConnect() {
         return mInitConnect;
     }
@@ -135,13 +140,26 @@ public class MqttMgr {
 
     @Subscribe(threadMode = ThreadMode.ASYNC)
     public void onMqttConnectCompleteEvent(MqttConnectCompleteEvent event) {
-        if (mSubScribeTopic != null) {
-            mSubScribeTopic.onSubScribeTopic();
-        }
         //默认订阅
         try {
-            if (isBind() && isInstalled() && getClient() != null) {
-                subInnerTopics(getClient(), curClientNeedSubTopics);
+            final ConnectionBinder binder = binder();
+            if (binder == null) {
+                return;
+            }
+            final WeakReference<RxPahoClient> weakRxPahoClient = binder.getWeakRxPahoClient();
+            RxPahoClient rxPahoClient = weakRxPahoClient.get();
+            if (rxPahoClient != null) {
+                if (mSubScribeTopic != null) {
+                    mSubScribeTopic.onSubScribeTopic(rxPahoClient);
+                }
+                subInnerTopics(rxPahoClient, curClientNeedSubTopics);
+            } else {
+                if (isBind() && isInstalled() && getClient() != null) {
+                    if (mSubScribeTopic != null) {
+                        mSubScribeTopic.onSubScribeTopic(getClient());
+                    }
+                    subInnerTopics(getClient(), curClientNeedSubTopics);
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "连接成功订阅主题错误：" + e.getMessage());
@@ -453,7 +471,10 @@ public class MqttMgr {
             try {
                 emitter.onNext("请不要关闭，尝试连接到服务器...");
                 conditionSleep(sleepTime);
-                rxPahoClient.setCallback(binder());
+                final ConnectionBinder binder = binder();
+                assert binder != null;
+                rxPahoClient.setCallback(binder);
+                binder.setWeakRxPahoClient(rxPahoClient);
                 rxPahoClient.connectWithResult().waitForCompletion(10000);
                 emitter.onNext("请不要关闭，正在订阅预定义主题...");
                 conditionSleep(sleepTime);
@@ -479,6 +500,10 @@ public class MqttMgr {
                     rxPahoClient.close(true);
                 } catch (Exception ee) {
                     rxPahoClient.closeForcibly(500, 500);
+                }
+                final ConnectionBinder binder = binder();
+                if (binder != null) {
+                    binder.setWeakRxPahoClient(null);
                 }
                 //如果下游没有错误处理则不会抛出异常
                 emitter.tryOnError(e);
@@ -522,14 +547,14 @@ public class MqttMgr {
     public synchronized void startFirstConnectTask(@NonNull ConnectionProfile connectionProfile) {
         cancelFirstConnectTask();
         Observable<String> startConnectObservable = Observable.create((ObservableOnSubscribe<String>) emitter -> {
-            //检查当前是否已经连接上了
-            if (isInstalled() && isConnected()) {
-                emitter.onError(new NoNeedRetryException("已经连接上了"));
-            } else {
-                emitter.onNext("第一次连接任务即将开始");
-                emitter.onComplete();
-            }
-        })
+                    //检查当前是否已经连接上了
+                    if (isInstalled() && isConnected()) {
+                        emitter.onError(new NoNeedRetryException("已经连接上了"));
+                    } else {
+                        emitter.onNext("第一次连接任务即将开始");
+                        emitter.onComplete();
+                    }
+                })
                 .flatMap((Function<String, ObservableSource<String>>) s -> {
                     return connectTo(connectionProfile, 0);
                 })
@@ -573,7 +598,7 @@ public class MqttMgr {
      */
     public interface OnSubScribeTopic {
 
-        void onSubScribeTopic();
+        void onSubScribeTopic(@NonNull RxPahoClient client);
     }
 
     public static class NoNeedRetryException extends RuntimeException {
