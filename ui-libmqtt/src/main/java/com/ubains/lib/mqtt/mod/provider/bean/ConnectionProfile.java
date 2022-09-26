@@ -3,6 +3,7 @@ package com.ubains.lib.mqtt.mod.provider.bean;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import cn.liujson.lib.mqtt.api.QoS;
 
@@ -83,4 +84,18 @@ public class ConnectionProfile implements Serializable {
     public String caFilePath;
     public String clientCertificateFilePath;
     public String clientKeyFilePath;
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConnectionProfile that = (ConnectionProfile) o;
+        return brokerPort == that.brokerPort && cleanSession == that.cleanSession && connectionTimeout == that.connectionTimeout && keepAliveInterval == that.keepAliveInterval && autoReconnect == that.autoReconnect && maxReconnectDelay == that.maxReconnectDelay && willRetained == that.willRetained && certificateSigned == that.certificateSigned && sslSecure == that.sslSecure && Objects.equals(profileName, that.profileName) && Objects.equals(brokerAddress, that.brokerAddress) && Objects.equals(clientID, that.clientID) && Objects.equals(username, that.username) && Objects.equals(password, that.password) && Objects.equals(willTopic, that.willTopic) && Objects.equals(willMessage, that.willMessage) && willQoS == that.willQoS && Objects.equals(defineTopics, that.defineTopics) && Objects.equals(updateTime, that.updateTime) && Objects.equals(caFilePath, that.caFilePath) && Objects.equals(clientCertificateFilePath, that.clientCertificateFilePath) && Objects.equals(clientKeyFilePath, that.clientKeyFilePath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(profileName, brokerAddress, brokerPort, clientID, cleanSession, username, password, connectionTimeout, keepAliveInterval, autoReconnect, maxReconnectDelay, willTopic, willMessage, willQoS, willRetained, defineTopics, updateTime, certificateSigned, sslSecure, caFilePath, clientCertificateFilePath, clientKeyFilePath);
+    }
 }

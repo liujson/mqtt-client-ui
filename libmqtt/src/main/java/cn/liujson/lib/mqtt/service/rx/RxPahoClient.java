@@ -21,6 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import cn.liujson.lib.mqtt.api.ConnectionParams;
 import cn.liujson.lib.mqtt.api.IRxMqttClient;
@@ -57,7 +59,7 @@ public class RxPahoClient implements IRxMqttClient {
     /**
      * 已经订阅的topic
      */
-    private final LinkedHashMap<String, QoS> activeSubs = new LinkedHashMap<>();
+    private final ConcurrentMap<String, QoS> activeSubs = new ConcurrentHashMap<>();
 
     private final Object activeSubLock = new Object();
     /**

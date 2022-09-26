@@ -6,7 +6,7 @@ android {
 
     libraryVariants.all { variant ->
         variant.outputs.all {
-            def fileName = "ui-libmqtt-0.0.15.aar"
+            def fileName = "ui-libmqtt-0.0.16.aar"
             outputFileName = fileName
         }
     }
