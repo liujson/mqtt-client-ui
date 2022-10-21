@@ -99,8 +99,11 @@ public class MqttSettingFragment extends Fragment implements MqttSettingViewMode
             viewDataBinding.etBrokerAddress.setError(getString(R.string.broker_address_cannot_be_null));
             return false;
         }
-        if (!RegexUtils.isIP(entity.fieldBrokerAddress.get())) {
-            viewDataBinding.etBrokerAddress.setError("解析IP地址错误");
+        if (!RegexUtils.isIP(entity.fieldBrokerAddress.get())&&
+                //匹配域名
+                !RegexUtils.isMatch("[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\\.?",
+                        entity.fieldBrokerAddress.get())) {
+            viewDataBinding.etBrokerAddress.setError("解析IP地址或域名错误");
             return false;
         }
         if (TextUtils.isEmpty(entity.fieldBrokerPort.get())) {

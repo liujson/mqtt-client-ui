@@ -213,6 +213,8 @@ public class MqttMgr {
          */
         IConnectionProfileStore profileStore;
 
+
+
         /**
          * 初始化的时候进行连接
          */
@@ -511,8 +513,7 @@ public class MqttMgr {
             }
             emitter.onComplete();
         }).doOnSubscribe(disposable -> {
-            final boolean b = isConnecting.getAndSet(true);
-            if (b) {
+            if (!isConnecting.compareAndSet(false, true)) {
                 Log.d(TAG, "connectTo:connecting dispose....");
                 disposable.dispose();
             }

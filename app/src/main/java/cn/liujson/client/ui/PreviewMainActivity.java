@@ -28,6 +28,7 @@ import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.interfaces.SimpleCallback;
 import com.ubains.lib.mqtt.mod.provider.event.MqttBindChangeEvent;
 import com.ubains.lib.mqtt.mod.service.MqttMgr;
+import com.ubains.lib.mqtt.mod.ui.MqttSubscribedTopicsFragment;
 import com.ubains.lib.mqtt.mod.ui.MqttWorkingStatusFragment;
 
 import net.lucode.hackware.magicindicator.FragmentContainerHelper;
@@ -81,7 +82,7 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
 
     private static final String TAG = "PreviewMainActivity";
 
-    public static final String[] mTitleList = new String[]{"Publish", "Topics", "Status", "Log"};
+    public static final String[] mTitleList = new String[]{"Publish", "Topics", "Status","Subscribed", "Log"};
 
     private ActivityPreviewMainBinding viewDataBinding;
 
@@ -217,12 +218,14 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         PublishFragment publishFragment = PublishFragment.newInstance();
         TopicsFragment topicsFragment = TopicsFragment.newInstance();
         MqttWorkingStatusFragment workingStatusFragment = MqttWorkingStatusFragment.newInstance();
+        MqttSubscribedTopicsFragment subscribedTopicsFragment = MqttSubscribedTopicsFragment.newInstance();
         LogPreviewFragment logPreviewFragment = LogPreviewFragment.newInstance();
 
         ArrayList<Fragment> fragmentList = new ArrayList<>();
         fragmentList.add(publishFragment);
         fragmentList.add(topicsFragment);
         fragmentList.add(workingStatusFragment);
+        fragmentList.add(subscribedTopicsFragment);
         fragmentList.add(logPreviewFragment);
 
         viewDataBinding.mViewPager.setAdapter(new PageFragmentStateAdapter(getSupportFragmentManager(), getLifecycle(), fragmentList));
