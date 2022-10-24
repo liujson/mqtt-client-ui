@@ -58,9 +58,16 @@ public class LibMqttUtils {
                 .username(profile.username)
                 .password(profile.password);
         //自身验证
-        if (profile.certificateSigned == 2) {
-            builder.socketFactory(createSocketFactory(profile.caFilePath, profile.clientCertificateFilePath, profile.clientKeyFilePath, RandomStringUtils.randomNumeric(4), profile.sslSecure));
-            builder.sslHostnameVerifier((hostname, session) -> true);
+        if (profile.brokerAddress.startsWith("ssl://")) {
+            if (profile.certificateSigned == 2) {
+                builder.socketFactory(createSocketFactory(profile.caFilePath, profile.clientCertificateFilePath, profile.clientKeyFilePath, RandomStringUtils.randomNumeric(4), profile.sslSecure));
+                builder.sslHostnameVerifier((hostname, session) -> true);
+            } else if (profile.certificateSigned == 1) {
+                if(!profile.sslSecure) {
+                    builder.socketFactory(createUnsafeSocketFactory());
+                    builder.sslHostnameVerifier((hostname, session) -> true);
+                }
+            }
         }
         if (!TextUtils.isEmpty(profile.willTopic) && !TextUtils.isEmpty(profile.willMessage)) {
             builder.setWill(profile.willTopic, profile.willMessage.getBytes(), profile.willQoS, profile.willRetained);
@@ -131,6 +138,12 @@ public class LibMqttUtils {
         return context.getSocketFactory();
     }
 
+    private static SSLSocketFactory createUnsafeSocketFactory() throws Exception {
+        final TrustManager[] trustManager = getTrustManager();
+        SSLContext sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(null, trustManager, new SecureRandom());
+        return sslContext.getSocketFactory();
+    }
 
     private static PrivateKey getPrivateKey(String keyPemPath) throws Exception {
         byte[] buffer = Base64.decode(getPem(keyPemPath), 0);
