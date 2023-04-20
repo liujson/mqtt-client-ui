@@ -115,11 +115,6 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0x11);
         }
-
-        viewDataBinding.btnSetting.setOnLongClickListener(v -> {
-            startActivity(new Intent(this, TouchScreenActivity.class));
-            return false;
-        });
     }
 
     @Override
