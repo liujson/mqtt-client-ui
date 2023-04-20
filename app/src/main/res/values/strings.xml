@@ -2,7 +2,6 @@
     <string name="app_name">MQTT.Cli</string>
 
 
-
     <string name="profile_name_cannot_be_null">Profile name cannot be null</string>
     <string name="broker_address_cannot_be_null">Broker address cannot be null</string>
     <string name="broker_port_cannot_be_null">Broker port cannot be null</string>

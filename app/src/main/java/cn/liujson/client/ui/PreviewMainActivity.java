@@ -82,7 +82,7 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
 
     private static final String TAG = "PreviewMainActivity";
 
-    public static final String[] mTitleList = new String[]{"Publish", "Topics", "Status","Subscribed", "Log"};
+    public static final String[] mTitleList = new String[]{"Publish", "Topics", "Status", "Subscribed", "Log"};
 
     private ActivityPreviewMainBinding viewDataBinding;
 
@@ -113,8 +113,13 @@ public class PreviewMainActivity extends BaseActivity implements PreviewMainView
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0x11);
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0x11);
         }
+
+        viewDataBinding.btnSetting.setOnLongClickListener(v -> {
+            startActivity(new Intent(this, TouchScreenActivity.class));
+            return false;
+        });
     }
 
     @Override
